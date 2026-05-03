@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trung Mai Quoc — EdTech Innovator & Learning Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050814;
+    --bg-2: #0a0f24;
+    --surface: #0e1530;
+    --surface-2: #131a3d;
+    --cyan: #00e5ff;
+    --blue: #2d7fff;
+    --indigo: #6366f1;
+    --violet: #8b5cf6;
+    --text: #e8ecff;
+    --text-dim: #8b95c4;
+    --text-mute: #5a6595;
+    --border: rgba(120, 150, 255, 0.12);
+    --border-bright: rgba(0, 229, 255, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  .bg-fx {
+    position: fixed; inset: 0; z-index: -2;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(45, 127, 255, 0.18), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.15), transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(0, 229, 255, 0.08), transparent 60%),
+      var(--bg);
+  }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(rgba(120, 150, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 150, 255, 0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 18px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(5, 8, 20, 0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; letter-spacing: 0.15em;
+    color: var(--cyan); font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo::before {
+    content: ''; width: 8px; height: 8px;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .nav-links { display: flex; gap: 28px; list-style: none; }
+  .nav-links a {
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    text-decoration: none; color: var(--text-dim);
+    transition: color 0.25s; font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+
+  #hero {
+    min-height: 100vh; display: flex; align-items: center;
+    padding: 100px 40px 60px; position: relative;
+  }
+  .hero-grid {
+    width: 100%;
+    display: grid; grid-template-columns: 1.3fr 1fr;
+    gap: 60px; align-items: center;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 0.2em;
+    color: var(--cyan); margin-bottom: 28px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 36px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan));
+  }
+  .hero-name {
+    font-size: clamp(56px, 7vw, 104px);
+    font-weight: 700; line-height: 0.98;
+    letter-spacing: -0.04em; margin-bottom: 24px;
+    background: linear-gradient(180deg, #fff 0%, #8b95c4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-name em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-weight: 400;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-tagline {
+    font-size: 18px; color: var(--text-dim);
+    margin: 0 0 40px; max-width: 540px;
+    line-height: 1.7; font-weight: 300;
+  }
+  .hero-tagline strong { color: var(--text); font-weight: 500; }
+  .hero-cta-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 16px 28px; text-decoration: none;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    transition: all 0.3s; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hero-cta.primary {
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%);
+    color: var(--bg);
+    box-shadow: 0 8px 32px rgba(0, 229, 255, 0.3);
+  }
+  .hero-cta.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 229, 255, 0.5);
+  }
+  .hero-cta.secondary {
+    border: 1px solid var(--border-bright); color: var(--cyan);
+  }
+  .hero-cta.secondary:hover {
+    background: rgba(0, 229, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .hero-3d {
+    position: relative; height: 380px;
+    display: flex; align-items: center; justify-content: center;
+    perspective: 1200px;
+  }
+  .orb-container {
+    width: 280px; height: 280px;
+    position: relative; transform-style: preserve-3d;
+    animation: rotate3d 30s linear infinite;
+  }
+  @keyframes rotate3d {
+    from { transform: rotateY(0) rotateX(15deg); }
+    to { transform: rotateY(360deg) rotateX(15deg); }
+  }
+  .orb-ring {
+    position: absolute; inset: 0;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    border-radius: 50%; transform-style: preserve-3d;
+  }
+  .orb-ring:nth-child(1) { transform: rotateX(75deg); border-color: rgba(0, 229, 255, 0.5); }
+  .orb-ring:nth-child(2) { transform: rotateX(75deg) rotateY(60deg); border-color: rgba(45, 127, 255, 0.4); }
+  .orb-ring:nth-child(3) { transform: rotateX(75deg) rotateY(120deg); border-color: rgba(139, 92, 246, 0.4); }
+  .orb-core {
+    position: absolute; inset: 30%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--cyan), var(--blue) 50%, var(--indigo) 100%);
+    box-shadow:
+      0 0 60px rgba(0, 229, 255, 0.6),
+      inset -20px -20px 60px rgba(0, 0, 0, 0.4),
+      inset 20px 20px 60px rgba(255, 255, 255, 0.1);
+    animation: corePulse 4s ease-in-out infinite;
+  }
+  @keyframes corePulse {
+    0%, 100% { box-shadow: 0 0 60px rgba(0, 229, 255, 0.6), inset -20px -20px 60px rgba(0,0,0,0.4), inset 20px 20px 60px rgba(255,255,255,0.1); }
+    50% { box-shadow: 0 0 100px rgba(0, 229, 255, 0.9), inset -20px -20px 60px rgba(0,0,0,0.4), inset 20px 20px 60px rgba(255,255,255,0.2); }
+  }
+  .orb-particle {
+    position: absolute; width: 8px; height: 8px;
+    background: var(--cyan); border-radius: 50%;
+    box-shadow: 0 0 12px var(--cyan);
+  }
+  .orb-particle:nth-child(5) { top: 50%; left: 0; transform: translate(-50%, -50%); }
+  .orb-particle:nth-child(6) { top: 50%; right: 0; transform: translate(50%, -50%); background: var(--blue); box-shadow: 0 0 12px var(--blue); }
+  .orb-particle:nth-child(7) { top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--violet); box-shadow: 0 0 12px var(--violet); }
+  .orb-particle:nth-child(8) { bottom: 0; left: 50%; transform: translate(-50%, 50%); background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+
+  .hero-stats { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+  .float-stat {
+    position: absolute;
+    background: rgba(14, 21, 48, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-bright);
+    padding: 14px 20px; border-radius: 12px;
+    pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .float-stat:nth-child(1) { top: 5%; right: -5%; animation: floatY 5s ease-in-out infinite 0s; }
+  .float-stat:nth-child(2) { bottom: 10%; right: -8%; animation: floatY 5s ease-in-out infinite 1.5s; }
+  .float-stat:nth-child(3) { top: 40%; left: -10%; animation: floatY 5s ease-in-out infinite 3s; }
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .float-stat-num {
+    font-size: 24px; font-weight: 700;
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .float-stat-label {
+    font-size: 10px; color: var(--text-dim);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  section { padding: 80px 40px; position: relative; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 0.25em;
+    color: var(--cyan); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 14px;
+    text-transform: uppercase;
+  }
+  .section-label::before {
+    content: ''; width: 32px; height: 1px; background: var(--cyan);
+  }
+  .section-title {
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 700; line-height: 1.05;
+    letter-spacing: -0.03em; margin-bottom: 60px;
+    max-width: 900px;
+  }
+  .section-title em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-weight: 400;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1.4fr;
+    gap: 50px; align-items: start;
+  }
+  .about-card {
+    position: relative; aspect-ratio: auto;
+    height: 560px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid var(--border-bright);
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+  }
+  .about-card:hover { transform: rotateY(-5deg) rotateX(2deg) scale(1.02); }
+  .about-card-inner {
+    position: absolute; inset: 1px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    padding: 18px;
+    display: flex; flex-direction: column; justify-content: flex-start;
+  }
+  .card-corner {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--cyan); letter-spacing: 0.15em;
+  }
+  .card-tmq {
+    width: 100%; height: 430px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 0 12px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(0, 229, 255, 0.04);
+  }
+  .card-tmq img {
+    width: 100%; height: 100%; object-fit: contain;
+    border-radius: 8px;
+  }
+  .card-data { display: flex; flex-direction: column; gap: 4px; }
+  .card-data-row {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+  .card-data-row span:first-child { color: var(--text-mute); }
+  .card-data-row span:last-child { color: var(--cyan); }
+
+  .about-text p {
+    color: var(--text-dim); margin-bottom: 22px;
+    font-size: 16px; line-height: 1.85; font-weight: 300;
+  }
+  .about-text p strong { color: var(--text); font-weight: 500; }
+  .about-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; }
+  .tag {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em; padding: 7px 14px;
+    border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 100px; transition: all 0.25s;
+    background: rgba(14, 21, 48, 0.5);
+  }
+  .tag:hover {
+    border-color: var(--cyan); color: var(--cyan);
+    transform: translateY(-2px);
+  }
+
+  .skills-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+  .skill-card {
+    position: relative; padding: 24px 20px;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border); border-radius: 16px;
+    transition: border-color 0.4s, box-shadow 0.4s;
+    overflow: hidden;
+  }
+  .skill-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 20px 60px rgba(0, 229, 255, 0.15);
+  }
+  .skill-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 18px rgba(0, 229, 255, 0.3);
+  }
+  .skill-icon svg { width: 20px; height: 20px; stroke: var(--bg); fill: none; stroke-width: 2; }
+  .skill-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+  .skill-list { list-style: none; }
+  .skill-list li {
+    font-size: 14px; color: var(--text-dim);
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 300;
+  }
+  .skill-list li:last-child { border-bottom: none; }
+  .skill-list li::before {
+    content: ''; width: 4px; height: 4px;
+    background: var(--cyan); border-radius: 50%;
+    box-shadow: 0 0 8px var(--cyan);
+    flex-shrink: 0;
+  }
+
+  .exp-timeline { position: relative; padding-left: 4px; }
+  .exp-timeline::before {
+    content: ''; position: absolute;
+    left: 6px; top: 8px; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--cyan) 0%, transparent 100%);
+  }
+  .exp-item { padding-left: 56px; margin-bottom: 60px; position: relative; }
+  .exp-item::before {
+    content: ''; position: absolute;
+    left: 0; top: 8px; width: 13px; height: 13px;
+    border-radius: 50%; background: var(--cyan);
+    box-shadow: 0 0 0 4px var(--bg), 0 0 20px var(--cyan);
+  }
+  .exp-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.15em;
+    color: var(--cyan); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .exp-role { font-size: 24px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .exp-org {
+    font-size: 14px; color: var(--text-dim); font-weight: 400;
+    margin-bottom: 20px; letter-spacing: 0.02em;
+  }
+  .exp-highlights { display: flex; flex-direction: column; gap: 10px; }
+  .exp-highlight {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 14.5px; color: var(--text-dim);
+    line-height: 1.7; font-weight: 300;
+  }
+  .exp-highlight strong { color: var(--text); font-weight: 500; }
+  .exp-highlight::before {
+    content: ''; width: 5px; height: 5px;
+    background: var(--cyan); border-radius: 50%;
+    margin-top: 9px; flex-shrink: 0;
+  }
+  .impact-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid var(--border-bright);
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; padding: 6px 12px;
+    letter-spacing: 0.05em; margin-top: 16px;
+    border-radius: 100px;
+  }
+
+  /* PROJECT/VOLUNTEER CARDS WITH IMAGE THUMB */
+  .projects-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  .project-card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border);
+    transition: border-color 0.4s, box-shadow 0.4s;
+    position: relative; border-radius: 16px;
+    overflow: hidden; cursor: pointer;
+    display: flex; flex-direction: column;
+  }
+  .project-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    transform: scaleX(0);
+    transition: transform 0.4s;
+    transform-origin: left;
+  }
+  .project-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 20px 60px rgba(0, 229, 255, 0.1);
+  }
+  .project-card:hover::after { transform: scaleX(1); }
+  .project-thumb {
+    width: 100%; aspect-ratio: 16/5.2;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--violet) 100%);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .project-thumb::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(255,255,255,0.15), transparent 40%);
+  }
+  .project-thumb::after {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .project-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    position: relative; z-index: 1;
+  }
+  .featured-card .project-thumb img {
+    object-fit: cover;
+    object-position: center;
+  }
+  .project-thumb-icon {
+    position: relative; z-index: 2;
+    font-size: 38px;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  }
+  .project-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+  .project-num {
+    font-size: 24px; font-weight: 800;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1; margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .project-title {
+    font-size: 16px; font-weight: 600;
+    margin-bottom: 6px; line-height: 1.3; color: var(--text);
+  }
+  .project-role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--cyan);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .project-desc {
+    font-size: 12px; color: var(--text-dim);
+    line-height: 1.6; margin-bottom: 12px; font-weight: 300;
+    flex: 1;
+  }
+  .project-desc strong { color: var(--text); font-weight: 500; }
+  .project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .project-tag {
+    font-size: 10px; padding: 5px 11px;
+    background: rgba(0, 229, 255, 0.06);
+    color: var(--cyan);
+    border: 1px solid var(--border-bright);
+    font-family: 'JetBrains Mono', monospace;
+    border-radius: 100px; letter-spacing: 0.05em;
+  }
+  .project-cta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--cyan);
+    display: flex; align-items: center; gap: 6px;
+    letter-spacing: 0.05em;
+  }
+  .featured-card { grid-column: span 2; }
+  .featured-card .project-thumb { aspect-ratio: 21/6.8; }
+  .featured-card .project-thumb-icon { font-size: 30px; }
+
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .ach-card {
+    cursor: pointer;
+    padding: 22px 20px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(14, 21, 48, 0.42);
+    backdrop-filter: blur(10px);
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    min-height: 132px;
+  }
+  .ach-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-bright);
+    background: rgba(14, 21, 48, 0.62);
+  }
+  .ach-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .ach-title {
+    font-size: 18px; font-weight: 600;
+    line-height: 1.35;
+    color: var(--text);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5, 8, 20, 0.85);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 40px 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border-bright);
+    border-radius: 24px;
+    max-width: 800px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    position: relative;
+    animation: modalIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5), 0 0 80px rgba(0, 229, 255, 0.15);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) rotateX(10deg); }
+    to { opacity: 1; transform: scale(1) rotateX(0); }
+  }
+  .modal-image {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--violet) 100%);
+    border-radius: 24px 24px 0 0;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-image::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.2), transparent 40%);
+  }
+  .modal-image::after {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 30px 30px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+  .modal-image img {
+    width: 100%; height: 100%; object-fit: cover;
+    position: relative; z-index: 1;
+  }
+  .modal-image-content {
+    position: relative; z-index: 2;
+    text-align: center; color: white;
+  }
+  .modal-image-icon {
+    font-size: 96px;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+    margin-bottom: 16px;
+  }
+  .modal-image-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; letter-spacing: 0.3em; opacity: 0.9;
+  }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    color: white; cursor: pointer;
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; z-index: 10;
+  }
+  .modal-close:hover { background: rgba(0,0,0,0.7); transform: rotate(90deg); }
+
+  /* IMAGE GALLERY */
+  .modal-gallery {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding: 16px 40px 0;
+  }
+  .modal-gallery-item {
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, var(--surface), var(--bg-2));
+    border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+    cursor: pointer; position: relative;
+    transition: all 0.2s;
+  }
+  .modal-gallery-item:hover {
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+  }
+  .modal-gallery-item img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .modal-image.full-image img {
+    object-fit: contain !important;
+    object-position: center;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+  }
+  .modal-gallery-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(139, 92, 246, 0.1));
+    color: var(--text-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em;
+    text-align: center; padding: 8px;
+  }
+
+  .modal-body { padding: 36px 40px 40px; }
+  .modal-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--cyan);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .modal-title {
+    font-size: 26px; font-weight: 600;
+    line-height: 1.3; margin-bottom: 12px; color: var(--text);
+  }
+  .modal-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-dim);
+    letter-spacing: 0.05em; margin-bottom: 24px;
+  }
+  .modal-desc {
+    font-size: 15px; color: var(--text-dim);
+    line-height: 1.85; margin-bottom: 24px; font-weight: 300;
+  }
+  .modal-desc strong { color: var(--text); font-weight: 500; }
+  .modal-desc p { margin-bottom: 16px; }
+  .modal-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    padding: 20px;
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .modal-stat-item { text-align: center; }
+  .modal-stat-num {
+    font-size: 22px; font-weight: 700;
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .modal-stat-lbl {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .modal-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 24px;
+  }
+  .modal-tag {
+    font-size: 10px; padding: 5px 11px;
+    background: rgba(0, 229, 255, 0.06);
+    color: var(--cyan);
+    border: 1px solid var(--border-bright);
+    font-family: 'JetBrains Mono', monospace;
+    border-radius: 100px; letter-spacing: 0.05em;
+  }
+
+  #contact { padding-bottom: 80px; }
+  .contact-card {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 1px solid var(--border-bright);
+    border-radius: 24px;
+    padding: 50px 40px;
+    position: relative; overflow: hidden;
+  }
+  .contact-card::before {
+    content: ''; position: absolute;
+    top: -50%; right: -20%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .contact-grid {
+    display: grid; grid-template-columns: 1.2fr 1fr;
+    gap: 50px; align-items: center;
+    position: relative; z-index: 1;
+  }
+  .contact-cta-text {
+    font-size: 17px; color: var(--text-dim);
+    line-height: 1.8; margin-bottom: 40px; font-weight: 300;
+  }
+  .contact-links { display: flex; flex-direction: column; gap: 12px; }
+  .contact-link {
+    display: flex; align-items: center; gap: 16px;
+    color: var(--text); text-decoration: none;
+    font-size: 14px; padding: 18px 22px;
+    background: rgba(14, 21, 48, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .contact-link:hover {
+    border-color: var(--cyan);
+    transform: translateX(4px);
+    background: rgba(0, 229, 255, 0.05);
+  }
+  .contact-link-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg); font-weight: 700;
+    flex-shrink: 0;
+  }
+  .brand-quote {
+    font-size: 32px; font-weight: 600;
+    line-height: 1.35; color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .brand-quote em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-weight: 400;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  footer {
+    text-align: center; padding: 30px;
+    color: var(--text-mute);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.15em;
+    border-top: 1px solid var(--border);
+  }
+
+  .fade-in {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 900px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    section { padding: 70px 24px; }
+    #hero { padding: 110px 24px 60px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 60px; }
+    .hero-3d { height: 350px; }
+    .orb-container { width: 280px; height: 280px; }
+    .about-grid, .skills-grid, .projects-grid, .contact-grid {
+      grid-template-columns: 1fr; gap: 40px;
+    }
+    .achievements-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ach-card { padding: 18px 16px; min-height: 120px; }
+    .ach-title { font-size: 16px; }
+    .featured-card { grid-column: span 1; }
+    .contact-card { padding: 50px 28px; }
+    .modal-body { padding: 28px; }
+    .modal-gallery { padding: 16px 28px 0; grid-template-columns: 1fr 1fr; }
+    .float-stat:nth-child(1) { top: 0; right: 5%; }
+    .float-stat:nth-child(2) { bottom: 5%; right: 8%; }
+    .float-stat:nth-child(3) { top: 35%; left: 5%; }
+  }
+
+  @media (max-width: 640px) {
+    .achievements-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<nav>
+  <div class="nav-logo">TMQ_PORTFOLIO//2026</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Stack</a></li>
+    <li><a href="#experience">Journey</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#volunteer">Community</a></li>
+    <li><a href="#achievements">Awards</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <div class="hero-grid">
+    <div class="hero-content fade-in">
+      <div class="hero-eyebrow">EdTech · Learning Design · AI Innovation</div>
+      <h1 class="hero-name">Engineering<br>the future of <em>learning</em>.</h1>
+      <p class="hero-tagline">
+        I'm <strong>Trung Mai Quoc</strong> — an Educational Technologist building digital learning experiences where <strong>pedagogy meets AI</strong>. From classroom innovation in Vietnam to international research forums, I design systems that scale human potential.
+      </p>
+      <div class="hero-cta-row">
+        <a href="#projects" class="hero-cta primary">Explore my work →</a>
+        <a href="#contact" class="hero-cta secondary">Get in touch</a>
+      </div>
+    </div>
+
+    <div class="hero-3d fade-in">
+      <div class="orb-container">
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-core"></div>
+        <div class="orb-particle"></div>
+        <div class="orb-particle"></div>
+        <div class="orb-particle"></div>
+        <div class="orb-particle"></div>
+      </div>
+      <div class="hero-stats">
+        <div class="float-stat">
+          <div class="float-stat-num">500+</div>
+          <div class="float-stat-label">Students Reached</div>
+        </div>
+        <div class="float-stat">
+          <div class="float-stat-num">200+</div>
+          <div class="float-stat-label">Teachers Trained</div>
+        </div>
+        <div class="float-stat">
+          <div class="float-stat-num">11</div>
+          <div class="float-stat-label">Awards Earned</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-label">01 / About</div>
+  <h2 class="section-title fade-in">A learning designer at the <em>intersection</em> of code, pedagogy, and human potential.</h2>
+  <div class="about-grid fade-in">
+    <div class="about-card">
+      <div class="about-card-inner">
+        <div style="display: flex; justify-content: space-between;">
+          <div class="card-corner">// PROFILE.JSON</div>
+          <div class="card-corner">v.2026</div>
+        </div>
+        <div class="card-tmq"><img src="images/MAI%20QUOC%20TRUNG%20-%20AVATAR.png" alt="Trung Mai Quoc" /></div>
+        <div class="card-data">
+          <div class="card-data-row"><span>role</span><span>EdTech Innovator</span></div>
+          <div class="card-data-row"><span>focus</span><span>AI · Learning Design</span></div>
+          <div class="card-data-row"><span>base</span><span>Hanoi, Vietnam</span></div>
+          <div class="card-data-row"><span>status</span><span>● Available</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="about-text">
+      <p>
+        I'm a final-year student at <strong>VNU University of Education</strong>, majoring in Educational Technology Management (GPA 3.5/4.0). My mission: to bridge the digital divide in education through thoughtful, scalable design.
+      </p>
+      <p>
+        Over the past three years, I've worn many hats — <strong>e-learning architect, teacher trainer, research lead, community builder</strong>. Each role has reinforced one belief: technology should never replace pedagogy, only amplify it.
+      </p>
+      <p>
+        From training <strong>200+ teachers</strong> across rural Vietnamese schools, to designing AI-integrated learning materials for national curriculum partners, to founding the first EdTech student club at my university — I build at the intersection of <strong>research, design, and impact</strong>.
+      </p>
+      <p>
+        Currently building <strong>nextSTEM Vietnam</strong>, an AI-enabled platform helping students discover STEM career pathways through personalized learning. Open to international collaborations, internships, and research partnerships.
+      </p>
+      <div class="about-tags">
+        <span class="tag">EdTech R&D</span>
+        <span class="tag">Generative AI</span>
+        <span class="tag">Instructional Design</span>
+        <span class="tag">SCORM</span>
+        <span class="tag">Learning Analytics</span>
+        <span class="tag">No-code / Low-code</span>
+        <span class="tag">Community Building</span>
+        <span class="tag">Academic Research</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="section-label">02 / Tech Stack</div>
+  <h2 class="section-title fade-in">Capabilities, <em>engineered</em> for impact.</h2>
+  <div class="skills-grid fade-in">
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2 L4 6 L4 18 L12 22 L20 18 L20 6 Z M4 6 L12 10 L20 6 M12 10 L12 22"/></svg>
+      </div>
+      <h3>Technical Stack</h3>
+      <ul class="skill-list">
+        <li>No-code / Low-code Development</li>
+        <li>Generative AI Integration</li>
+        <li>SCORM / xAPI Authoring</li>
+        <li>LMS Architecture & Testing</li>
+        <li>Learning Data Analytics</li>
+        <li>Multimedia Production</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg viewBox="0 0 24 24"><path d="M2 3 L22 3 L22 17 L13 17 L13 21 L11 21 L11 17 L2 17 Z M6 8 L18 8 M6 12 L14 12"/></svg>
+      </div>
+      <h3>Learning Design</h3>
+      <ul class="skill-list">
+        <li>Instructional Systems Design</li>
+        <li>Curriculum Development</li>
+        <li>Interactive Simulation</li>
+        <li>Pedagogical Alignment</li>
+        <li>Teacher Training Facilitation</li>
+        <li>UX for Learning</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="11" r="2.5"/><path d="M3 21 C3 17 6 15 9 15 C12 15 15 17 15 21 M13 21 C13 18.5 15 17 17 17 C19 17 21 18.5 21 21"/></svg>
+      </div>
+      <h3>Leadership & Research</h3>
+      <ul class="skill-list">
+        <li>Project Coordination</li>
+        <li>Systems Thinking</li>
+        <li>Academic Research Methods</li>
+        <li>Stakeholder Management</li>
+        <li>Cross-functional Mentoring</li>
+        <li>Strategic Communication</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="section-label">03 / Journey</div>
+  <h2 class="section-title fade-in">A <em>career</em> built one impact at a time.</h2>
+  <div class="exp-timeline fade-in">
+
+    <div class="exp-item">
+      <div class="exp-date">JUL 2025 — PRESENT</div>
+      <div class="exp-role">Curriculum Development Specialist</div>
+      <div class="exp-org">Agile Academy JSC</div>
+      <div class="exp-highlights">
+        <div class="exp-highlight">Develop e-learning content for national-scale partners including the <strong>Ministry of National Defence, TPBank, and Tri Nam</strong>.</div>
+        <div class="exp-highlight">Research and prototype tooling that accelerates the digitization workflow.</div>
+        <div class="exp-highlight">Build and deliver internal training programs for interns; provide implementation support to lecturers and partner organizations.</div>
+      </div>
+      <span class="impact-badge">● Enterprise EdTech · National Partnerships</span>
+    </div>
+
+    <div class="exp-item">
+      <div class="exp-date">AUG 2025 — MAR 2026</div>
+      <div class="exp-role">Head of EdTech Research & Development</div>
+      <div class="exp-org">Kampus Co., Ltd.</div>
+      <div class="exp-highlights">
+        <div class="exp-highlight">Lead testing, evaluation, and optimization of the LMS supporting all training operations.</div>
+        <div class="exp-highlight">Co-design and deploy an automated reporting system that tracks student learning outcomes in real-time.</div>
+        <div class="exp-highlight">Translate business requirements into system improvements that elevate management efficiency and user experience.</div>
+      </div>
+      <span class="impact-badge">● LMS Optimization · Learning Analytics</span>
+    </div>
+
+    <div class="exp-item">
+      <div class="exp-date">AUG 2024 — DEC 2024</div>
+      <div class="exp-role">Digital Learning Content Developer</div>
+      <div class="exp-org">Thang Long Institute for Applied Educational Science Research</div>
+      <div class="exp-highlights">
+        <div class="exp-highlight">Produced multimedia digital content — e-learning modules, lecture videos, interactive simulations — aligned with the Vietnamese national curriculum.</div>
+        <div class="exp-highlight">Applied generative AI tooling to accelerate digital learning material production.</div>
+        <div class="exp-highlight">Trained <strong>200+ teachers across 15+ schools</strong> on effective adoption of the Institute's digital materials.</div>
+      </div>
+      <span class="impact-badge">● 200+ Teachers · 15+ Schools Reached</span>
+    </div>
+
+    <div class="exp-item">
+      <div class="exp-date">APR 2024 — AUG 2024</div>
+      <div class="exp-role">Logistics Staff — Summer Camp</div>
+      <div class="exp-org">SWORLD Vietnam Creative Development Co., Ltd.</div>
+      <div class="exp-highlights">
+        <div class="exp-highlight">Supervised and coordinated logistics operations for summer camp — facility preparation, transportation, equipment supply.</div>
+        <div class="exp-highlight">Worked closely with the Head Coordinator to execute camp activities on tight schedules.</div>
+        <div class="exp-highlight">Submitted regular progress reports covering logistics status and operational issues.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-label">04 / Featured Work</div>
+  <h2 class="section-title fade-in">Selected <em>projects</em>.</h2>
+  <p style="color: var(--text-dim); margin-bottom: 40px; font-size: 13px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">// Click any card to explore in detail</p>
+  <div class="projects-grid fade-in" id="projects-grid"></div>
+</section>
+
+<!-- VOLUNTEER & COMMUNITY -->
+<section id="volunteer">
+  <div class="section-label">05 / Volunteer & Community</div>
+  <h2 class="section-title fade-in">Building <em>communities</em>, lifting others up.</h2>
+  <p style="color: var(--text-dim); margin-bottom: 40px; font-size: 13px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">// Click any card to explore in detail</p>
+  <div class="projects-grid fade-in" id="volunteer-grid"></div>
+</section>
+
+<!-- ACHIEVEMENTS -->
+<section id="achievements">
+  <div class="section-label">06 / Recognition</div>
+  <h2 class="section-title fade-in">Awards & <em>milestones</em>.</h2>
+  <div class="achievements-grid fade-in" id="ach-grid"></div>
+</section>
+
+<!-- UNIVERSAL MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-image" id="m-image">
+      <div class="modal-image-content" id="m-image-fallback">
+        <div class="modal-image-icon" id="m-icon">🏆</div>
+        <div class="modal-image-year" id="m-year">2025</div>
+      </div>
+    </div>
+    <div class="modal-gallery" id="m-gallery"></div>
+    <div class="modal-body">
+      <div class="modal-meta" id="m-meta">CATEGORY · 2025</div>
+      <h3 class="modal-title" id="m-title">Title</h3>
+      <div class="modal-subtitle" id="m-subtitle"></div>
+      <div class="modal-desc" id="m-desc"></div>
+      <div class="modal-stats" id="m-stats"></div>
+      <div class="modal-tags" id="m-tags"></div>
+    </div>
+  </div>
+</div>
+
+<section id="contact">
+  <div class="contact-card fade-in">
+    <div class="section-label" style="position: relative; z-index: 1;">07 / Let's collaborate</div>
+    <div class="contact-grid">
+      <div>
+        <h2 class="section-title" style="margin-bottom: 32px;">Building <em>something</em>?<br>Let's make it count.</h2>
+        <p class="contact-cta-text">
+          Whether you're scaling an EdTech product, launching a research project, or designing a learning experience that matters — I'd love to hear about it. Open to international collaborations, internships, and research partnerships.
+        </p>
+        <div class="contact-links">
+          <a href="mailto:maiqtrung13@gmail.com" class="contact-link">
+            <span class="contact-link-icon">✉</span>
+            <span>maiqtrung13@gmail.com</span>
+          </a>
+          <a href="tel:+84378366131" class="contact-link">
+            <span class="contact-link-icon">☏</span>
+            <span>(+84) 378 366 131</span>
+          </a>
+          <a href="https://www.linkedin.com/in/mason2003/" target="_blank" class="contact-link">
+            <span class="contact-link-icon">in</span>
+            <span>linkedin.com/in/mason2003</span>
+          </a>
+        </div>
+      </div>
+      <div>
+        <div class="brand-quote">
+          "Technology doesn't <em>replace</em> teachers — it <em>amplifies</em> their reach, their care, and their impact."
+        </div>
+        <p style="color: var(--text-mute); font-size: 13px; margin-top: 24px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">
+          — Personal manifesto
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 TRUNG MAI QUOC // CRAFTED WITH PURPOSE // HANOI, VN
+</footer>
+
+<script>
+  /* ═══════════════════════════════════════════════════════════
+     IMAGE PATHS — REPLACE WITH YOUR ACTUAL IMAGES
+     Place images in same folder as HTML, e.g. ./images/awards/01.jpg
+     If image is missing, the system gracefully falls back to icon
+     ═══════════════════════════════════════════════════════════ */
+
+  // ─── PROJECTS ─────────────────────────────────────────────
+  const projects = [
+    {
+      featured: true,
+      icon: '🚀',
+      thumb: 'images/nextStem.JPG',
+      gallery: [
+        'images/cerft.png',
+        'images/nextstem2.jpg',
+        'images/nextstem3.png'
+      ],
+      number: '01',
+      title: 'nextSTEM Vietnam',
+      role: 'Founder · AI-Enabled EdTech Platform',
+      shortDesc: 'An AI-powered platform helping secondary students discover STEM career pathways and build personalized academic profiles. Currently in active development.',
+      meta: 'FLAGSHIP PROJECT · 2025—PRESENT',
+      subtitle: 'AI as an intelligent companion for STEM career discovery',
+      fullDesc: `<p><strong>nextSTEM</strong> is a project I have been building to address a critical gap in education today: while many secondary school students have strong potential, they often lack the guidance, tools, and personalized support needed to understand their strengths, identify suitable career pathways, and intentionally develop the competencies and academic portfolios required for the future.</p>
+        <p>Conceived as an <strong>AI-enabled EdTech platform</strong>, nextSTEM is designed to help students explore careers and build STEM-oriented academic profiles through a learning journey that is personalized, self-directed, and grounded in digital readiness.</p>
+        <p>Rather than functioning as a basic career guidance tool, nextSTEM is envisioned as a comprehensive digital learning ecosystem in which AI acts as an intelligent companion. Its purpose is to help students connect dimensions that are too often fragmented in traditional education: <strong>personal strengths, learning pathways, and long-term career goals</strong>.</p>
+        <p>Beyond simply asking students what they want to become, the platform helps them understand <em>why</em> certain paths may suit them, <em>what</em> capabilities they need to build, and <em>how</em> to begin that journey in a structured and meaningful way.</p>
+        <p><strong>Personalization sits at the heart of nextSTEM.</strong> Every student comes with different circumstances, strengths, interests, and developmental needs. Some show early aptitude in mathematics and logic, others in creativity and design, while many are still in the process of discovering themselves. The platform analyzes each learner's profile, interests, progress, and aspirations to generate recommendations that are more relevant and actionable.</p>
+        <p>This is the central philosophy: <em>using technology not to standardize learners, but to recognize and support each student as an individual.</em></p>`,
+      stats: [
+        { num: 'AI', lbl: 'Powered' },
+        { num: '2025', lbl: 'Launched' },
+        { num: 'STEM', lbl: 'Focus' }
+      ],
+      tags: ['Generative AI', 'Career Discovery', 'Personalization', 'STEM Education', 'EdTech Startup', 'Founder']
+    },
+    {
+      icon: '🎓',
+      thumb: 'images/edtech_pic.jpg',
+      gallery: [
+        'images/projects/edtech-club-1.jpg',
+        'images/projects/edtech-club-2.jpg',
+        'images/projects/edtech-club-3.jpg'
+      ],
+      number: '02',
+      title: 'EdTech Enthusiasts — Founding Student Club',
+      role: 'Founder & President · Aug 2024 — Present',
+      shortDesc: 'Founded the first EdTech student club at VNU University of Education, scaling to 30+ active members and 10+ partner organizations.',
+      meta: 'COMMUNITY · ONGOING',
+      subtitle: 'Building Vietnam\'s next generation of learning designers',
+      fullDesc: `<p>Founded and developed the first student club dedicated to <strong>Educational Technology</strong> at VNU University of Education. The club reached 30+ active members within the first month, creating a digital learning and practice environment for students aspiring to enter the EdTech field.</p>
+        <p>Established partnerships with <strong>10+ individuals and organizations</strong> across Vietnam's education and tech ecosystems. Currently developing a survey and evaluation system to optimize club performance and building a comprehensive roadmap for workshops, seminars, training programs, and EdTech camping events.</p>
+        <p>The club has become a flagship community for aspiring learning designers, instructional design researchers, and EdTech entrepreneurs at the university level.</p>`,
+      stats: [
+        { num: '30+', lbl: 'Members' },
+        { num: '10+', lbl: 'Partners' },
+        { num: '2 Gens', lbl: 'Cohorts' }
+      ],
+      tags: ['Community', 'Leadership', 'EdTech', 'Founder', 'Mentorship']
+    },
+    {
+      icon: '💻',
+      thumb: 'images/VNU.jpg',
+      gallery: [
+        'images/projects/digital-comp-1.jpg',
+        'images/projects/digital-comp-2.jpg',
+        'images/projects/digital-comp-3.jpg'
+      ],
+      number: '03',
+      title: 'Digital Competency Initiative for VNU Students',
+      role: 'Project Lead & Coordinator · Jan — Dec 2025',
+      shortDesc: 'Led a year-long initiative engaging 500+ students through a workshop series with multi-tier sponsorship from leading EdTech partners.',
+      meta: 'INITIATIVE · 2025',
+      subtitle: 'Scaling digital fluency across the university',
+      fullDesc: `<p>Led the design and implementation of a year-long initiative to elevate digital fluency among university students at VNU. Organized a comprehensive workshop series on digital skills development that attracted <strong>500+ student participants</strong>.</p>
+        <p>Built strategic partnerships with reputable speakers and industry experts including <strong>Do Van Linh, MC La Thanh, Diem Ly, Lecturer Nguyen Gia Hy, Nguyen Minh Chau</strong> and others to enhance program quality and outreach.</p>
+        <p>Secured a multi-tier sponsorship system ranging from Supporting to Diamond level, including <strong>SkillPixel, ST Light House, HP i-Store, NET English, So Media</strong>, and various student clubs and faculty unions across universities.</p>`,
+      stats: [
+        { num: '500+', lbl: 'Participants' },
+        { num: '5', lbl: 'Tier Sponsors' },
+        { num: '12 mo.', lbl: 'Duration' }
+      ],
+      tags: ['Digital Literacy', 'Workshops', 'Partnerships', 'Project Management']
+    },
+    {
+      icon: '🤖',
+      thumb: 'images/grade 11.jpg',
+      gallery: [
+        'images/projects/ai-english-1.jpg',
+        'images/projects/ai-english-2.jpg',
+        'images/projects/ai-english-3.jpg'
+      ],
+      number: '04',
+      title: 'AI-Powered Learning — Grade 11 English (Global Success)',
+      role: 'Head of Learning Content · Dec 2024 — Feb 2025',
+      shortDesc: 'Designed AI-integrated digital learning content with 360° models for the national Global Success English textbook series.',
+      meta: 'CURRICULUM · 2024–2025',
+      subtitle: 'AI meets language learning at national scale',
+      fullDesc: `<p>Designed and developed AI-integrated digital learning content for the <strong>Grade 11 English curriculum</strong> in the Global Success Textbook Series — one of Vietnam's most widely adopted national English programs.</p>
+        <p>The work included producing <strong>lecture videos, visual aids, and immersive 360° models</strong> that contextualize language learning by placing students inside real-world communicative settings — restaurants, airports, classrooms — to foster engagement and retention.</p>
+        <p>The output shipped as part of national curriculum-aligned digital classrooms, reaching students across multiple provinces.</p>`,
+      stats: [
+        { num: 'AI', lbl: 'Integrated' },
+        { num: '360°', lbl: 'Immersive' },
+        { num: 'G11', lbl: 'Grade Level' }
+      ],
+      tags: ['Generative AI', '360° Models', 'English Education', 'Curriculum', 'Multimedia']
+    },
+    {
+      icon: '🎨',
+      thumb: 'images/nexta.jpg',
+      gallery: [
+        'images/projects/nexta-1.jpg',
+        'images/projects/nexta-2.jpg',
+        'images/projects/nexta-3.jpg'
+      ],
+      number: '05',
+      title: 'Nexta EdTech × Faculty of Educational Technology',
+      role: 'Project Leader · Feb — Jul 2025',
+      shortDesc: 'Led an industry-academia collaboration designing a digital learning system teaching foundational digital skills to primary students.',
+      meta: 'INDUSTRY × ACADEMIA · 2025',
+      subtitle: 'Bringing digital fluency to primary classrooms',
+      fullDesc: `<p>Coordinated and managed a joint project between <strong>Nexta EdTech JSC</strong> and the Faculty of Educational Technology at VNU University of Education. The collaboration produced a comprehensive digital learning material system for teaching digital skills to primary school students.</p>
+        <p>Led cross-functional teams of teachers, designers, and engineers — coordinating timelines, ensuring on-schedule delivery, and maintaining output quality.</p>
+        <p>Worked closely with teacher teams to ensure pedagogical soundness, age-appropriateness, and practical classroom applicability. Researched and applied AI tools to optimize the instructional design process and accelerate development cycles.</p>`,
+      stats: [
+        { num: '6 mo.', lbl: 'Duration' },
+        { num: 'K1–K5', lbl: 'Grade Level' },
+        { num: 'AI', lbl: 'Workflow' }
+      ],
+      tags: ['Industry × Academia', 'Primary Education', 'AI Workflow', 'Project Lead']
+    }
+  ];
+
+  // ─── VOLUNTEER & COMMUNITY ─────────────────────────────────
+  const volunteers = [
+    {
+      icon: '🌱',
+      thumb: 'images/Huyndai.jpg',
+      gallery: [
+        'images/volunteer/hyundai-1.jpg',
+        'images/volunteer/hyundai-2.jpg',
+        'images/volunteer/hyundai-3.jpg'
+      ],
+      number: '01',
+      title: 'Hyundai Jump School',
+      role: 'Education Volunteer · Outstanding Award (S4)',
+      shortDesc: 'Designed and delivered Math, Vietnamese, English & STEAM lessons for Grade 5 and middle school students. Recognized as Outstanding Volunteer.',
+      meta: 'EDUCATION VOLUNTEER · DEC 2023 — PRESENT',
+      subtitle: 'Empowering rural students through education',
+      fullDesc: `<p>Independently developed, designed, and delivered lessons for <strong>Grade 5 and middle school students</strong> across Mathematics, Vietnamese, English, and STEM/STEAM skills — strengthening critical thinking and academic confidence.</p>
+        <p>Collaborated with schools to organize <strong>extracurricular activities and STEM fairs</strong>, promoting a culture of creativity and innovation among students who would otherwise have limited exposure to such opportunities.</p>
+        <p>Mentored and built close relationships with students, encouraging holistic development in both academic knowledge and soft skills. Recognized as <strong>Outstanding Volunteer of Season 4</strong> for sustained impact and dedication.</p>`,
+      stats: [
+        { num: 'S4', lbl: 'Outstanding' },
+        { num: '4', lbl: 'Subjects' },
+        { num: '2+ yrs', lbl: 'Service' }
+      ],
+      tags: ['Education', 'STEM/STEAM', 'Mentorship', 'Rural Outreach', 'Community']
+    },
+    {
+      icon: '💝',
+      thumb: 'images/Hope.JPG',
+      gallery: [
+        'images/volunteer/hope-1.jpg',
+        'images/volunteer/hope-2.jpg',
+        'images/volunteer/hope-3.jpg'
+      ],
+      number: '02',
+      title: 'Project "Hy Vong (Hope)"',
+      role: 'Co-Founder · Phuong Cach Middle School, Quoc Oai',
+      shortDesc: 'Co-founded an education-meets-fundraising initiative selling student artworks to support local children, nurturing creativity and community spirit.',
+      meta: 'CO-FOUNDER · DEC 2025 — FEB 2026',
+      subtitle: 'Where education meets community giving',
+      fullDesc: `<p>Co-initiated and organized an <strong>education-meets-fundraising project</strong> in collaboration with Phuong Cach Middle School in Quoc Oai to support local children in need.</p>
+        <p>Planned and directly coordinated the sale of <strong>student-created artworks</strong> as a fundraising initiative — turning the act of creating into the act of giving.</p>
+        <p>Accompanied students throughout the project to nurture <strong>creative thinking, teamwork skills, and a spirit of community giving</strong>. The project demonstrated how education can be a vehicle for both personal growth and social impact.</p>`,
+      stats: [
+        { num: 'Co-', lbl: 'Founded' },
+        { num: '3 mo.', lbl: 'Duration' },
+        { num: 'Quoc Oai', lbl: 'Location' }
+      ],
+      tags: ['Fundraising', 'Community Giving', 'Student Empowerment', 'Co-Founder']
+    },
+    {
+      icon: '📚',
+      thumb: 'images/VNU.JPG',
+      gallery: [
+        'images/volunteer/vnu-students-1.jpg',
+        'images/volunteer/vnu-students-2.jpg',
+        'images/volunteer/vnu-students-3.jpg'
+      ],
+      number: '03',
+      title: 'Project "Learning with VNU Students"',
+      role: 'Head of Academic Content · Mar — Jun 2023',
+      shortDesc: 'Built and delivered online learning content for Grade 12 students preparing for university entrance exams via private group platform.',
+      meta: 'HEAD OF ACADEMIC CONTENT · 2023',
+      subtitle: 'Supporting Grade 12 students through exam preparation',
+      fullDesc: `<p>Developed and delivered online learning content for <strong>Grade 12 students</strong> via a private group platform, ensuring accuracy and alignment with the current national curriculum.</p>
+        <p>Collaborated with the Design team to produce <strong>professional and visually engaging educational media</strong> that resonated with high school learners preparing for university entrance examinations.</p>
+        <p>Supported students directly with subject queries, study method guidance, and exam preparation mentoring — providing the kind of personalized academic support that mass-market courses often miss.</p>`,
+      stats: [
+        { num: 'G12', lbl: 'Target' },
+        { num: '4 mo.', lbl: 'Duration' },
+        { num: 'Online', lbl: 'Format' }
+      ],
+      tags: ['Academic Content', 'High School', 'Online Learning', 'Mentorship']
+    }
+  ];
+
+  // ─── AWARDS & ACHIEVEMENTS ─────────────────────────────────
+  const awards = [
+    {
+      icon: '🌏',
+      thumb: 'images/awards/intl-research-thumb.jpg',
+      gallery: [
+        'images/awards/intl-research-cert.jpg',
+        'images/awards/intl-research-1.jpg',
+        'images/awards/intl-research-2.jpg'
+      ],
+      title: 'Outstanding Research Award',
+      sub: 'INTERNATIONAL · 2025',
+      meta: 'INTERNATIONAL FORUM',
+      fullTitle: 'Outstanding Research Award — International Student Science Forum 2025',
+      desc: '<p>Recognized for outstanding research contribution at the <strong>International Student Science Forum 2025</strong> — an annual gathering bringing together emerging researchers from across Asia.</p><p>The award acknowledges rigorous methodology, original insight, and meaningful contribution to the field of educational technology.</p>',
+      stats: [
+        { num: '🌏', lbl: 'International' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'Research', lbl: 'Category' }
+      ],
+      tags: ['International', 'Research', 'Recognition']
+    },
+    {
+      icon: '🥇',
+      thumb: 'images/awards/vnu-extended-thumb.jpg',
+      gallery: ['images/awards/vnu-extended-cert.jpg', 'images/awards/vnu-extended-1.jpg', 'images/awards/vnu-extended-2.jpg'],
+      title: 'First Prize — Extended Scientific Research',
+      sub: 'VNU UNIVERSITY · 2025',
+      meta: 'UNIVERSITY LEVEL',
+      fullTitle: 'First Prize — Extended Scientific Research Conference, VNU University of Education 2025',
+      desc: '<p>Awarded First Prize at the university-wide <strong>Extended Scientific Research Conference</strong> at VNU University of Education, recognizing top-tier student research in educational technology.</p><p>The conference is one of the most competitive student research events at Vietnam National University.</p>',
+      stats: [
+        { num: '1st', lbl: 'Place' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'Univ.', lbl: 'Level' }
+      ],
+      tags: ['Research', 'University', 'First Prize']
+    },
+    {
+      icon: '🏆',
+      thumb: 'images/awards/faculty-thumb.jpg',
+      gallery: ['images/awards/faculty-cert.jpg', 'images/awards/faculty-1.jpg', 'images/awards/faculty-2.jpg'],
+      title: 'First Prize — Faculty Research Conference',
+      sub: 'FACULTY LEVEL · 2025',
+      meta: 'FACULTY LEVEL',
+      fullTitle: 'First Prize — Faculty-level Scientific Research Conference 2025',
+      desc: '<p>Achieved <strong>First Prize</strong> at the Faculty-level Scientific Research Conference, recognizing excellence in research methodology, depth of analysis, and practical impact within the field of Educational Technology Management.</p>',
+      stats: [
+        { num: '1st', lbl: 'Place' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'Faculty', lbl: 'Level' }
+      ],
+      tags: ['Research', 'Faculty', 'First Prize']
+    },
+    {
+      icon: '🚀',
+      thumb: 'images/awards/startup-thumb.jpg',
+      gallery: ['images/awards/startup-cert.jpg', 'images/awards/startup-1.jpg', 'images/awards/startup-2.jpg'],
+      title: 'First Prize — Creative Startup Idea',
+      sub: 'SCIENCE & TECH · 2025–2026',
+      meta: 'STARTUP COMPETITION',
+      fullTitle: 'First Prize — "Creative Startup Idea in Science & Technology" Competition (AY 2025–2026)',
+      desc: '<p>Won <strong>First Prize</strong> at the Creative Startup Idea Competition in Science & Technology — a flagship competition supporting student-led ventures that combine technical innovation with social impact.</p><p>The award includes mentorship and incubation support, advancing the development of <strong>nextSTEM Vietnam</strong>.</p>',
+      stats: [
+        { num: '1st', lbl: 'Place' },
+        { num: "'25–'26", lbl: 'Cycle' },
+        { num: 'Startup', lbl: 'Track' }
+      ],
+      tags: ['Startup', 'Innovation', 'First Prize', 'nextSTEM']
+    },
+    {
+      icon: '💡',
+      thumb: 'images/awards/hcmc-thumb.jpg',
+      gallery: ['images/awards/hcmc-cert.jpg', 'images/awards/hcmc-1.jpg', 'images/awards/hcmc-2.jpg'],
+      title: 'Top 50 Young Creative Ideas',
+      sub: 'HCMC · 2025',
+      meta: 'CITY LEVEL',
+      fullTitle: 'Top 50 Young Creative Ideas — Ho Chi Minh City 2025',
+      desc: '<p>Selected among the <strong>Top 50 Young Creative Ideas</strong> in Ho Chi Minh City 2025 — a city-wide initiative spotlighting Vietnam\'s most promising young innovators.</p><p>The recognition reflects strength of concept, feasibility, and potential social impact.</p>',
+      stats: [
+        { num: 'Top 50', lbl: 'Rank' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'HCMC', lbl: 'City' }
+      ],
+      tags: ['Innovation', 'City Level', 'Recognition']
+    },
+    {
+      icon: '🥉',
+      thumb: 'images/awards/vnu-research-thumb.jpg',
+      gallery: ['images/awards/vnu-research-cert.jpg', 'images/awards/vnu-research-1.jpg', 'images/awards/vnu-research-2.jpg'],
+      title: 'Third Prize — VNU Student Research',
+      sub: 'VNU HANOI · 2025',
+      meta: 'NATIONAL UNIVERSITY',
+      fullTitle: 'Third Prize — Student Scientific Research Award, Vietnam National University, Hanoi',
+      desc: '<p>Awarded Third Prize at the prestigious <strong>Student Scientific Research Award</strong> at Vietnam National University, Hanoi — one of the most competitive academic research awards in Vietnam.</p><p>Evaluated on originality, methodology, and contribution to the field.</p>',
+      stats: [
+        { num: '3rd', lbl: 'Place' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'VNU', lbl: 'National' }
+      ],
+      tags: ['Research', 'National', 'VNU']
+    },
+    {
+      icon: '📺',
+      thumb: 'images/awards/vtv-thumb.jpg',
+      gallery: ['images/awards/vtv-1.jpg', 'images/awards/vtv-2.jpg', 'images/awards/vtv-3.jpg'],
+      title: 'Outstanding Student — VTV1 Feature',
+      sub: 'NATIONAL TV',
+      meta: 'NATIONAL TELEVISION',
+      fullTitle: 'Outstanding Student of the Faculty of Educational Technology — Featured on VTV1',
+      desc: '<p>Featured on <strong>VTV1</strong> — Vietnam\'s national television channel — as an Outstanding Student of the Faculty of Educational Technology.</p><p>The feature spotlights students whose academic excellence and community contribution exemplify the values of the institution.</p>',
+      stats: [
+        { num: 'VTV1', lbl: 'Channel' },
+        { num: 'Featured', lbl: 'Status' },
+        { num: 'National', lbl: 'Reach' }
+      ],
+      tags: ['Media', 'National TV', 'Recognition']
+    },
+    {
+      icon: '🤖',
+      thumb: 'images/awards/ideathon-thumb.jpg',
+      gallery: ['images/awards/ideathon-cert.jpg', 'images/awards/ideathon-1.jpg', 'images/awards/ideathon-2.jpg'],
+      title: 'Honorable Mention — Ideathon 2025',
+      sub: 'AI × LIFELONG LEARNING',
+      meta: 'AI INNOVATION',
+      fullTitle: 'Honorable Mention — Ideathon 2025: "Applying AI in Game Design for Lifelong Learning"',
+      desc: '<p>Earned Honorable Mention at <strong>Ideathon 2025</strong> for innovative work on integrating Artificial Intelligence with game-based design to support lifelong learning.</p><p>The project explored how AI-driven adaptive systems can sustain learner motivation and personalize learning trajectories.</p>',
+      stats: [
+        { num: 'HM', lbl: 'Award' },
+        { num: '2025', lbl: 'Year' },
+        { num: 'AI/Games', lbl: 'Theme' }
+      ],
+      tags: ['AI', 'Game Design', 'Lifelong Learning']
+    },
+    {
+      icon: '🌟',
+      thumb: 'images/awards/hyundai-thumb.jpg',
+      gallery: ['images/awards/hyundai-cert.jpg', 'images/awards/hyundai-1.jpg', 'images/awards/hyundai-2.jpg'],
+      title: 'Outstanding Volunteer — Hyundai Jump School',
+      sub: 'SEASON 4',
+      meta: 'COMMUNITY IMPACT',
+      fullTitle: 'Outstanding Volunteer — Hyundai Jump School Education Volunteer Program (Season 4)',
+      desc: '<p>Recognized as <strong>Outstanding Volunteer at Hyundai Jump School Season 4</strong> — a flagship CSR education program.</p><p>The award honors volunteers who designed and delivered exceptional learning experiences for underserved students across Math, Vietnamese, English, and STEM/STEAM.</p>',
+      stats: [
+        { num: 'S4', lbl: 'Season' },
+        { num: 'Top', lbl: 'Tier' },
+        { num: 'Education', lbl: 'Field' }
+      ],
+      tags: ['Volunteering', 'Community', 'Education']
+    },
+    {
+      icon: '🎖️',
+      thumb: 'images/awards/educator-thumb.jpg',
+      gallery: ['images/awards/educator-cert.jpg', 'images/awards/educator-1.jpg', 'images/awards/educator-2.jpg'],
+      title: 'Second Prize — Educator for Tomorrow',
+      sub: 'COMPETITION · 2024',
+      meta: 'EDUCATOR COMPETITION',
+      fullTitle: 'Second Prize — "Educator for Tomorrow" Competition 2024',
+      desc: '<p>Awarded Second Prize at the <strong>"Educator for Tomorrow" 2024</strong> — a national competition recognizing future educators who demonstrate innovative teaching philosophy, pedagogical creativity, and commitment to advancing education in Vietnam.</p>',
+      stats: [
+        { num: '2nd', lbl: 'Place' },
+        { num: '2024', lbl: 'Year' },
+        { num: 'National', lbl: 'Scope' }
+      ],
+      tags: ['Education', 'National', 'Competition']
+    },
+    {
+      icon: '🤝',
+      thumb: 'images/awards/yenthang-thumb.jpg',
+      gallery: ['images/awards/yenthang-cert.jpg', 'images/awards/yenthang-1.jpg', 'images/awards/yenthang-2.jpg'],
+      title: 'Certificate of Commendation',
+      sub: 'YEN THANG COMMUNITY',
+      meta: 'COMMUNITY DEVELOPMENT',
+      fullTitle: 'Certificate of Commendation — Community Development Program, Yen Thang Commune',
+      desc: '<p>Honored with a Certificate of Commendation for contributions to the <strong>Community Development Program in Yen Thang Commune</strong>.</p><p>The award recognizes sustained engagement with rural community education initiatives and meaningful impact on local students and families.</p>',
+      stats: [
+        { num: 'Cert.', lbl: 'Honor' },
+        { num: 'Yen Thang', lbl: 'Locality' },
+        { num: 'Community', lbl: 'Track' }
+      ],
+      tags: ['Community', 'Rural Development', 'Recognition']
+    }
+  ];
+
+  // ─── RENDERING ──────────────────────────────────────────────
+  function imageOrPlaceholder(src, fallback) {
+    return `<img src="${src}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="modal-gallery-placeholder" style="display:none;">${fallback}</div>`;
+  }
+
+  function previewModalImage(src, altText = '') {
+    const imageEl = document.getElementById('m-image');
+    imageEl.classList.add('full-image');
+    imageEl.innerHTML = `
+      <img src="${src}" alt="${altText}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="modal-image-content" style="display:none;">
+        <div class="modal-image-icon">🖼️</div>
+        <div class="modal-image-year">IMAGE</div>
+      </div>
+    `;
+  }
+
+  function renderProjectCard(p, idx, type) {
+    return `
+      <div class="project-card ${p.featured ? 'featured-card' : ''}" onclick="openProject('${type}', ${idx})">
+        <div class="project-thumb">
+          <img src="${p.thumb}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="project-thumb-icon" style="display:none;">${p.icon}</div>
+        </div>
+        <div class="project-content">
+          <div class="project-num">${p.number}</div>
+          <div class="project-title">${p.title}</div>
+          <div class="project-role">${p.role}</div>
+          <p class="project-desc">${p.shortDesc}</p>
+          <div class="project-tags">
+            ${p.tags.slice(0, 4).map(t => `<span class="project-tag">${t}</span>`).join('')}
+          </div>
+          <div class="project-cta">View case study →</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAchievementCard(a, idx) {
+    return `
+      <div class="ach-card" onclick="openAward(${idx})">
+        <div class="ach-meta">${a.sub}</div>
+        <div class="ach-title">${a.title}</div>
+      </div>
+    `;
+  }
+
+  document.getElementById('projects-grid').innerHTML =
+    projects.map((p, i) => renderProjectCard(p, i, 'project')).join('');
+
+  document.getElementById('volunteer-grid').innerHTML =
+    volunteers.map((v, i) => renderProjectCard(v, i, 'volunteer')).join('');
+
+  document.getElementById('ach-grid').innerHTML =
+    awards.map((a, i) => renderAchievementCard(a, i)).join('');
+
+  // ─── MODAL CONTROLS ─────────────────────────────────────────
+  function openModalWith(item, mode) {
+    const isAward = mode === 'award';
+    const isNextStem = !isAward && item.title === 'nextSTEM Vietnam';
+    document.getElementById('m-year').textContent = isAward ? item.sub : item.role.split('·')[1] || '';
+    document.getElementById('m-meta').textContent = item.meta;
+    document.getElementById('m-title').textContent = isAward ? item.fullTitle : item.title;
+    document.getElementById('m-subtitle').textContent = isAward ? '' : (item.subtitle || item.role);
+    document.getElementById('m-desc').innerHTML = isAward ? item.desc : item.fullDesc;
+
+    const statsEl = document.getElementById('m-stats');
+    statsEl.innerHTML = item.stats.map(s => `
+      <div class="modal-stat-item">
+        <div class="modal-stat-num">${s.num}</div>
+        <div class="modal-stat-lbl">${s.lbl}</div>
+      </div>
+    `).join('');
+
+    const tagsEl = document.getElementById('m-tags');
+    tagsEl.innerHTML = (item.tags || []).map(t => `<span class="modal-tag">${t}</span>`).join('');
+
+    // Hero image with fallback
+    const imageEl = document.getElementById('m-image');
+    imageEl.classList.remove('full-image');
+    const heroImg = item.thumb || (item.gallery && item.gallery[0]);
+    imageEl.innerHTML = `
+      <img src="${heroImg}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="modal-image-content" style="display:none;">
+        <div class="modal-image-icon" id="m-icon">${item.icon}</div>
+        <div class="modal-image-year" id="m-year">${isAward ? item.sub : ''}</div>
+      </div>
+    `;
+    // Force placeholder if image missing
+    setTimeout(() => {
+      const img = imageEl.querySelector('img');
+      if (img && (img.complete && img.naturalWidth === 0)) {
+        img.style.display = 'none';
+        imageEl.querySelector('.modal-image-content').style.display = 'flex';
+      }
+    }, 100);
+
+    // Gallery
+    const galleryEl = document.getElementById('m-gallery');
+    if (isNextStem && item.gallery && item.gallery.length > 0) {
+      galleryEl.style.display = 'grid';
+      galleryEl.innerHTML = item.gallery.map((src, i) => `
+        <div class="modal-gallery-item" onclick="previewModalImage('${src}', 'Gallery ${i+1}')">
+          <img src="${src}" alt="Gallery ${i+1}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="modal-gallery-placeholder" style="display:none;">IMG ${i+1}<br>Add to /${src.replace(/^\//, '')}</div>
+        </div>
+      `).join('');
+    } else {
+      galleryEl.style.display = 'none';
+      galleryEl.innerHTML = '';
+    }
+
+    document.getElementById('modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function openProject(type, idx) {
+    const item = type === 'project' ? projects[idx] : volunteers[idx];
+    openModalWith(item, 'project');
+  }
+
+  function openAward(idx) {
+    openModalWith(awards[idx], 'award');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+    document.getElementById('m-image').classList.remove('full-image');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target.id === 'modal') closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ─── ANIMATIONS ──────────────────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // 3D tilt on cards
+  document.querySelectorAll('.skill-card, .project-card, .ach-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rx = ((y - cy) / cy) * -4;
+      const ry = ((x - cx) / cx) * 4;
+      card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+</script>
+</body>
+</html>
