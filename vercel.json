@@ -1,0 +1,12 @@
+
+{
+  "version": 2,
+  "builds": [
+    { "src": "Desktop/Portfolio/portfolio/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/Desktop/Portfolio/portfolio/$1" },
+    { "src": "/", "dest": "/Desktop/Portfolio/portfolio/index.html" }
+  ],
+  "cleanUrls": true
+}
