@@ -1,0 +1,597 @@
+.page-shell {
+  min-height: 100vh;
+  padding: 8px 16px;
+}
+
+.hero-layout {
+  position: relative;
+  min-height: calc(100vh - 32px);
+  /* make hero full-bleed across viewport */
+  width: 100vw;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 36px 80px 28px;
+  border-radius: 0;
+  overflow: visible;
+  background: linear-gradient(180deg, rgba(8, 20, 16, 0.18), rgba(8, 20, 16, 0.24));
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
+  isolation: isolate;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255, 255, 255, 0.06), transparent 22%),
+    radial-gradient(circle at 14% 18%, rgba(255, 111, 31, 0.05), transparent 24%),
+    linear-gradient(180deg, rgba(12, 30, 23, 0.38), rgba(7, 17, 13, 0.18));
+  z-index: -2;
+}
+
+.hero-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 56%, rgba(62, 91, 73, 0.45), transparent 28%),
+    radial-gradient(circle at 75% 74%, rgba(255, 255, 255, 0.08), transparent 22%),
+    radial-gradient(circle at 22% 80%, rgba(255, 111, 31, 0.08), transparent 20%);
+  filter: blur(18px);
+}
+
+.topbar {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  min-height: 52px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  font-family: 'Sora', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: -0.04em;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.95;
+  text-transform: lowercase;
+}
+
+.brand-text strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.brand-text span {
+  font-size: 0.88rem;
+  color: rgba(245, 247, 243, 0.82);
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 42px;
+  font-size: 0.88rem;
+  color: rgba(245, 247, 243, 0.62);
+}
+
+.nav a {
+  position: relative;
+  padding: 6px 0;
+}
+
+.nav a:hover,
+.nav a.active {
+  color: var(--text);
+}
+
+.nav a.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  transform: translateX(-50%);
+}
+
+.contact-btn,
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #ff7b2b, #ff6d14);
+  color: white;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 16px 26px rgba(255, 109, 20, 0.24);
+}
+
+.contact-btn {
+  min-width: 126px;
+}
+
+.primary-btn {
+  min-width: 136px;
+}
+
+.hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* widen the visual column so image can be larger */
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.8fr) 260px;
+  align-items: start;
+  gap: 24px;
+  margin-top: 18px;
+  min-height: calc(100vh - 250px);
+}
+
+.hero-copy {
+  align-self: center;
+  padding-top: 24px;
+  max-width: 600px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  letter-spacing: 0.42em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #df2f2b;
+}
+
+.hero-copy h1 {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(3rem, 4.8vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+  max-width: 620px;
+}
+
+.hero-copy h1 span {
+  color: var(--accent);
+}
+
+.hero-description {
+  max-width: 470px;
+  margin: 28px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.hero-actions {
+  margin-top: 22px;
+}
+
+.hero-visual {
+  position: relative;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* reduce overlap with lower cards */
+  margin-top: -60px;
+  overflow: visible;
+}
+
+.image-glow {
+  position: absolute;
+  inset: auto 4% 8% 4%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 60%);
+  filter: blur(40px);
+  z-index: -1;
+}
+
+.horse-image {
+  /* position the image absolutely so it doesn't push or cover content */
+  position: absolute;
+  right: 6%;
+  top: 0;
+  width: 40vw;
+  max-width: 480px;
+  height: auto;
+  object-fit: contain;
+  object-position: right top;
+  transform: translateY(6vh);
+  filter: drop-shadow(0 34px 45px rgba(0, 0, 0, 0.45));
+  z-index: 0; /* sit behind the main content */
+  pointer-events: none;
+}
+
+.hero-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 500px;
+  padding-top: 14px;
+}
+
+/* Ensure text and cards render above the hero image */
+.hero-copy,
+.stats-row,
+.topbar,
+.hero-rail {
+  position: relative;
+  z-index: 2;
+}
+
+.trainer-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 22, 17, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.trainer-card::before {
+  content: '';
+  position: absolute;
+  inset: 16px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trainer-avatar-stack {
+  position: relative;
+  width: 110px;
+  height: 74px;
+  margin-bottom: 22px;
+}
+
+.trainer-avatar {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.28);
+}
+
+.avatar-1 {
+  left: 6px;
+  top: 18px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+    linear-gradient(135deg, #6e5a45, #c89a69);
+}
+
+.avatar-2 {
+  left: 30px;
+  top: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+    linear-gradient(135deg, #435c52, #8da08f);
+}
+
+.avatar-3 {
+  left: 52px;
+  top: 18px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+    linear-gradient(135deg, #5f4f65, #b07d93);
+}
+
+.trainer-count {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(2.5rem, 3vw, 4rem);
+  line-height: 1;
+}
+
+.trainer-label {
+  margin-top: 8px;
+  color: rgba(245, 247, 243, 0.56);
+  font-size: 0.92rem;
+}
+
+.explore-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 40px;
+}
+
+.rail-line {
+  position: relative;
+  width: 1px;
+  height: 84px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.rail-dot {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.explore-copy {
+  color: rgba(245, 247, 243, 0.82);
+  font-size: 0.95rem;
+}
+
+.play-btn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 0.85rem;
+  box-shadow: 0 12px 22px rgba(255, 111, 31, 0.35);
+}
+
+.stats-row {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1.02fr 1fr;
+  align-items: end;
+  gap: 16px;
+  margin-top: -40px;
+}
+
+.stat-card {
+  min-height: 175px;
+  border-radius: 18px;
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.stat-card.left,
+.stat-card.right {
+  background: rgba(12, 25, 20, 0.48);
+}
+
+.stat-card.center {
+  min-height: 198px;
+  background: linear-gradient(180deg, #f7fbff 0%, #d9dde2 100%);
+  color: #11161a;
+  border: 0;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.18);
+}
+
+.stat-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2.6rem;
+  margin-bottom: auto;
+}
+
+.stat-card.left .stat-badge {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stat-card.right .stat-badge {
+  background: transparent;
+  color: var(--accent);
+  font-family: 'Sora', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 32px;
+}
+
+.stat-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.stat-card.center .stat-value {
+  font-size: 2.1rem;
+}
+
+.stat-label {
+  margin-top: 10px;
+  max-width: 240px;
+  color: inherit;
+  opacity: 0.72;
+  line-height: 1.4;
+}
+
+.center-copy {
+  max-width: 260px;
+  margin: 24px auto 16px;
+  color: #11161a;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.45rem;
+  line-height: 1.35;
+}
+
+.center-cta {
+  width: 92px;
+  height: 18px;
+  border-radius: 999px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #ffffff, #d1d7dd);
+}
+
+@media (max-width: 1280px) {
+  .hero-layout {
+    padding: 18px 22px 22px;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(280px, 0.88fr) minmax(360px, 1fr);
+  }
+
+  .hero-rail {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-self: end;
+  }
+
+  .stats-row {
+    margin-top: -14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topbar {
+    grid-template-columns: auto 1fr;
+  }
+
+  .nav,
+  .contact-btn {
+    display: none;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .hero-copy {
+    padding-top: 20px;
+    max-width: 720px;
+  }
+
+  .hero-visual {
+    min-height: 500px;
+    margin-top: -200px;
+  }
+
+  .horse-image {
+    width: min(80%, 640px);
+  }
+
+  .hero-rail {
+    grid-column: auto;
+    grid-row: auto;
+    flex-direction: row;
+    min-height: auto;
+    padding-top: 0;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .trainer-card {
+    width: 180px;
+    height: 180px;
+    flex: none;
+  }
+
+  .explore-rail {
+    padding-bottom: 0;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+    margin-top: -28px;
+  }
+
+  .stat-card,
+  .stat-card.center {
+    min-height: 170px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding: 10px;
+  }
+
+  .hero-layout {
+    min-height: calc(100vh - 20px);
+    padding: 14px 14px 18px;
+    border-radius: 22px;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+
+  .brand-mark {
+    font-size: 1.65rem;
+  }
+
+  .brand-text strong,
+  .brand-text span {
+    font-size: 0.8rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.9rem, 14vw, 4.2rem);
+  }
+
+  .hero-description {
+    margin-top: 20px;
+    font-size: 0.94rem;
+  }
+
+  .hero-visual {
+    min-height: 390px;
+  }
+
+  .hero-rail {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  .trainer-card {
+    width: 100%;
+    height: 200px;
+  }
+
+  .explore-rail {
+    align-items: center;
+  }
+
+  .stats-row {
+    gap: 12px;
+  }
+
+  .stat-card {
+    min-height: 160px;
+  }
+
+  .center-copy {
+    font-size: 1.2rem;
+  }
+}
