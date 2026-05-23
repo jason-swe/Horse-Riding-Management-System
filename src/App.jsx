@@ -1,10 +1,26 @@
-import './App.css';
+import "./App.css";
+import horseImage from "./img/img_horse03.png";
 
-const navItems = ['Home', 'Horses', 'Lessons', 'Ownership', 'Training'];
+const navItems = ["Home", "Horses", "Lessons", "Ownership", "Training"];
 
 const stats = [
-  { value: '100%', label: 'Satisfied Riders', tone: 'left', badge: '😊' },
-  { value: '15+', label: 'Years we have been giving', tone: 'right', badge: '15+' },
+  { value: "100%", label: "Satisfied Riders", tone: "left", badge: "😊" },
+  {
+    value: "15+",
+    label: "Years we have been giving",
+    tone: "right",
+    badge: "15+",
+  },
+];
+
+const horseFacts = [
+  { label: "Warmblood", position: "fact-left fact-top" },
+  { label: "Flexible Back", position: "fact-center fact-top" },
+  { label: "17hh", position: "fact-right fact-top" },
+  { label: "15 years", position: "fact-left fact-mid" },
+  { label: "Efficient Heart", position: "fact-right fact-mid" },
+  { label: "58 mph", position: "fact-center fact-bottom" },
+  { label: "455 lb", position: "fact-right fact-bottom" },
 ];
 
 function App() {
@@ -24,7 +40,11 @@ function App() {
 
           <nav className="nav" aria-label="Primary">
             {navItems.map((item, index) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className={index === 0 ? 'active' : ''}>
+              <a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                className={index === 0 ? "active" : ""}
+              >
                 {item}
               </a>
             ))}
@@ -43,8 +63,9 @@ function App() {
               Improve Your <span>Riding</span> Skill With Us
             </h1>
             <p className="hero-description">
-              Explore our website for comprehensive horse riding training, offering expert tips,
-              techniques, and resources to help riders of all skill levels succeed.
+              Explore our website for comprehensive horse riding training,
+              offering expert tips, techniques, and resources to help riders of
+              all skill levels succeed.
             </p>
             <div className="hero-actions">
               <a className="primary-btn" href="#join">
@@ -56,7 +77,11 @@ function App() {
 
           <div className="hero-visual" aria-label="Horse riding hero image">
             <div className="image-glow" aria-hidden="true" />
-            <img src="/images/horse-riding.png" alt="Horse rider in motion" className="horse-image" />
+            <img
+              src="/images/horse-riding.png"
+              alt="Horse rider in motion"
+              className="horse-image"
+            />
           </div>
 
           <aside className="hero-rail" aria-label="Club stats and explore more">
@@ -75,7 +100,11 @@ function App() {
                 <span className="rail-dot" />
               </div>
               <div className="explore-copy">Explore More</div>
-              <button className="play-btn" type="button" aria-label="Explore more">
+              <button
+                className="play-btn"
+                type="button"
+                aria-label="Explore more"
+              >
                 ▶
               </button>
             </div>
@@ -94,10 +123,44 @@ function App() {
           ))}
 
           <article className="stat-card center">
-            <div className="center-copy">Improve Your Riding Skill Through Training With Us.</div>
+            <div className="center-copy">
+              Improve Your Riding Skill Through Training With Us.
+            </div>
             <div className="center-cta" aria-hidden="true" />
           </article>
         </div>
+
+        <section
+          className="horse-details"
+          id="horses"
+          aria-labelledby="horse-details-title"
+        >
+          <div className="horse-details__header">
+            <p className="horse-details__eyebrow">HORSE PROFILE</p>
+            <h2 id="horse-details-title">Racing Horse Details</h2>
+          </div>
+
+          <div className="horse-details__stage">
+            <div className="horse-details__watermark" aria-hidden="true">
+              HORSE
+            </div>
+
+            <div className="horse-details__frame">
+              <img
+                src={horseImage}
+                alt="Racing horse profile"
+                className="horse-details__image"
+              />
+
+              {horseFacts.map((fact) => (
+                <div key={fact.label} className={`horse-fact ${fact.position}`}>
+                  <span className="horse-fact__connector" aria-hidden="true" />
+                  <span className="horse-fact__label">{fact.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </section>
     </main>
   );
