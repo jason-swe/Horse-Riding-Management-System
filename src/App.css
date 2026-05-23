@@ -15,7 +15,11 @@
   padding: 36px 80px 28px;
   border-radius: 0;
   overflow: visible;
-  background: linear-gradient(180deg, rgba(8, 20, 16, 0.18), rgba(8, 20, 16, 0.24));
+  background: linear-gradient(
+    180deg,
+    rgba(8, 20, 16, 0.18),
+    rgba(8, 20, 16, 0.24)
+  );
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
   isolation: isolate;
 }
@@ -24,20 +28,36 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 32%, rgba(255, 255, 255, 0.06), transparent 22%),
-    radial-gradient(circle at 14% 18%, rgba(255, 111, 31, 0.05), transparent 24%),
+    radial-gradient(
+      circle at 50% 32%,
+      rgba(255, 255, 255, 0.06),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 14% 18%,
+      rgba(255, 111, 31, 0.05),
+      transparent 24%
+    ),
     linear-gradient(180deg, rgba(12, 30, 23, 0.38), rgba(7, 17, 13, 0.18));
   z-index: -2;
 }
 
 .hero-background::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background:
     radial-gradient(circle at 50% 56%, rgba(62, 91, 73, 0.45), transparent 28%),
-    radial-gradient(circle at 75% 74%, rgba(255, 255, 255, 0.08), transparent 22%),
-    radial-gradient(circle at 22% 80%, rgba(255, 111, 31, 0.08), transparent 20%);
+    radial-gradient(
+      circle at 75% 74%,
+      rgba(255, 255, 255, 0.08),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 22% 80%,
+      rgba(255, 111, 31, 0.08),
+      transparent 20%
+    );
   filter: blur(18px);
 }
 
@@ -58,7 +78,7 @@
 }
 
 .brand-mark {
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
@@ -102,7 +122,7 @@
 }
 
 .nav a.active::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   bottom: 0;
@@ -165,7 +185,7 @@
 
 .hero-copy h1 {
   margin: 0;
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: clamp(3rem, 4.8vw, 5rem);
   line-height: 0.96;
   letter-spacing: -0.06em;
@@ -204,7 +224,11 @@
   position: absolute;
   inset: auto 4% 8% 4%;
   height: 60%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 60%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.15),
+    transparent 60%
+  );
   filter: blur(40px);
   z-index: -1;
 }
@@ -258,7 +282,7 @@
 }
 
 .trainer-card::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 16px;
   border-radius: inherit;
@@ -284,26 +308,41 @@
 .avatar-1 {
   left: 6px;
   top: 18px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.5),
+      transparent 32%
+    ),
     linear-gradient(135deg, #6e5a45, #c89a69);
 }
 
 .avatar-2 {
   left: 30px;
   top: 0;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.5),
+      transparent 32%
+    ),
     linear-gradient(135deg, #435c52, #8da08f);
 }
 
 .avatar-3 {
   left: 52px;
   top: 18px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 32%),
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.5),
+      transparent 32%
+    ),
     linear-gradient(135deg, #5f4f65, #b07d93);
 }
 
 .trainer-count {
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: clamp(2.5rem, 3vw, 4rem);
   line-height: 1;
 }
@@ -366,6 +405,261 @@
   margin-top: -40px;
 }
 
+.horse-details {
+  position: relative;
+  margin: 42px -80px 0;
+  padding: 96px 80px 112px;
+  background: linear-gradient(180deg, #f6f8f2 0%, #edf0ea 100%);
+  color: #10161b;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.horse-details::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 70px;
+  background: #f6f8f2;
+  clip-path: polygon(
+    0 54%,
+    3% 64%,
+    6% 42%,
+    9% 70%,
+    12% 48%,
+    15% 68%,
+    18% 36%,
+    21% 62%,
+    24% 44%,
+    27% 72%,
+    30% 40%,
+    33% 66%,
+    36% 46%,
+    39% 74%,
+    42% 38%,
+    45% 64%,
+    48% 40%,
+    51% 68%,
+    54% 34%,
+    57% 58%,
+    60% 42%,
+    63% 66%,
+    66% 36%,
+    69% 64%,
+    72% 38%,
+    75% 70%,
+    78% 44%,
+    81% 64%,
+    84% 40%,
+    87% 70%,
+    90% 46%,
+    93% 64%,
+    96% 42%,
+    100% 58%,
+    100% 100%,
+    0 100%
+  );
+  z-index: 0;
+}
+
+.horse-details__header {
+  position: relative;
+  z-index: 2;
+  max-width: 360px;
+  margin-bottom: 22px;
+}
+
+.horse-details__eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent);
+  letter-spacing: 0.34em;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.horse-details__header h2 {
+  margin: 0;
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.25rem, 3.8vw, 3.9rem);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  color: #12181d;
+}
+
+.horse-details__stage {
+  position: relative;
+  z-index: 2;
+  min-height: 640px;
+}
+
+.horse-details__watermark {
+  position: absolute;
+  left: 3%;
+  bottom: 30px;
+  z-index: 1;
+  color: rgba(16, 22, 27, 0.08);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(5rem, 14vw, 11rem);
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  line-height: 0.8;
+  pointer-events: none;
+  user-select: none;
+}
+
+.horse-details__frame {
+  position: relative;
+  min-height: 640px;
+  display: grid;
+  place-items: center;
+}
+
+.horse-details__image {
+  position: relative;
+  z-index: 2;
+  width: min(66vw, 760px);
+  max-height: 600px;
+  object-fit: contain;
+  filter: drop-shadow(0 26px 42px rgba(78, 52, 24, 0.24));
+}
+
+.horse-fact {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.horse-fact__label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(233, 149, 84, 0.62);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #6e4d39;
+  box-shadow: 0 10px 18px rgba(55, 36, 19, 0.08);
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.horse-fact__connector {
+  width: 72px;
+  height: 1px;
+  background: rgba(169, 137, 104, 0.4);
+  position: relative;
+}
+
+.horse-fact__connector::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: #f6f8f2;
+  border: 1px solid rgba(169, 137, 104, 0.8);
+}
+
+.fact-left {
+  left: 2%;
+}
+
+.fact-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.fact-right {
+  right: 2%;
+}
+
+.fact-top {
+  top: 80px;
+}
+
+.fact-mid {
+  top: 295px;
+}
+
+.fact-bottom {
+  bottom: 108px;
+}
+
+.fact-right.fact-top,
+.fact-right.fact-mid,
+.fact-right.fact-bottom {
+  flex-direction: row-reverse;
+}
+
+.fact-right.fact-top .horse-fact__connector::after,
+.fact-right.fact-mid .horse-fact__connector::after,
+.fact-right.fact-bottom .horse-fact__connector::after {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.fact-right.fact-top .horse-fact__connector,
+.fact-right.fact-mid .horse-fact__connector,
+.fact-right.fact-bottom .horse-fact__connector {
+  order: 1;
+}
+
+.fact-center.fact-top,
+.fact-center.fact-bottom {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fact-center.fact-top .horse-fact__connector,
+.fact-center.fact-bottom .horse-fact__connector {
+  width: 1px;
+  height: 48px;
+}
+
+.fact-center.fact-top .horse-fact__connector::after,
+.fact-center.fact-bottom .horse-fact__connector::after {
+  inset-inline-start: 50%;
+  inset-inline-end: auto;
+  top: auto;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.fact-left.fact-mid {
+  top: 360px;
+}
+
+.fact-right.fact-mid {
+  top: 372px;
+}
+
+.fact-right.fact-bottom {
+  bottom: 86px;
+}
+
+.fact-center.fact-bottom {
+  bottom: 48px;
+}
+
+.horse-details__frame::before {
+  content: "";
+  position: absolute;
+  inset: auto 8% 54px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(118, 89, 57, 0.18),
+    transparent
+  );
+}
+
 .stat-card {
   min-height: 175px;
   border-radius: 18px;
@@ -409,14 +703,14 @@
 .stat-card.right .stat-badge {
   background: transparent;
   color: var(--accent);
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: 3rem;
   font-weight: 800;
   margin-bottom: 32px;
 }
 
 .stat-value {
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: 2.5rem;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -438,7 +732,7 @@
   max-width: 260px;
   margin: 24px auto 16px;
   color: #11161a;
-  font-family: 'Sora', sans-serif;
+  font-family: "Sora", sans-serif;
   font-size: 1.45rem;
   line-height: 1.35;
 }
@@ -468,6 +762,21 @@
 
   .stats-row {
     margin-top: -14px;
+  }
+
+  .horse-details {
+    margin-left: -22px;
+    margin-right: -22px;
+    padding: 88px 22px 102px;
+  }
+
+  .horse-details__stage,
+  .horse-details__frame {
+    min-height: 600px;
+  }
+
+  .horse-details__image {
+    width: min(74vw, 700px);
   }
 }
 
@@ -528,6 +837,50 @@
   .stat-card,
   .stat-card.center {
     min-height: 170px;
+  }
+
+  .horse-details {
+    padding: 72px 18px 90px;
+  }
+
+  .horse-details__stage,
+  .horse-details__frame {
+    min-height: 720px;
+  }
+
+  .horse-details__watermark {
+    left: 50%;
+    bottom: 160px;
+    transform: translateX(-50%);
+    font-size: clamp(4.2rem, 22vw, 7rem);
+    text-align: center;
+  }
+
+  .horse-details__image {
+    width: min(86vw, 640px);
+    max-height: 500px;
+  }
+
+  .horse-fact {
+    position: static;
+    transform: none;
+    margin: 0;
+  }
+
+  .horse-details__frame {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 16px;
+    padding-top: 24px;
+  }
+
+  .horse-details__frame::before {
+    display: none;
+  }
+
+  .horse-fact__connector {
+    width: 46px;
   }
 }
 
@@ -593,5 +946,51 @@
 
   .center-copy {
     font-size: 1.2rem;
+  }
+
+  .horse-details {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding: 64px 14px 78px;
+  }
+
+  .horse-details__header {
+    margin-bottom: 8px;
+  }
+
+  .horse-details__header h2 {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .horse-details__stage,
+  .horse-details__frame {
+    min-height: 0;
+  }
+
+  .horse-details__image {
+    width: min(92vw, 520px);
+    max-height: 380px;
+  }
+
+  .horse-details__watermark {
+    bottom: 124px;
+  }
+
+  .horse-details__frame {
+    padding-top: 10px;
+  }
+
+  .horse-fact {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .horse-fact__connector {
+    width: 32px;
+  }
+
+  .horse-fact__label {
+    font-size: 0.82rem;
+    padding: 0 12px;
   }
 }
