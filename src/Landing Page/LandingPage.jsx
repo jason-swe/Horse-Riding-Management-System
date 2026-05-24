@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "../App.css";
 import horseImage from "../img/img_horse03.png";
 import testi1 from "../assets/testi1.svg";
@@ -30,34 +31,34 @@ const stats = [
 const testimonials = [
   {
     id: 1,
-    name: "Elina Lee",
-    role: "Rider",
+    name: "Nhan DT35",
+    role: "Horse Owner",
     text:
-      "Exceptional training, supportive environment — my riding skills and confidence have greatly improved.",
+      "Managing horse registration, jockey assignment, and race confirmation is much easier with the tournament dashboard.",
     stars: 5,
     image: testi1,
   },
   {
     id: 2,
-    name: "Maya Tran",
-    role: "Rider",
-    text: "Great instructors and a friendly community. I learned so much quickly.",
+    name: "Nhan DT35",
+    role: "Jockey",
+    text: "I can quickly review my assigned races, horse details, and results from one screen.",
     stars: 5,
     image: testi2,
   },
   {
     id: 3,
-    name: "Rita Tran",
-    role: "Rider",
-    text: "Friendly staff and great lessons — highly recommended for beginners.",
+    name: "Nhan DT35",
+    role: "Race Referee",
+    text: "The race confirmation, violation tracking, and result approval flow stays clear and organized.",
     stars: 5,
     image: testi3,
   },
   {
     id: 4,
-    name: "Sam Park",
-    role: "Rider",
-    text: "Well-structured classes, patient trainers, and a clean facility.",
+    name: "Nhan DT35",
+    role: "Spectator",
+    text: "I can follow the live rankings and predictions without losing track of the tournament progress.",
     stars: 4,
     image: testi1,
   },
@@ -89,13 +90,13 @@ function LandingPage() {
         <div className="hero-background" aria-hidden="true" />
 
         <header className="topbar">
-          <a className="brand" href="#home" aria-label="Horse riding home">
+          <Link className="brand" to="/" aria-label="Horse racing home">
             <span className="brand-mark">HR</span>
             <span className="brand-text">
               <strong>horse</strong>
-              <span>riding</span>
+              <span>racing</span>
             </span>
-          </a>
+          </Link>
 
           <nav className="nav" aria-label="Primary">
             {navItems.map((item, index) => (
@@ -110,62 +111,60 @@ function LandingPage() {
           </nav>
 
           <div className="header-actions">
-            <a className="signup-btn" href="#signup">Sign Up</a>
-            <a className="contact-btn" href="#login">
+            <Link className="signup-btn" to="/signup">Sign Up</Link>
+            <Link className="contact-btn" to="/login">
               Login
               <span aria-hidden="true">↗</span>
-            </a>
+            </Link>
           </div>
         </header>
 
         <div className="hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow">RIDING</p>
+            <p className="eyebrow">HORSE RACING</p>
             <h1>
-              Improve Your <span>Riding</span> Skill With Us
+              Manage Your <span>Horse Racing</span> Tournament
             </h1>
             <p className="hero-description">
-              Explore our website for comprehensive horse riding training,
-              offering expert tips, techniques, and resources to help riders of
-              all skill levels succeed.
+              Manage registrations, race schedules, race results, rankings, and prediction features for horse owners, jockeys, referees, spectators, and admins.
             </p>
             <div className="hero-actions">
               <a className="primary-btn" href="#join">
-                Join Our Club
+                Explore Tournament
                 <span aria-hidden="true">↗</span>
               </a>
             </div>
           </div>
 
-          <div className="hero-visual" aria-label="Horse riding hero image">
+          <div className="hero-visual" aria-label="Horse racing management hero image">
             <div className="image-glow" aria-hidden="true" />
             <img
               src="/images/horse-riding.png"
-              alt="Horse rider in motion"
+              alt="Horse racing visual"
               className="horse-image"
             />
           </div>
 
-          <aside className="hero-rail" aria-label="Club stats and explore more">
+          <aside className="hero-rail" aria-label="Tournament roles and explore more">
             <div className="trainer-card">
               <div className="trainer-avatar-stack" aria-hidden="true">
                 <div className="trainer-avatar avatar-1" />
                 <div className="trainer-avatar avatar-2" />
                 <div className="trainer-avatar avatar-3" />
               </div>
-              <div className="trainer-count">20+</div>
-              <div className="trainer-label">Trainer</div>
+              <div className="trainer-count">5+</div>
+              <div className="trainer-label">Roles</div>
             </div>
 
             <div className="explore-rail">
               <div className="rail-line" aria-hidden="true">
                 <span className="rail-dot" />
               </div>
-              <div className="explore-copy">Explore More</div>
+              <div className="explore-copy">Explore Modules</div>
               <button
                 className="play-btn"
                 type="button"
-                aria-label="Explore more"
+                aria-label="Explore modules"
               >
                 ▶
               </button>
@@ -186,7 +185,7 @@ function LandingPage() {
 
           <article className="stat-card center">
             <div className="center-copy">
-              Improve Your Riding Skill Through Training With Us.
+              Track registrations, race schedules, results, rankings, and predictions in one system.
             </div>
             <div className="center-cta" aria-hidden="true" />
           </article>
@@ -198,13 +197,13 @@ function LandingPage() {
           aria-labelledby="horse-details-title"
         >
           <div className="horse-details__header">
-            <p className="horse-details__eyebrow">HORSE PROFILE</p>
-            <h2 id="horse-details-title">Racing Horse Details</h2>
+            <p className="horse-details__eyebrow">RACE PROFILE</p>
+            <h2 id="horse-details-title">Horse Racing Details</h2>
           </div>
 
           <div className="horse-details__stage">
             <div className="horse-details__watermark" aria-hidden="true">
-              HORSE
+              RACE
             </div>
 
             <div className="horse-details__frame">
@@ -226,7 +225,7 @@ function LandingPage() {
 
         <section className="testimonials" aria-label="Riders testimonials">
           <div className="testimonials__header">
-            <h3 className="testimonials__title">What's Riders Are Saying</h3>
+            <h3 className="testimonials__title">What Participants Are Saying</h3>
             <div className="testimonials__controls" />
           </div>
 
@@ -302,10 +301,10 @@ function LandingPage() {
               <span className="brand-mark">HR</span>
               <span className="brand-text">
                 <strong>horse</strong>
-                <span>riding</span>
+                <span>racing</span>
               </span>
             </a>
-            <p className="footer-copy">Providing expert riding lessons, horse care, and community events since 2010.</p>
+            <p className="footer-copy">Providing race registrations, schedules, results, rankings, and prediction tools since 2010.</p>
           </div>
 
           <nav className="footer-links" aria-label="Footer navigation">
@@ -320,16 +319,16 @@ function LandingPage() {
           <div className="footer-contact">
             <h4>Contact</h4>
             <address>
-              123 Stable Lane<br />
-              Countryside, CA 90210
+              123 Race Circuit<br />
+              Grandstand District, CA 90210
             </address>
-            <a href="mailto:info@horseriding.example">info@horseriding.example</a>
+            <a href="mailto:info@horseracing.example">info@horseracing.example</a>
             <a href="tel:+1234567890">+1 (234) 567-890</a>
           </div>
 
           <div className="footer-newsletter">
             <h4>Join our newsletter</h4>
-            <p>Get news on lessons, events and special offers.</p>
+            <p>Get updates on race schedules, results, rankings, and tournament announcements.</p>
             <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
               <input className="newsletter-input" type="email" placeholder="Email address" aria-label="Email address" />
               <button className="newsletter-btn" type="submit">Subscribe</button>
@@ -338,7 +337,7 @@ function LandingPage() {
         </div>
 
         <div className="site-footer__bottom">
-          <div className="footer-copyright">© {year} Horse Riding. All rights reserved.</div>
+          <div className="footer-copyright">© {year} Horse Racing Tournament Management System. All rights reserved.</div>
           <div className="footer-social" aria-hidden="false">
             <a href="#" aria-label="Facebook" className="social-link">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07C2 17.09 5.66 21.2 10.44 21.95v-6.94H8.08v-2.9h2.36V9.41c0-2.33 1.39-3.62 3.52-3.62 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.16 0-1.52.72-1.52 1.46v1.76h2.59l-.41 2.9h-2.18v6.94C18.34 21.2 22 17.09 22 12.07z" fill="currentColor"/></svg>

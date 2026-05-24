@@ -3,44 +3,44 @@
 const testimonials = [
   {
     id: 1,
-    name: 'Elina Lee',
-    role: 'Rider',
+    name: 'Nhan DT35',
+    role: 'Horse Owner',
     stars: 5,
-    text: 'Exceptional training, supportive environment — my riding skills and confidence have greatly improved.',
+    text: 'Managing horse registration, jockey assignment, and race confirmation is much easier with the tournament dashboard.',
     // simple SVG avatar as data URL
-    img: makeAvatarSVG('EL','#e6f7ff','#6e4d39')
+    img: makeAvatarSVG('HO','#e6f7ff','#6e4d39')
   },
   {
     id: 2,
-    name: 'Maya Tran',
-    role: 'Rider',
+    name: 'Nhan DT35',
+    role: 'Jockey',
     stars: 5,
-    text: 'Great instructors and friendly community, learned a lot quickly.',
-    img: makeAvatarSVG('MT','#fff0e6','#6e4d39')
+    text: 'I can quickly review my assigned races, horse details, and results from one screen.',
+    img: makeAvatarSVG('JY','#fff0e6','#6e4d39')
   },
   {
     id: 3,
-    name: 'Rita Tran',
-    role: 'Rider',
+    name: 'Nhan DT35',
+    role: 'Race Referee',
     stars: 5,
-    text: 'Friendly staff and great lessons — highly recommend.',
-    img: makeAvatarSVG('RT','#f0fff0','#6e4d39')
+    text: 'The race confirmation, violation tracking, and result approval flow stays clear and organized.',
+    img: makeAvatarSVG('RF','#f0fff0','#6e4d39')
   },
   {
     id: 4,
-    name: 'Sam Park',
-    role: 'Rider',
+    name: 'Nhan DT35',
+    role: 'Spectator',
     stars: 4,
-    text: 'Well-structured classes and patient trainers.',
+    text: 'I can follow the live rankings and predictions without losing track of the tournament progress.',
     img: makeAvatarSVG('SP','#f6f1ff','#6e4d39')
   },
   {
     id: 5,
-    name: 'Tina Le',
-    role: 'Rider',
+    name: 'Nhan DT35',
+    role: 'Admin',
     stars: 5,
-    text: 'A wonderful place to improve quickly.',
-    img: makeAvatarSVG('TL','#fff7e6','#6e4d39')
+    text: 'Managing accounts, schedules, rankings, and predictions in one place keeps the tournament flow organized.',
+    img: makeAvatarSVG('AD','#fff7e6','#6e4d39')
   }
 ]
 
