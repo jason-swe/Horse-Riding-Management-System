@@ -260,26 +260,6 @@
   overflow: visible;
 }
 
-/* vertical blur/fade on the right side to mask the image edge */
-.hero-visual::after {
-  content: "";
-  position: absolute;
-  /* make the overlay half the container height and anchor near the bottom */
-  height: 50%;
-
-  bottom: -19vh;
-  top: auto;
-  /* width anchored to image size (image width is 40vw), position to its right edge */
-  width: 7vw;
-  left: calc(50% + 15vw);
-  pointer-events: none;
-  z-index: 1; /* above the image (z-index:0) but below text (z-index:2) */
-  /* make overlay neutral (no tint) and rely on backdrop-filter for blur */
-  background: transparent;
-  backdrop-filter: blur(10px);
-  box-shadow: none;
-}
-
 .image-glow {
   position: absolute;
   inset: auto 4% 8% 4%;
@@ -299,12 +279,12 @@
   left: 50%;
   right: auto;
   top: 0;
-  width: 40vw;
-  max-width: 480px;
+  width: 44vw;
+  max-width: 540px;
   height: auto;
   object-fit: contain;
   object-position: center top;
-  transform: translate(-50%, 6vh);
+  transform: translate(-50%, 5vh);
   filter: drop-shadow(0 34px 45px rgba(0, 0, 0, 0.45));
   z-index: 0; /* sit behind the main content */
   pointer-events: none;
