@@ -2,55 +2,143 @@ import { Link } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 
 const summaryCards = [
-  { label: "Registered Users", value: "248", note: "Horse owners, jockeys, referees, spectators" },
-  { label: "Active Horses", value: "76", note: "Approved for upcoming races" },
-  { label: "Scheduled Races", value: "14", note: "Heats, rounds, finals" },
-  { label: "Pending Approvals", value: "21", note: "Registrations waiting for review" },
+  { label: "Registered Users", value: "248", note: "Horse owners, jockeys, referees, spectators", module: "users" },
+  { label: "Active Horses", value: "76", note: "Approved for upcoming races", module: "horses" },
+  { label: "Scheduled Races", value: "14", note: "Heats, rounds, finals", module: "schedule" },
+  { label: "Pending Approvals", value: "21", note: "Registrations waiting for review", module: "registrations" },
+  { label: "Published Results", value: "42", note: "Verified and announced to all roles", module: "results" },
+  { label: "Prize Entries", value: "12", note: "Reward logs linked to predictions", module: "predictions" },
 ];
 
-const quickFunctions = [
+const overviewPanels = [
   {
-    title: "Users & Roles",
-    items: ["Manage accounts", "Assign roles", "Suspend or activate users"],
+    eyebrow: "Users & Roles",
+    title: "Role Management",
+    module: "users",
+    items: [
+      "Manage Horse Owner, Jockey, Race Referee, Spectator, and Admin accounts.",
+      "Assign permissions by role and review user status.",
+      "Keep account records consistent across the system.",
+    ],
   },
   {
-    title: "Tournament Setup",
-    items: ["Create tournament", "Set race rounds", "Publish schedule"],
+    eyebrow: "Tournament Setup",
+    title: "Race Planning",
+    module: "tournament",
+    items: [
+      "Create tournaments, race rounds, heats, and finals.",
+      "Set venues, race order, and published time slots.",
+      "Coordinate registration deadlines and approval stages.",
+    ],
   },
   {
-    title: "Race Operations",
-    items: ["Assign referee", "Track race status", "Publish results"],
+    eyebrow: "Race Schedule",
+    title: "Race Orchestration",
+    module: "schedule",
+    items: [
+      "Build race calendar and sequence.",
+      "Assign horses, jockeys, and referees to each race.",
+      "Monitor live race state and publication status.",
+    ],
   },
   {
-    title: "Predictions & Prize",
-    items: ["Manage bets", "Review prediction logs", "Distribute prizes"],
+    eyebrow: "Registrations",
+    title: "Approval Queue",
+    module: "registrations",
+    items: [
+      "Review horse owner and jockey registrations.",
+      "Approve or reject tournament participation requests.",
+      "Track pending items and approval history.",
+    ],
+  },
+];
+
+const adminFeatureCards = [
+  {
+    title: "Registration Review",
+    eyebrow: "Approvals",
+    module: "registrations",
+    description: "Review pending registrations, approve or reject requests, and keep approval history visible.",
+    stats: [
+      { label: "Pending", value: "21" },
+      { label: "Processed today", value: "13" },
+      { label: "Flagged", value: "4" },
+    ],
+  },
+  {
+    title: "Schedule Builder",
+    eyebrow: "Planning",
+    module: "schedule",
+    description: "Create race calendar, add rounds, assign referees, and manage draft vs published states.",
+    stats: [
+      { label: "Upcoming races", value: "14" },
+      { label: "Published slots", value: "11" },
+      { label: "Draft rounds", value: "3" },
+    ],
+  },
+  {
+    title: "Result Publication",
+    eyebrow: "Race outcomes",
+    module: "results",
+    description: "Verify race result, update leaderboard, and publish official outcomes to participants.",
+    stats: [
+      { label: "Verified", value: "42" },
+      { label: "Prize claims", value: "9" },
+      { label: "Reports filed", value: "27" },
+    ],
+  },
+  {
+    title: "Prediction Control",
+    eyebrow: "Rewards",
+    module: "predictions",
+    description: "Review spectator predictions, compare outcomes, and distribute prize notifications.",
+    stats: [
+      { label: "Entries", value: "156" },
+      { label: "Winning picks", value: "38" },
+      { label: "Payouts", value: "12" },
+    ],
+  },
+];
+
+const adminOperations = [
+  {
+    title: "Create & Manage Users",
+    module: "users",
+    items: ["Create user account", "Assign role", "Review user status", "Suspend / activate account"],
+  },
+  {
+    title: "Manage Horses & Jockeys",
+    module: "horses",
+    items: ["Add horse data", "Assign jockey", "Check readiness", "Track horse-jockey pairing"],
+  },
+  {
+    title: "Manage Schedule & Tournament",
+    module: "schedule",
+    items: ["Create tournament", "Build round structure", "Set race date", "Publish calendar"],
+  },
+  {
+    title: "Manage Results & Prediction",
+    module: "results",
+    items: ["Publish result", "Check report", "Review prediction", "Track prize payout"],
   },
 ];
 
 const workflowBlocks = [
   {
     title: "Approvals Queue",
-    details:
-      "Approve horse owner registrations, jockey invitations, and referee participation before race day.",
+    module: "registrations",
+    details: "Approve horse owner registrations, jockey invitations, referee assignments, and spectator access before race day.",
   },
   {
     title: "Race Registry",
-    details:
-      "Maintain horse profiles, jockey assignments, race entries, and tournament brackets in one place.",
+    module: "horses",
+    details: "Maintain horse profiles, jockey assignments, race entries, schedules, and tournament brackets in one control panel.",
   },
   {
     title: "Reporting",
-    details:
-      "Generate referee reports, result summaries, and prediction outcome logs for the tournament record.",
+    module: "results",
+    details: "Generate referee reports, result summaries, prize logs, and prediction outcome records for the tournament history.",
   },
-];
-
-const roleMatrix = [
-  { role: "Horse Owner", action: "Register horse, assign jockey, confirm race" },
-  { role: "Jockey", action: "Accept invite, view assigned races, track performance" },
-  { role: "Race Referee", action: "Inspect horses, monitor race, confirm results" },
-  { role: "Spectator", action: "View schedule, follow results, make predictions" },
-  { role: "Admin", action: "Manage accounts, schedule races, assign roles" },
 ];
 
 function AdminDashboard() {
@@ -61,153 +149,108 @@ function AdminDashboard() {
       description="Manage users, approve registrations, organize races, assign referees, publish results, and monitor predictions from one dashboard."
       actions={(
         <>
-          <Link className="admin-header__button" to="/signup">Create user</Link>
-          <a className="admin-header__button admin-header__button--ghost" href="#schedule">View schedule</a>
+          <Link className="admin-header__button" to="/admin/users">Manage users</Link>
+          <Link className="admin-header__button admin-header__button--ghost" to="/admin/registrations">Approvals</Link>
         </>
       )}
-      activeSection="dashboard"
     >
+      {/* Key metrics */}
       <section className="admin-metrics" aria-label="Key metrics">
         {summaryCards.map((card) => (
-          <article key={card.label} className="admin-metric-card">
+          <Link key={card.label} to={`/admin/${card.module}`} className="admin-metric-card admin-metric-card--link">
             <p className="admin-metric-card__label">{card.label}</p>
             <div className="admin-metric-card__value">{card.value}</div>
             <p className="admin-metric-card__note">{card.note}</p>
+          </Link>
+        ))}
+      </section>
+
+      {/* Overview panels */}
+      <section className="admin-grid">
+        {overviewPanels.map((panel) => (
+          <article key={panel.title} className="admin-panel">
+            <div className="admin-panel__header">
+              <p className="admin-panel__eyebrow">{panel.eyebrow}</p>
+              <h2>{panel.title}</h2>
+            </div>
+            <ul className="admin-list">
+              {panel.items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+            <div>
+              <Link className="admin-header__button admin-header__button--ghost admin-panel__cta" to={`/admin/${panel.module}`}>
+                Go to {panel.eyebrow} →
+              </Link>
+            </div>
           </article>
         ))}
       </section>
 
-      <section className="admin-grid">
-        <article className="admin-panel" id="users">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Users & Roles</p>
-            <h2>Role Management</h2>
-          </div>
-          <ul className="admin-list">
-            <li>Manage Horse Owner, Jockey, Race Referee, Spectator, and Admin accounts.</li>
-            <li>Assign permissions by role and review user status.</li>
-            <li>Keep account records consistent across the system.</li>
-          </ul>
-        </article>
-
-        <article className="admin-panel" id="tournament">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Tournament Setup</p>
-            <h2>Race Planning</h2>
-          </div>
-          <ul className="admin-list">
-            <li>Create tournaments, race rounds, heats, and finals.</li>
-            <li>Set venues, race order, and published time slots.</li>
-            <li>Coordinate registration deadlines and approval stages.</li>
-          </ul>
-        </article>
-
-        <article className="admin-panel" id="schedule">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Race Schedule</p>
-            <h2>Race Orchestration</h2>
-          </div>
-          <ul className="admin-list">
-            <li>Build race calendar and sequence.</li>
-            <li>Assign horses, jockeys, and referees to each race.</li>
-            <li>Monitor live race state and publication status.</li>
-          </ul>
-        </article>
-
-        <article className="admin-panel" id="registrations">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Registrations</p>
-            <h2>Approval Queue</h2>
-          </div>
-          <ul className="admin-list">
-            <li>Review horse owner and jockey registrations.</li>
-            <li>Approve or reject tournament participation requests.</li>
-            <li>Track pending items and approval history.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section className="admin-stack">
-        <article className="admin-panel" id="horses">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Horse & Jockey Registry</p>
-            <h2>Participants</h2>
-          </div>
-
-          <div className="admin-table">
-            {roleMatrix.map((entry) => (
-              <div key={entry.role} className="admin-table__row">
-                <div className="admin-table__role">{entry.role}</div>
-                <div className="admin-table__action">{entry.action}</div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <div className="admin-split">
-          <article className="admin-panel" id="referees">
+      {/* Feature cards with stats */}
+      <section className="admin-grid" aria-label="Admin feature cards">
+        {adminFeatureCards.map((card) => (
+          <article key={card.title} className="admin-panel">
             <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">Referee Assignment</p>
-              <h2>Control & Verification</h2>
+              <p className="admin-panel__eyebrow">{card.eyebrow}</p>
+              <h2>{card.title}</h2>
             </div>
-            <ul className="admin-list">
-              <li>Assign referees to races and capture referee reports.</li>
-              <li>Record violations, confirmations, and approvals.</li>
-              <li>Validate horse conditions before race start.</li>
-            </ul>
-          </article>
-
-          <article className="admin-panel" id="results">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">Results & Prediction</p>
-              <h2>Publication</h2>
-            </div>
-            <ul className="admin-list">
-              <li>Publish race results and leaderboard updates.</li>
-              <li>Track bets, predictions, and prize outcomes.</li>
-              <li>Share verified results with spectators and participants.</li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section className="admin-bottom-grid" id="predictions">
-        <article className="admin-panel">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Quick Functions</p>
-            <h2>Core Admin Actions</h2>
-          </div>
-          <div className="admin-quick-grid">
-            {quickFunctions.map((group) => (
-              <div key={group.title} className="admin-quick-card">
-                <h3>{group.title}</h3>
-                <ul>
-                  {group.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="admin-panel">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Workflow</p>
-            <h2>Management Flow</h2>
-          </div>
-          <div className="admin-flow">
-            {workflowBlocks.map((block, index) => (
-              <div key={block.title} className="admin-flow__step">
-                <div className="admin-flow__index">0{index + 1}</div>
-                <div>
-                  <h3>{block.title}</h3>
-                  <p>{block.details}</p>
+            <p>{card.description}</p>
+            <div className="admin-stat-row">
+              {card.stats.map((stat) => (
+                <div key={stat.label} className="admin-stat-chip">
+                  <span className="admin-stat-chip__value">{stat.value}</span>
+                  <span className="admin-stat-chip__label">{stat.label}</span>
                 </div>
+              ))}
+            </div>
+            <div>
+              <Link className="admin-header__button admin-panel__cta" to={`/admin/${card.module}`}>
+                Open {card.eyebrow} →
+              </Link>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      {/* Operations grid */}
+      <section className="admin-grid">
+        {adminOperations.map((group) => (
+          <article key={group.title} className="admin-panel">
+            <div className="admin-panel__header">
+              <p className="admin-panel__eyebrow">Admin Actions</p>
+              <h2>{group.title}</h2>
+            </div>
+            <ul className="admin-list">
+              {group.items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+            <div>
+              <Link className="admin-header__button admin-header__button--ghost admin-panel__cta" to={`/admin/${group.module}`}>
+                Manage →
+              </Link>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      {/* Workflow steps */}
+      <section className="admin-panel" aria-label="Management workflow">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">Workflow</p>
+          <h2>Management Flow</h2>
+        </div>
+        <div className="admin-flow">
+          {workflowBlocks.map((block, index) => (
+            <div key={block.title} className="admin-flow__step">
+              <div className="admin-flow__index">0{index + 1}</div>
+              <div>
+                <h3>{block.title}</h3>
+                <p>{block.details}</p>
               </div>
-            ))}
-          </div>
-        </article>
+              <Link className="admin-header__button admin-header__button--ghost" to={`/admin/${block.module}`} style={{ alignSelf: "center" }}>
+                Open →
+              </Link>
+            </div>
+          ))}
+        </div>
       </section>
     </AdminLayout>
   );

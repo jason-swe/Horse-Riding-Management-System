@@ -5,6 +5,10 @@ export const adminModules = {
     description:
       "Manage accounts for Horse Owner, Jockey, Race Referee, Spectator, and Admin roles. Assign permissions, review account status, and keep access aligned with tournament operations.",
     primaryActions: ["Create account", "Assign role", "Suspend user"],
+    filters: {
+      searchPlaceholder: "Search user ID, name, role, status...",
+      statusOptions: ["All", "Active", "Pending", "Suspended"],
+    },
     summary: [
       { label: "Active users", value: "248" },
       { label: "Pending reviews", value: "18" },
@@ -28,6 +32,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Role filter",
+        content: "Quick search by role, status, or verification stage before editing user access.",
+      },
+      {
+        title: "Permission matrix",
+        content: "Display a toggle grid for module access such as races, registrations, and results.",
+      },
+    ],
     tables: [
       {
         title: "User accounts",
@@ -48,6 +62,10 @@ export const adminModules = {
     description:
       "Maintain horse profiles, racing attributes, registration details, and readiness status for each tournament entry.",
     primaryActions: ["Add horse", "Verify profile", "Set readiness"],
+    filters: {
+      searchPlaceholder: "Search horse, owner, breed, next race...",
+      statusOptions: ["All", "Yes", "No", "Review"],
+    },
     summary: [
       { label: "Registered horses", value: "76" },
       { label: "Ready to race", value: "61" },
@@ -71,6 +89,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Horse search",
+        content: "Filter by horse name, owner, breed, and readiness before assigning a race.",
+      },
+      {
+        title: "Inspection notes",
+        content: "Show health or referee notes so admin can decide whether the horse can race.",
+      },
+    ],
     tables: [
       {
         title: "Horse registry",
@@ -91,6 +119,10 @@ export const adminModules = {
     description:
       "Plan tournament rounds, race order, and published time slots while keeping all participants aligned with the race calendar.",
     primaryActions: ["Create race", "Publish slot", "Assign referee"],
+    filters: {
+      searchPlaceholder: "Search race, tournament, round, referee...",
+      statusOptions: ["All", "Published", "Draft"],
+    },
     summary: [
       { label: "Upcoming races", value: "14" },
       { label: "Published slots", value: "11" },
@@ -114,6 +146,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Calendar view",
+        content: "Switch between day, week, and month layouts to manage race timing more visually.",
+      },
+      {
+        title: "Drag & drop order",
+        content: "Move races between rounds and adjust sequence before publication.",
+      },
+    ],
     tables: [
       {
         title: "Race schedule",
@@ -133,6 +175,10 @@ export const adminModules = {
     description:
       "Publish race results, rankings, prize outcomes, and verified referee reports for each completed race.",
     primaryActions: ["Publish result", "Verify report", "Update ranking"],
+    filters: {
+      searchPlaceholder: "Search race, winner, prize, report...",
+      statusOptions: ["All", "Confirmed", "Pending"],
+    },
     summary: [
       { label: "Verified results", value: "42" },
       { label: "Prize claims", value: "09" },
@@ -156,6 +202,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Result approval queue",
+        content: "Let admin verify submitted results before the public leaderboard is updated.",
+      },
+      {
+        title: "Publish controls",
+        content: "Show a draft/published state so result announcements can be reviewed first.",
+      },
+    ],
     tables: [
       {
         title: "Official results",
@@ -175,6 +231,10 @@ export const adminModules = {
     description:
       "Approve horse owner, jockey, referee, and spectator participation requests before they enter the tournament workflow.",
     primaryActions: ["Approve request", "Reject request", "Review details"],
+    filters: {
+      searchPlaceholder: "Search reg ID, participant, role, target...",
+      statusOptions: ["All", "Approved", "Pending", "Review"],
+    },
     summary: [
       { label: "Waiting approval", value: "21" },
       { label: "Processed today", value: "13" },
@@ -198,6 +258,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Approval inbox",
+        content: "List requests with approve/reject actions so admins can process them one by one.",
+      },
+      {
+        title: "Bulk review",
+        content: "Support multi-select review for routine accounts and racing participants.",
+      },
+    ],
     tables: [
       {
         title: "Registration queue",
@@ -217,6 +287,10 @@ export const adminModules = {
     description:
       "Manage jockey profiles, invitations, assignments, confirmations, and performance tracking across the tournament.",
     primaryActions: ["Invite jockey", "Assign race", "Review performance"],
+    filters: {
+      searchPlaceholder: "Search jockey, horse, status, race...",
+      statusOptions: ["All", "Active", "Pending", "Invited"],
+    },
     summary: [
       { label: "Available jockeys", value: "32" },
       { label: "Assigned today", value: "19" },
@@ -240,6 +314,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Invitation panel",
+        content: "Show pending invites with accept/decline states for quick coordination.",
+      },
+      {
+        title: "Availability check",
+        content: "Let admin compare jockey free slots against race dates before assigning.",
+      },
+    ],
     tables: [
       {
         title: "Jockey assignments",
@@ -259,6 +343,10 @@ export const adminModules = {
     description:
       "Assign referees to races, inspect horses before competition, record violations, and confirm final results with official reports.",
     primaryActions: ["Assign referee", "Add report", "Confirm result"],
+    filters: {
+      searchPlaceholder: "Search referee, race, report status...",
+      statusOptions: ["All", "Confirmed", "Filed", "Pending", "Draft"],
+    },
     summary: [
       { label: "Available referees", value: "11" },
       { label: "Active assignments", value: "08" },
@@ -282,6 +370,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Assignment planner",
+        content: "Pick a referee per race and show current workloads before confirming assignment.",
+      },
+      {
+        title: "Violation tracker",
+        content: "Capture misconduct notes and inspection details in a compact review panel.",
+      },
+    ],
     tables: [
       {
         title: "Referee roster",
@@ -301,6 +399,10 @@ export const adminModules = {
     description:
       "Manage spectator predictions, bet logs, ranking outcomes, and prize tracking tied to each race result.",
     primaryActions: ["Review bets", "Publish odds", "Award prize"],
+    filters: {
+      searchPlaceholder: "Search bet, spectator, race, outcome...",
+      statusOptions: ["All", "Win", "Lose", "Pending"],
+    },
     summary: [
       { label: "Prediction entries", value: "156" },
       { label: "Winning picks", value: "38" },
@@ -324,6 +426,16 @@ export const adminModules = {
         ],
       },
     ],
+    tools: [
+      {
+        title: "Prediction review",
+        content: "Show a moderation panel for reviewing prediction entries before prize distribution.",
+      },
+      {
+        title: "Prize summary",
+        content: "Summarize payouts and winning picks per race for admin visibility.",
+      },
+    ],
     tables: [
       {
         title: "Prediction log",
@@ -343,6 +455,10 @@ export const adminModules = {
     description:
       "Create the tournament structure, set race rounds and publish the complete event schedule for the season.",
     primaryActions: ["Create tournament", "Add round", "Publish plan"],
+    filters: {
+      searchPlaceholder: "Search tournament, venue, round, status...",
+      statusOptions: ["All", "Active", "Draft", "Planning"],
+    },
     summary: [
       { label: "Season tournaments", value: "03" },
       { label: "Rounds configured", value: "18" },
@@ -364,6 +480,16 @@ export const adminModules = {
           "Update rounds when changes happen.",
           "Keep a master event plan for the admin team.",
         ],
+      },
+    ],
+    tools: [
+      {
+        title: "Round builder",
+        content: "Visually assemble heats, semi-finals, and finals in a structured tournament flow.",
+      },
+      {
+        title: "Publish checklist",
+        content: "Show pre-publish validation so admins can confirm all required data is ready.",
       },
     ],
     tables: [

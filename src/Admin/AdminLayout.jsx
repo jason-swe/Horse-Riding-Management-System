@@ -1,6 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 
-function AdminLayout({ title, eyebrow, description, children, actions, activeSection = "dashboard" }) {
+function AdminLayout({ title, eyebrow, description, children, actions }) {
   return (
     <main className="admin-page" aria-label={title}>
       <section className="admin-shell">
@@ -19,11 +19,11 @@ function AdminLayout({ title, eyebrow, description, children, actions, activeSec
           <div className="admin-sidebar__section">
             <p className="admin-sidebar__eyebrow">Operations</p>
             <nav className="admin-nav" aria-label="Admin sections">
-              <NavLink to="/admin" end className={({ isActive }) => (isActive && activeSection === "dashboard" ? "active" : "")}>
+              <NavLink to="/admin" end className={({ isActive }) => (isActive ? "active" : "")}>
                 Dashboard
               </NavLink>
               <NavLink to="/admin/users" className={({ isActive }) => (isActive ? "active" : "")}>
-                Users & Roles
+                Users &amp; Roles
               </NavLink>
               <NavLink to="/admin/tournament" className={({ isActive }) => (isActive ? "active" : "")}>
                 Tournament Setup
@@ -56,14 +56,32 @@ function AdminLayout({ title, eyebrow, description, children, actions, activeSec
             <p className="admin-sidebar__eyebrow">Quick action</p>
             <h3>Approve and publish faster</h3>
             <p>
-              Keep registrations, race planning, referee assignments, and result publication under one control panel.
+              Keep registrations, race planning, referee assignments, and result
+              publication under one control panel.
             </p>
-            <Link className="admin-sidebar__button" to="/login">Back to Login</Link>
+            <Link className="admin-sidebar__button" to="/admin/registrations">
+              Approval queue
+            </Link>
+          </div>
+
+          <div className="admin-user-row">
+            <div className="admin-user-avatar" aria-hidden="true">A</div>
+            <div className="admin-user-info">
+              <span className="admin-user-name">Admin</span>
+              <span className="admin-user-role">System administrator</span>
+            </div>
+            <Link className="admin-logout-btn" to="/login" title="Sign out" aria-label="Sign out">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </Link>
           </div>
         </aside>
 
         <section className="admin-content">
-          <header className="admin-header" id={activeSection}>
+          <header className="admin-header">
             <div>
               <p className="admin-header__eyebrow">{eyebrow}</p>
               <h1>{title}</h1>

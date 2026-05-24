@@ -3,14 +3,14 @@
 :root {
   color-scheme: dark;
   font-family: 'Inter', system-ui, sans-serif;
-  --bg: #10261d;
+  --bg: #171b18;
   --panel: rgba(255, 255, 255, 0.08);
   --panel-strong: rgba(255, 255, 255, 0.16);
-  --text: #f5f7f3;
-  --muted: rgba(245, 247, 243, 0.72);
-  --accent: #ff6f1f;
-  --accent-soft: #ff8a3d;
-  --green: #3e5b49;
+  --text: #f7f1ea;
+  --muted: rgba(247, 241, 234, 0.72);
+  --accent: #d97735;
+  --accent-soft: #f0a15c;
+  --green: #2f3d35;
 }
 
 * {
@@ -28,8 +28,8 @@ body {
   color: var(--text);
   background:
     radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.08), transparent 24%),
-    radial-gradient(circle at 85% 22%, rgba(255, 111, 31, 0.1), transparent 28%),
-    linear-gradient(180deg, #163326 0%, var(--green) 44%, #30483b 100%);
+    radial-gradient(circle at 85% 22%, rgba(255, 138, 61, 0.12), transparent 28%),
+    linear-gradient(180deg, #201712 0%, var(--green) 44%, #3b2d26 100%);
   overflow-x: hidden;
 }
 
