@@ -541,7 +541,7 @@
 .horse-details__watermark {
   position: absolute;
   left: 50%;
-  bottom: 160px;
+  bottom: 220px;
   z-index: 0;
   transform: translateX(-50%);
   /* slightly stronger watermark color for better visibility */
@@ -2265,7 +2265,7 @@
 
   .horse-details__watermark {
     left: 50%;
-    bottom: 160px;
+    bottom: 220px;
     transform: translateX(-50%);
     font-size: clamp(4.2rem, 22vw, 7rem);
     text-align: center;
@@ -2653,7 +2653,7 @@
   }
 
   .horse-details__watermark {
-    bottom: 124px;
+    bottom: 160px;
   }
 
   .horse-details__frame {
