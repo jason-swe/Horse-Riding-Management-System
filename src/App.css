@@ -2024,11 +2024,13 @@
 }
 
 .fact-right.fact-mid {
-  top: 300px;
+  /* raise the mid-right fact a bit to avoid overlapping the bottom-right badge */
+  top: 240px;
 }
 
 .fact-right.fact-bottom {
-  bottom: 140px;
+  /* lower the bottom-right fact slightly so labels don't collide */
+  bottom: 100px;
 }
 
 .fact-center.fact-bottom {
