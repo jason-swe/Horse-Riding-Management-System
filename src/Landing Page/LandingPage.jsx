@@ -6,7 +6,12 @@ import testi1 from "../assets/testi1.svg";
 import testi2 from "../assets/testi2.svg";
 import testi3 from "../assets/testi3.svg";
 
-const navItems = ["Home", "Schedule", "Leaderboard"];
+const navItems = [
+  { label: "Home", to: "/" },
+  { label: "Tournament", to: "/spectator/tournaments" },
+  { label: "Schedule", to: "/spectator/tournaments" },
+  { label: "Leaderboard", to: "/spectator/leaderboard" },
+];
 
 const horseFacts = [
   { label: "Warmblood", position: "fact-left fact-top" },
@@ -100,13 +105,13 @@ function LandingPage() {
 
           <nav className="nav" aria-label="Primary">
             {navItems.map((item, index) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
+              <Link
+                key={item.label}
+                to={item.to}
                 className={index === 0 ? "active" : ""}
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -129,10 +134,10 @@ function LandingPage() {
               Manage registrations, race schedules, race results, rankings, and prediction features for horse owners, jockeys, referees, spectators, and admins.
             </p>
             <div className="hero-actions">
-              <a className="primary-btn" href="#join">
+              <Link className="primary-btn" to="/spectator/tournaments">
                 Explore Tournament
                 <span aria-hidden="true">↗</span>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -310,9 +315,10 @@ function LandingPage() {
           <nav className="footer-links" aria-label="Footer navigation">
             <h4>Explore</h4>
             <ul>
-              <li><a href="#home">Home</a></li>
-              <li><a href="#schedule">Schedule</a></li>
-              <li><a href="#leaderboard">Leaderboard</a></li>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/spectator/tournaments">Tournament</Link></li>
+              <li><Link to="/spectator/tournaments">Schedule</Link></li>
+              <li><Link to="/spectator/leaderboard">Leaderboard</Link></li>
             </ul>
           </nav>
 
