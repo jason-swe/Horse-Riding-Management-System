@@ -203,7 +203,7 @@ function LandingPage() {
 
           <div className="horse-details__stage">
             <div className="horse-details__watermark" aria-hidden="true">
-              RACE
+              HORSE
             </div>
 
             <div className="horse-details__frame">
