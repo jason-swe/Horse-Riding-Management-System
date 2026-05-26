@@ -60,55 +60,119 @@ export const adminModules = {
     title: "Horses",
     eyebrow: "Horse registry",
     description:
-      "Maintain horse profiles, racing attributes, registration details, and readiness status for each tournament entry.",
+      "Manage comprehensive horse profiles covering identification, pedigree, physical stats, performance data, and race history. All records must be verified before a horse enters any race.",
     primaryActions: ["Add horse", "Verify profile", "Set readiness"],
     filters: {
-      searchPlaceholder: "Search horse, owner, breed, next race...",
-      statusOptions: ["All", "Yes", "No", "Review"],
+      searchPlaceholder: "Search ID, microchip, name, breed, owner, trainer...",
+      statusOptions: ["All", "Ready", "Review", "Injured", "Retired"],
     },
     summary: [
       { label: "Registered horses", value: "76" },
-      { label: "Ready to race", value: "61" },
+      { label: "Race-ready", value: "61" },
       { label: "Under review", value: "15" },
     ],
     sections: [
       {
-        title: "Horse profile",
+        title: "Identity & Pedigree",
         items: [
-          "Track horse identity, owner, and registration status.",
-          "Record breed, age, weight, and racing indicators.",
-          "Flag horses needing referee inspection.",
+          "Each horse has a unique ID and microchip number for tournament registration.",
+          "Age group and gender (Colt/Horse, Filly/Mare, Gelding) determine eligible race categories.",
+          "Sire/Dam pedigree records inform distance preference and surface adaptability research.",
+          "Owner and trainer contact is stored for administrative coordination.",
         ],
       },
       {
-        title: "Race readiness",
+        title: "Physical & Health",
         items: [
-          "Confirm horse eligibility before race day.",
-          "Manage race selection and queue status.",
-          "Keep tournament entry information up to date.",
+          "Weight is monitored each week — fluctuations above ±5 kg trigger a review flag.",
+          "Height is recorded in hands (1 hand = 10.16 cm) measured at the withers.",
+          "Hoof care log tracks last shoeing date and shoe type (aluminium for race day, steel for training).",
+          "Health notes from referee inspections are stored per horse.",
+        ],
+      },
+      {
+        title: "Performance & Training",
+        items: [
+          "GPS and sensor data (Equimetre/Polar) provide max speed and 200 m sectional times from breeze-ups.",
+          "Exercise heart rate peaks at 200–240 bpm; recovery time to under 100 bpm is the primary fitness metric.",
+          "Stride length (~7–8 m for elite horses) and stride frequency are logged per session.",
+          "Training sessions are timestamped and compared against race-day benchmarks.",
+        ],
+      },
+      {
+        title: "Race History & Handicap",
+        items: [
+          "Race record stored as Starts–1st–2nd–3rd (e.g. 10-3-2-1).",
+          "Handicap rating (points) assigned by officials based on form — higher rating means extra weight in future races.",
+          "Points earned per race placement are tracked in the system instead of monetary prizes.",
+          "Career stats and rating history are visible for selection and research purposes.",
         ],
       },
     ],
     tools: [
       {
         title: "Horse search",
-        content: "Filter by horse name, owner, breed, and readiness before assigning a race.",
+        content: "Filter by horse name, microchip, owner, breed, and readiness before assigning to a race slot.",
       },
       {
         title: "Inspection notes",
-        content: "Show health or referee notes so admin can decide whether the horse can race.",
+        content: "Health and referee inspection notes per horse — determine eligibility and flag review cases.",
       },
     ],
     tables: [
       {
-        title: "Horse registry",
-        columns: ["Horse ID", "Horse name", "Owner", "Breed", "Ready", "Next race"],
+        title: "Horse registry — Identity & Ownership",
+        columns: ["Horse ID", "Microchip", "Name", "Age", "Gender", "Breed", "Owner", "Trainer", "Status"],
         rows: [
-          ["H-001", "Storm Arrow", "Minh Le", "Thoroughbred", "Yes", "R-08"],
-          ["H-002", "Blue Horizon", "Nhan Tran", "Warmblood", "Yes", "R-03"],
-          ["H-003", "Golden Mane", "Cam Tu", "Arabian", "Review", "TBD"],
-          ["H-004", "Night Sprint", "Hoang Anh", "Thoroughbred", "Yes", "R-11"],
-          ["H-005", "Silver Wind", "Bao Nguyen", "Warmblood", "No", "TBD"],
+          ["H-001", "MC-884412", "Storm Arrow", "4", "Colt", "Thoroughbred", "Minh Le", "Coach Bao", "Ready"],
+          ["H-002", "MC-771023", "Blue Horizon", "5", "Gelding", "Warmblood", "Nhan Tran", "Coach Linh", "Ready"],
+          ["H-003", "MC-992301", "Golden Mane", "3", "Filly", "Arabian", "Cam Tu", "Coach Son", "Review"],
+          ["H-004", "MC-663841", "Night Sprint", "6", "Horse", "Thoroughbred", "Hoang Anh", "Coach Bao", "Ready"],
+          ["H-005", "MC-447712", "Silver Wind", "4", "Mare", "Warmblood", "Bao Nguyen", "Coach Linh", "Injured"],
+        ],
+      },
+      {
+        title: "Horse registry — Pedigree",
+        columns: ["Horse ID", "Name", "Sire (Father)", "Dam (Mother)", "Distance pref.", "Surface pref.", "Stud farm"],
+        rows: [
+          ["H-001", "Storm Arrow", "Thunder King", "Arrow Queen", "Short (1000–1400m)", "Turf", "Saigon Stud"],
+          ["H-002", "Blue Horizon", "Sea Breeze", "Calm Waters", "Long (2000m+)", "Dirt", "Hanoi Farm"],
+          ["H-003", "Golden Mane", "Gold Rush", "Lady Luck", "Mid (1400–1800m)", "Turf", "Da Nang Ranch"],
+          ["H-004", "Night Sprint", "Dark Comet", "Night Star", "Short (1000–1400m)", "Turf", "Saigon Stud"],
+          ["H-005", "Silver Wind", "Silver Bolt", "Wind Song", "Mid (1600–2000m)", "Dirt", "Hanoi Farm"],
+        ],
+      },
+      {
+        title: "Horse registry — Physical & Health",
+        columns: ["Horse ID", "Name", "Weight (kg)", "Height (hands)", "Last shoed", "Shoe type", "Health status"],
+        rows: [
+          ["H-001", "Storm Arrow", "512", "16.1", "2026-05-20", "Aluminium", "Ready"],
+          ["H-002", "Blue Horizon", "534", "16.3", "2026-05-18", "Steel", "Ready"],
+          ["H-003", "Golden Mane", "498", "15.3", "2026-05-10", "Steel", "Review"],
+          ["H-004", "Night Sprint", "521", "16.0", "2026-05-22", "Aluminium", "Ready"],
+          ["H-005", "Silver Wind", "509", "16.2", "2026-04-30", "Steel", "Injured"],
+        ],
+      },
+      {
+        title: "Horse registry — Performance & Training",
+        columns: ["Horse ID", "Name", "Max speed (km/h)", "200m split (s)", "Heart rate peak (bpm)", "Recovery time (s)", "Stride length (m)", "Stride freq. (spm)"],
+        rows: [
+          ["H-001", "Storm Arrow", "68.4", "10.58", "228", "42", "7.8", "138"],
+          ["H-002", "Blue Horizon", "65.2", "11.04", "221", "51", "7.4", "132"],
+          ["H-003", "Golden Mane", "61.8", "11.62", "216", "58", "7.1", "128"],
+          ["H-004", "Night Sprint", "70.1", "10.27", "235", "38", "8.0", "142"],
+          ["H-005", "Silver Wind", "63.5", "11.35", "219", "49", "7.2", "130"],
+        ],
+      },
+      {
+        title: "Horse registry — Race History & Points",
+        columns: ["Horse ID", "Name", "Starts", "1st", "2nd", "3rd", "Career pts", "Handicap rating", "Extra weight (kg)"],
+        rows: [
+          ["H-001", "Storm Arrow", "10", "4", "3", "1", "1,840 pts", "112", "2.0"],
+          ["H-002", "Blue Horizon", "12", "3", "4", "2", "1,620 pts", "108", "1.5"],
+          ["H-003", "Golden Mane", "4", "1", "0", "1", "480 pts", "90", "0.0"],
+          ["H-004", "Night Sprint", "8", "5", "2", "0", "2,100 pts", "118", "3.0"],
+          ["H-005", "Silver Wind", "6", "1", "2", "1", "740 pts", "94", "0.0"],
         ],
       },
     ],
@@ -215,12 +279,12 @@ export const adminModules = {
     tables: [
       {
         title: "Official results",
-        columns: ["Race", "Winner", "Time", "Prize", "Referee report"],
+        columns: ["Race", "Winner", "Time", "Points awarded", "Referee report"],
         rows: [
-          ["R-01", "Storm Arrow", "1:41.28", "$3,500", "Confirmed"],
-          ["R-02", "Blue Horizon", "1:39.84", "$4,000", "Confirmed"],
-          ["R-05", "Night Sprint", "1:38.02", "$5,000", "Pending"],
-          ["R-06", "Silver Wind", "1:40.11", "$3,000", "Confirmed"],
+          ["R-01", "Storm Arrow", "1:41.28", "500 pts", "Confirmed"],
+          ["R-02", "Blue Horizon", "1:39.84", "500 pts", "Confirmed"],
+          ["R-05", "Night Sprint", "1:38.02", "750 pts", "Pending"],
+          ["R-06", "Silver Wind", "1:40.11", "500 pts", "Confirmed"],
         ],
       },
     ],
@@ -285,54 +349,86 @@ export const adminModules = {
     title: "Jockeys",
     eyebrow: "Jockey management",
     description:
-      "Manage jockey profiles, invitations, assignments, confirmations, and performance tracking across the tournament.",
+      "Manage jockey profiles, physical condition, medical clearance, performance metrics, discipline history, and race assignments across the tournament.",
     primaryActions: ["Invite jockey", "Assign race", "Review performance"],
     filters: {
-      searchPlaceholder: "Search jockey, horse, status, race...",
-      statusOptions: ["All", "Active", "Pending", "Invited"],
+      searchPlaceholder: "Search jockey, horse, clearance, violation, suspension...",
+      statusOptions: ["All", "Active", "Invited", "Pending", "Suspended", "Medical hold"],
     },
     summary: [
-      { label: "Available jockeys", value: "32" },
-      { label: "Assigned today", value: "19" },
-      { label: "Pending invites", value: "06" },
+      { label: "Licensed jockeys", value: "32" },
+      { label: "Race assigned", value: "19" },
+      { label: "Under medical review", value: "03" },
     ],
     sections: [
       {
-        title: "Assignments",
+        title: "Physical & Health",
         items: [
-          "Send horse owner invitations.",
-          "Track accepted or declined race invites.",
-          "Match jockey availability with race slots.",
+          "Track official weight check before and after each race day.",
+          "Store injury history, recovery progress, and current health condition.",
+          "Store medical clearance issued by the medical board.",
         ],
       },
       {
-        title: "Performance",
+        title: "Performance & Form",
         items: [
-          "Review personal race history.",
-          "Compare rankings and achievements.",
-          "Keep jockey participation data current.",
+          "Track win rate percentage from total starts and wins.",
+          "Show track/surface or distance preference performance splits.",
+          "Keep race-by-race form and recent finishes visible for selection.",
+        ],
+      },
+      {
+        title: "Discipline & Compliance",
+        items: [
+          "Record whip violations, careless riding, and start faults.",
+          "Track suspension days and current serving status.",
+          "Store random drug/alcohol test records and outcomes.",
         ],
       },
     ],
     tools: [
       {
-        title: "Invitation panel",
-        content: "Show pending invites with accept/decline states for quick coordination.",
+        title: "Weight control",
+        content: "Compare official weight against allowed race limit and flag weight-out cases instantly.",
       },
       {
-        title: "Availability check",
-        content: "Let admin compare jockey free slots against race dates before assigning.",
+        title: "Medical clearance",
+        content: "Show clearance validity, injury recovery state, and doctor approval in one compact panel.",
+      },
+      {
+        title: "Violation tracker",
+        content: "Summarize whip, riding, suspension, and testing history before assigning a jockey.",
       },
     ],
     tables: [
       {
-        title: "Jockey assignments",
-        columns: ["Jockey ID", "Name", "Assigned horse", "Races", "Wins", "Status"],
+        title: "Jockey roster — profile",
+        columns: ["Jockey ID", "Name", "Weight", "Medical clearance", "Status"],
         rows: [
-          ["J-11", "Anh Khoa", "Blue Horizon", "4", "2", "Active"],
-          ["J-12", "Le Nam", "Storm Arrow", "6", "3", "Active"],
-          ["J-13", "Phuong Vy", "Night Sprint", "2", "1", "Invited"],
-          ["J-14", "Duc Huy", "Silver Wind", "0", "0", "Pending"],
+          ["J-11", "Anh Khoa", "53.2 kg", "Valid until 2026-06-12", "Active"],
+          ["J-12", "Le Nam", "52.4 kg", "Valid until 2026-06-08", "Invited"],
+          ["J-13", "Phuong Vy", "54.1 kg", "Pending review", "Medical hold"],
+          ["J-14", "Duc Huy", "55.0 kg", "Valid until 2026-06-20", "Suspended"],
+        ],
+      },
+      {
+        title: "Jockey roster — performance",
+        columns: ["Jockey ID", "Name", "Starts", "Wins", "Win rate", "Turf form", "Dirt form", "Distance form"],
+        rows: [
+          ["J-11", "Anh Khoa", "18", "6", "33%", "Strong", "Average", "Best at 1200-1600m"],
+          ["J-12", "Le Nam", "22", "9", "41%", "Average", "Strong", "Best at 1800m+"],
+          ["J-13", "Phuong Vy", "9", "2", "22%", "Strong", "Average", "Best at sprint"],
+          ["J-14", "Duc Huy", "14", "4", "29%", "Average", "Weak", "Best at 1400m"],
+        ],
+      },
+      {
+        title: "Jockey roster — discipline",
+        columns: ["Jockey ID", "Name", "Violations", "Suspension days", "Drug/alcohol tests", "Last test result"],
+        rows: [
+          ["J-11", "Anh Khoa", "1", "0", "4", "Negative"],
+          ["J-12", "Le Nam", "0", "0", "5", "Negative"],
+          ["J-13", "Phuong Vy", "2", "7", "3", "Negative"],
+          ["J-14", "Duc Huy", "4", "14", "6", "Negative"],
         ],
       },
     ],
@@ -341,10 +437,10 @@ export const adminModules = {
     title: "Referees",
     eyebrow: "Race officials",
     description:
-      "Assign referees to races, inspect horses before competition, record violations, and confirm final results with official reports.",
+      "Assign referees to races, inspect horses before competition, manage conflict-of-interest declarations, and confirm final results with official reports.",
     primaryActions: ["Assign referee", "Add report", "Confirm result"],
     filters: {
-      searchPlaceholder: "Search referee, race, report status...",
+      searchPlaceholder: "Search referee, level, race, report status...",
       statusOptions: ["All", "Confirmed", "Filed", "Pending", "Draft"],
     },
     summary: [
@@ -354,41 +450,73 @@ export const adminModules = {
     ],
     sections: [
       {
-        title: "Inspection",
+        title: "Identification & Accreditation",
         items: [
-          "Inspect horse readiness before races.",
-          "Log violations and remarks.",
-          "Approve race start conditions.",
+          "Track referee licensing level: IFHA international, national, or local track accreditation.",
+          "Store referee identity, jurisdiction, and event assignment history.",
+          "Display current role eligibility before a referee is assigned to a race.",
         ],
       },
       {
-        title: "Reporting",
+        title: "Conflict of Interest",
         items: [
-          "File race reports after each event.",
-          "Confirm official results and disputes.",
-          "Maintain referee history for the record.",
+          "Declare no family relationship with any horse owner, trainer, or jockey in the tournament.",
+          "Block referees who hold shares, sponsorship, or betting ties related to the event.",
+          "Show conflict clearance status before final assignment.",
+        ],
+      },
+      {
+        title: "Performance & Decision Making",
+        items: [
+          "Track number of races officiated and overall officiating experience.",
+          "Record decision time from inquiry / objection to final ruling after video or photo review.",
+          "Monitor consistency and turnaround speed for race verdicts.",
         ],
       },
     ],
     tools: [
       {
         title: "Assignment planner",
-        content: "Pick a referee per race and show current workloads before confirming assignment.",
+        content: "Pick a referee per race and show current workload, level, and conflict clearance before confirming assignment.",
       },
       {
-        title: "Violation tracker",
-        content: "Capture misconduct notes and inspection details in a compact review panel.",
+        title: "Conflict checker",
+        content: "Review family, ownership, sponsorship, and betting disclosures before allowing a referee to officiate.",
+      },
+      {
+        title: "Decision tracker",
+        content: "Measure officiating speed from inquiry to final decision, including replay and photo-finish review time.",
       },
     ],
     tables: [
       {
-        title: "Referee roster",
-        columns: ["Referee ID", "Name", "Assigned race", "Violations", "Report status"],
+        title: "Referee roster — accreditation",
+        columns: ["Referee ID", "Name", "Level", "Events officiated", "Conflict status", "Assigned race"],
         rows: [
-          ["RF-01", "Le Quang", "R-01", "0", "Confirmed"],
-          ["RF-02", "Thu Trang", "R-02", "1", "Filed"],
-          ["RF-03", "Minh Tu", "R-03", "0", "Pending"],
-          ["RF-04", "Hong Son", "R-04", "2", "Draft"],
+          ["RF-01", "Le Quang", "National", "48", "Clear", "R-01"],
+          ["RF-02", "Thu Trang", "IFHA", "76", "Clear", "R-02"],
+          ["RF-03", "Minh Tu", "Local", "19", "Review", "R-03"],
+          ["RF-04", "Hong Son", "National", "54", "Clear", "R-04"],
+        ],
+      },
+      {
+        title: "Referee roster — performance",
+        columns: ["Referee ID", "Name", "Matches officiated", "Inquiry handling", "Decision time", "Replay used"],
+        rows: [
+          ["RF-01", "Le Quang", "48", "Fast", "42 sec", "Yes"],
+          ["RF-02", "Thu Trang", "76", "Very fast", "28 sec", "Yes"],
+          ["RF-03", "Minh Tu", "19", "Moderate", "61 sec", "No"],
+          ["RF-04", "Hong Son", "54", "Fast", "35 sec", "Yes"],
+        ],
+      },
+      {
+        title: "Referee roster — decision log",
+        columns: ["Referee ID", "Race", "Inquiry", "Video review", "Final ruling", "Decision time"],
+        rows: [
+          ["RF-01", "R-01", "False start objection", "Checked", "Disqualified", "42 sec"],
+          ["RF-02", "R-02", "Photo finish review", "Checked", "Winner confirmed", "28 sec"],
+          ["RF-03", "R-03", "Lane interference claim", "Not required", "Warning issued", "61 sec"],
+          ["RF-04", "R-04", "Jockey contact inquiry", "Checked", "Penalty applied", "35 sec"],
         ],
       },
     ],
@@ -439,12 +567,12 @@ export const adminModules = {
     tables: [
       {
         title: "Prediction log",
-        columns: ["Bet ID", "Spectator", "Race", "Pick", "Odds", "Outcome", "Prize"],
+        columns: ["Bet ID", "Spectator", "Race", "Pick", "Odds", "Outcome", "Points earned"],
         rows: [
-          ["BET-301", "Ngoc Anh", "R-01", "Storm Arrow", "3.2", "Win", "$120"],
-          ["BET-302", "Phuong Mai", "R-02", "Blue Horizon", "4.1", "Win", "$210"],
-          ["BET-303", "Quoc Bao", "R-05", "Night Sprint", "2.8", "Pending", "-"],
-          ["BET-304", "Thanh Ha", "R-06", "Silver Wind", "5.0", "Lose", "$0"],
+          ["BET-301", "Ngoc Anh", "R-01", "Storm Arrow", "3.2×", "Win", "320 pts"],
+          ["BET-302", "Phuong Mai", "R-02", "Blue Horizon", "4.1×", "Win", "410 pts"],
+          ["BET-303", "Quoc Bao", "R-05", "Night Sprint", "2.8×", "Pending", "-"],
+          ["BET-304", "Thanh Ha", "R-06", "Silver Wind", "5.0×", "Lose", "0 pts"],
         ],
       },
     ],
