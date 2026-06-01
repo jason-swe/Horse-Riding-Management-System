@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight, CalendarDays, CircleDollarSign, Clock3, LineChart, Radio, Sparkles, Trophy } from "lucide-react";
 import "./spectator.css";
 
 const raceImages = [
@@ -11,6 +12,9 @@ const nextRaces = [
   { time: "14:00", title: "Emerald Sprint", venue: "Grandstand A", status: "Open", distance: "1,200m", entries: 8 },
   { time: "15:30", title: "Derby Trial", venue: "Turf Circuit", status: "Live", distance: "1,600m", entries: 10 },
   { time: "17:00", title: "Sunset Stakes", venue: "Main Track", status: "Open", distance: "2,000m", entries: 7 },
+  { time: "18:20", title: "Royal Mile", venue: "Inner Rail", status: "Open", distance: "1,600m", entries: 9 },
+  { time: "19:10", title: "Night Circuit Qualifier", venue: "Floodlit Track", status: "Open", distance: "1,400m", entries: 11 },
+  { time: "20:00", title: "Champion Trial", venue: "Main Track", status: "Open", distance: "2,200m", entries: 6 },
 ];
 
 const topPicks = [
@@ -44,115 +48,117 @@ const quickActions = [
 ];
 
 const SpectatorHome = () => {
+  const overviewStats = [
+    { label: "Reward balance", value: "1,280", note: "points ready", icon: CircleDollarSign },
+    { label: "Active bets", value: "04", note: "tracking now", icon: Radio },
+    { label: "Win rate", value: "62%", note: "last 30 picks", icon: LineChart },
+    { label: "Next gate", value: "14:00", note: "Emerald Sprint", icon: Clock3 },
+  ];
+
   return (
     <section className="spectator-page spectator-overview">
-      <div className="spectator-overview-hero">
-        <div className="spectator-overview-hero__media">
-          <img src={raceImages[0]} alt="Horse racecourse grandstand" />
-          <div className="spectator-overview-hero__overlay">
-            <span className="spectator-badge spectator-badge--green">Live season</span>
-            <strong>Grand Circuit 2026</strong>
-            <span>18 races - 6 tournaments - 42 confirmed contenders</span>
-          </div>
-        </div>
-
+      <div className="spectator-overview-hero spectator-overview-hero--redesign">
         <div className="spectator-overview-hero__content">
-          <p className="spectator-eyebrow">Spectator Command Center</p>
-          <h1 className="spectator-title">Watch the season unfold from the best seat in the system.</h1>
+          <span className="spectator-live-pill"><Radio size={15} /> Live circuit</span>
+          <h1 className="spectator-title">Follow every race signal before the gate opens.</h1>
           <p className="spectator-copy">
-            Discover tournaments, follow the race timeline, compare contenders, predict winners, and track reward outcomes in one focused spectator dashboard.
+            A sharper overview for tournaments, race timing, prediction balance, contender form, and official reward outcomes.
           </p>
           <div className="spectator-actions">
-            <Link className="spectator-button spectator-button--primary" to="/spectator/predictions">Make Prediction</Link>
-            <Link className="spectator-button" to="/spectator/tournaments">View Tournaments</Link>
+            <Link className="spectator-button spectator-button--primary" to="/spectator/predictions">
+              Make Prediction
+              <ArrowRight size={17} />
+            </Link>
+            <Link className="spectator-button" to="/spectator/tournaments">
+              View Tournaments
+            </Link>
+          </div>
+
+          <dl className="spectator-hero-signal-grid">
+            <div>
+              <dt>Current circuit</dt>
+              <dd>Grand Circuit 2026</dd>
+            </div>
+            <div>
+              <dt>Confirmed contenders</dt>
+              <dd>42 horses</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="spectator-overview-hero__media">
+          <img src={raceImages[0]} alt="Horse racecourse grandstand" />
+          <div className="spectator-live-race-card">
+            <span className="spectator-badge spectator-badge--green">Live season</span>
+            <strong>Emerald Sprint</strong>
+            <span>Grandstand A - 1,200m - 8 entries</span>
           </div>
         </div>
       </div>
 
-      <div className="spectator-overview-stats">
-        <article>
-          <span>Reward Balance</span>
-          <strong>1,280</strong>
-          <small>Prediction points available</small>
-        </article>
-        <article>
-          <span>Active Bets</span>
-          <strong>04</strong>
-          <small>Waiting for official results</small>
-        </article>
-        <article>
-          <span>Win Rate</span>
-          <strong>62%</strong>
-          <small>Across last 30 predictions</small>
-        </article>
-        <article>
-          <span>Next Gate</span>
-          <strong>14:00</strong>
-          <small>Emerald Sprint opens soon</small>
-        </article>
+      <div className="spectator-overview-stats spectator-overview-stats--redesign">
+        {overviewStats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <article key={stat.label}>
+              <Icon size={18} />
+              <span>{stat.label}</span>
+              <strong>{stat.value}</strong>
+              <small>{stat.note}</small>
+            </article>
+          );
+        })}
       </div>
 
-      <div className="spectator-overview-layout">
-        <article className="spectator-card spectator-feature-card">
+      <div className="spectator-command-grid">
+        <article className="spectator-card spectator-race-board">
           <div className="spectator-card__header">
             <div>
-              <p className="spectator-eyebrow">Featured Tournament</p>
-              <h2>Wolverhampton Night Circuit</h2>
+              <p className="spectator-eyebrow">Race Timeline</p>
+              <h2>Today at the track</h2>
             </div>
-            <Link className="spectator-badge" to="/spectator/tournaments">Details</Link>
-          </div>
-          <img src={raceImages[1]} alt="Racecourse event overview" />
-          <div className="spectator-feature-card__footer">
-            <div>
-              <strong>$500,000</strong>
-              <span>Prize pool</span>
-            </div>
-            <div>
-              <strong>June 15</strong>
-              <span>Opening date</span>
-            </div>
-            <div>
-              <strong>12</strong>
-              <span>Registered horses</span>
-            </div>
-          </div>
-        </article>
-
-        <aside className="spectator-card spectator-wallet-card">
-          <div className="spectator-card__header">
-            <h2>Reward Wallet</h2>
-            <span className="spectator-badge spectator-badge--amber">Ready</span>
-          </div>
-          <div className="spectator-wallet-card__balance">1,280 pts</div>
-          <div className="spectator-wallet-card__bar" aria-hidden="true"><span /></div>
-          <p className="spectator-meta">Earn points from correct race predictions and follow every reward from the results page.</p>
-          <Link className="spectator-button" to="/spectator/results">View Rewards</Link>
-        </aside>
-      </div>
-
-      <div className="spectator-grid spectator-grid--two">
-        <article className="spectator-card">
-          <div className="spectator-card__header">
-            <h2>Race Timeline</h2>
             <Link className="spectator-badge" to="/spectator/results">Results</Link>
           </div>
-          <div className="spectator-timeline spectator-overview-timeline">
+
+          <div className="spectator-race-board__list">
             {nextRaces.map((race) => (
-              <div className="spectator-timeline__item" key={race.title}>
-                <span className="spectator-time">{race.time}</span>
-                <div>
-                  <h3>{race.title}</h3>
-                  <span className="spectator-meta">{race.venue} - {race.distance} - {race.entries} entries</span>
-                </div>
-                <span className={`spectator-badge ${race.status === "Live" ? "spectator-badge--green" : "spectator-badge--amber"}`}>{race.status}</span>
-              </div>
+              <Link className="spectator-race-row" to="/spectator/predictions" key={race.title}>
+                <span className="spectator-race-row__time">{race.time}</span>
+                <span className="spectator-race-row__body">
+                  <strong>{race.title}</strong>
+                  <small>{race.venue} - {race.distance} - {race.entries} entries</small>
+                </span>
+                <span className={`spectator-badge ${race.status === "Live" ? "spectator-badge--green" : "spectator-badge--amber"}`}>
+                  {race.status}
+                </span>
+              </Link>
             ))}
           </div>
         </article>
 
-        <article className="spectator-card">
+        <aside className="spectator-card spectator-wallet-card spectator-wallet-card--redesign">
           <div className="spectator-card__header">
-            <h2>Popular Picks</h2>
+            <div>
+              <p className="spectator-eyebrow">Reward Wallet</p>
+              <h2>1,280 pts</h2>
+            </div>
+            <span className="spectator-badge spectator-badge--amber">Ready</span>
+          </div>
+          <div className="spectator-wallet-card__bar" aria-hidden="true"><span /></div>
+          <p className="spectator-meta">Your next correct prediction can unlock the weekly reward tier.</p>
+          <div className="spectator-wallet-card__split">
+            <span>Weekly target</span>
+            <strong>68%</strong>
+          </div>
+          <Link className="spectator-button" to="/spectator/results">View Rewards</Link>
+        </aside>
+
+        <article className="spectator-card spectator-popular-card">
+          <div className="spectator-card__header">
+            <div>
+              <p className="spectator-eyebrow">Public Picks</p>
+              <h2>Market favorites</h2>
+            </div>
             <Link className="spectator-badge" to="/spectator/leaderboard">Ranking</Link>
           </div>
           <ul className="spectator-list">
@@ -160,7 +166,7 @@ const SpectatorHome = () => {
               <li className="spectator-list__item" key={pick.name}>
                 <img className="spectator-list__thumb" src={pick.image} alt={pick.name} />
                 <div>
-                  <h3>#{pick.rank} {pick.name}</h3>
+                  <h3>{pick.name}</h3>
                   <span className="spectator-meta">{pick.meta}</span>
                 </div>
                 <span className="spectator-badge">{pick.odds}</span>
@@ -170,24 +176,33 @@ const SpectatorHome = () => {
         </article>
       </div>
 
-      <div className="spectator-overview-gallery">
-        {raceImages.map((image, index) => (
-          <article key={image}>
-            <img src={image} alt={`Racecourse highlight ${index + 1}`} />
-            <div>
-              <span className="spectator-badge">{index === 0 ? "Grandstand" : index === 1 ? "Race Day" : "Trackside"}</span>
-              <strong>{index === 0 ? "Crowd energy" : index === 1 ? "Race analysis" : "Finish line watch"}</strong>
-            </div>
-          </article>
-        ))}
+      <div className="spectator-feature-strip">
+        <article className="spectator-feature-strip__image">
+          <img src={raceImages[1]} alt="Racecourse event overview" />
+        </article>
+        <article className="spectator-feature-strip__content">
+          <span className="spectator-badge"><Trophy size={14} /> Featured tournament</span>
+          <h2>Wolverhampton Night Circuit</h2>
+          <p>Track the June 15 opening card, $500,000 prize pool, and the first 12 confirmed horses.</p>
+          <Link className="spectator-button spectator-button--primary" to="/spectator/tournaments">
+            Tournament Details
+            <ArrowRight size={17} />
+          </Link>
+        </article>
+        <article className="spectator-feature-strip__meta">
+          <CalendarDays size={20} />
+          <strong>June 15</strong>
+          <span>Opening date</span>
+        </article>
       </div>
 
-      <div className="spectator-overview-actions">
-        {quickActions.map((action) => (
-          <Link className="spectator-card spectator-overview-action" key={action.label} to={action.to}>
-            <span className="spectator-badge">Open</span>
+      <div className="spectator-overview-actions spectator-overview-actions--redesign">
+        {quickActions.map((action, index) => (
+          <Link className="spectator-overview-action" key={action.label} to={action.to}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
             <strong>{action.label}</strong>
             <small>{action.meta}</small>
+            <Sparkles size={16} aria-hidden="true" />
           </Link>
         ))}
       </div>

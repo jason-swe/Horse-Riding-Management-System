@@ -1,0 +1,2620 @@
+.jockey-page {
+  --jockey-text-strong: #fff8ea;
+  --jockey-text: #f7f3e8;
+  --jockey-text-soft: #e6ddc8;
+  --jockey-text-muted: #d4c8b3;
+  min-height: 100dvh;
+  padding: 28px clamp(16px, 4vw, 48px) 48px;
+  color: var(--jockey-text);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 122, 43, 0.18), transparent 28%),
+    radial-gradient(circle at 86% 10%, rgba(238, 231, 212, 0.22), transparent 26%),
+    linear-gradient(180deg, #314c3d 0%, #294536 52%, #22392d 100%);
+}
+
+.jockey-page * {
+  box-sizing: border-box;
+  text-wrap: pretty;
+}
+
+.jockey-page :focus-visible {
+  outline: 3px solid rgba(240, 161, 92, 0.72);
+  outline-offset: 3px;
+}
+
+.jockey-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1240px;
+  margin: 0 auto 30px;
+}
+
+.jockey-brand {
+  text-decoration: none;
+}
+
+.jockey-nav {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 999px;
+  background: rgba(238, 231, 212, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.jockey-nav__link,
+.jockey-button,
+.jockey-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.jockey-nav__link {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: var(--jockey-text-soft);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.jockey-nav__link:hover {
+  color: var(--jockey-text-strong);
+  background: rgba(238, 231, 212, 0.28);
+  transform: translateY(-1px);
+}
+
+.jockey-nav__link--active {
+  color: #294536;
+  background: var(--jockey-text-strong);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.jockey-topbar__actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jockey-icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 999px;
+  color: var(--jockey-text-strong);
+  background: rgba(238, 231, 212, 0.11);
+}
+
+.jockey-icon-button:hover {
+  border-color: rgba(238, 231, 212, 0.42);
+  background: rgba(238, 231, 212, 0.22);
+  transform: translateY(-1px);
+}
+
+.jockey-button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(238, 231, 212, 0.26);
+  border-radius: 4px;
+  color: var(--jockey-text-strong);
+  background: rgba(238, 231, 212, 0.12);
+  font-weight: 800;
+}
+
+.jockey-button:hover {
+  border-color: rgba(238, 231, 212, 0.46);
+  background: rgba(238, 231, 212, 0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(21, 35, 26, 0.22);
+}
+
+.jockey-button:active,
+.jockey-icon-button:active,
+.jockey-nav__link:active {
+  transform: translateY(1px);
+}
+
+.jockey-button--primary {
+  border-color: transparent;
+  color: var(--jockey-text-strong);
+  background: linear-gradient(180deg, #ff7b2b, #d97735);
+  box-shadow: 0 16px 28px rgba(217, 119, 53, 0.28);
+}
+
+.jockey-button--primary:hover {
+  background: linear-gradient(180deg, #ff8d44, #d97735);
+  box-shadow: 0 20px 34px rgba(217, 119, 53, 0.36);
+}
+
+.jockey-button--ghost {
+  border-radius: 999px;
+}
+
+.jockey-content {
+  animation: jockeyFadeIn 300ms ease-out;
+}
+
+@keyframes jockeyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jockey-notification-menu {
+  position: relative;
+}
+
+.jockey-notification-trigger {
+  position: relative;
+  padding: 0;
+}
+
+.jockey-notification-trigger span {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid #294536;
+  border-radius: 999px;
+  color: #294536;
+  background: #ffd08a;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.jockey-notification-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 40;
+  width: min(380px, calc(100vw - 28px));
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 8px;
+  background: rgba(26, 45, 35, 0.96);
+  box-shadow: 0 26px 60px rgba(12, 24, 17, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.jockey-notification-popover.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.jockey-notification-popover::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid rgba(238, 231, 212, 0.28);
+  border-left: 1px solid rgba(238, 231, 212, 0.28);
+  background: rgba(26, 45, 35, 0.96);
+  transform: rotate(45deg);
+}
+
+.jockey-notification-popover__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jockey-notification-popover__header h2 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.jockey-notification-popover__list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.jockey-notification-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.075);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.jockey-notification-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 161, 92, 0.32);
+  background: rgba(238, 231, 212, 0.13);
+}
+
+.jockey-notification-item__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffd08a;
+  background: rgba(240, 161, 92, 0.16);
+}
+
+.jockey-notification-item strong {
+  display: block;
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.jockey-notification-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--jockey-text-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.jockey-notification-popover__footer {
+  position: relative;
+  z-index: 1;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  color: var(--jockey-text-strong);
+  background: rgba(238, 231, 212, 0.1);
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.jockey-notification-popover__footer:hover {
+  transform: translateY(-1px);
+  border-color: rgba(240, 161, 92, 0.38);
+  background: rgba(238, 231, 212, 0.16);
+}
+
+.jockey-dashboard {
+  display: grid;
+  gap: 18px;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.jockey-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 24px;
+  align-items: end;
+  min-height: 500px;
+  padding: clamp(24px, 4vw, 46px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-hero > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.jockey-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(22, 38, 30, 0.96) 0%, rgba(22, 38, 30, 0.72) 48%, rgba(22, 38, 30, 0.24) 100%),
+    radial-gradient(circle at 80% 18%, rgba(240, 161, 92, 0.22), transparent 34%);
+}
+
+.jockey-hero__copy,
+.jockey-hero__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.jockey-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: #f0a15c;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.jockey-hero__copy h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.65rem, 5.8vw, 5.2rem);
+  line-height: 0.92;
+}
+
+.jockey-hero__copy p:not(.jockey-kicker) {
+  max-width: 58ch;
+  margin: 18px 0 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.65;
+}
+
+.jockey-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.jockey-hero__panel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 8px;
+  background: rgba(22, 38, 30, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.jockey-hero__panel strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.jockey-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 999px;
+  color: var(--jockey-text-strong);
+  background: rgba(238, 231, 212, 0.13);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.jockey-badge--green {
+  border-color: rgba(114, 223, 138, 0.46);
+  color: #9af0ad;
+  background: rgba(78, 207, 107, 0.18);
+}
+
+.jockey-badge--amber {
+  border-color: rgba(255, 189, 99, 0.48);
+  color: #ffd08a;
+  background: rgba(255, 179, 71, 0.18);
+}
+
+.jockey-badge--muted {
+  border-color: rgba(212, 200, 179, 0.32);
+  color: var(--jockey-text-muted);
+  background: rgba(238, 231, 212, 0.08);
+}
+
+.jockey-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jockey-stat-card,
+.jockey-card,
+.jockey-visual-card,
+.jockey-race-strip__item {
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-stat-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-stat-card:hover,
+.jockey-card:hover,
+.jockey-visual-card:hover,
+.jockey-race-strip__item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 161, 92, 0.34);
+  background: rgba(238, 231, 212, 0.14);
+  box-shadow: 0 18px 38px rgba(16, 29, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-stat-card svg {
+  color: #f0a15c;
+}
+
+.jockey-stat-card span,
+.jockey-stat-card small {
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-stat-card strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.jockey-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.65fr);
+  gap: 18px;
+}
+
+.jockey-card {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.2vw, 24px);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jockey-card__header h2,
+.jockey-visual-card h2,
+.jockey-race-strip__item strong,
+.jockey-next-race__body strong,
+.jockey-invite-item strong,
+.jockey-assignment-item strong {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.08;
+}
+
+.jockey-next-race__body {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.jockey-date-block {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 12px;
+  border: 1px solid rgba(240, 161, 92, 0.28);
+  border-radius: 8px;
+  background: rgba(240, 161, 92, 0.1);
+}
+
+.jockey-date-block span {
+  color: #ffd08a;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.jockey-date-block strong {
+  color: var(--jockey-text-strong);
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jockey-next-race__body > div:last-child {
+  display: grid;
+  gap: 7px;
+}
+
+.jockey-next-race__body span,
+.jockey-next-race__body small,
+.jockey-invite-item small,
+.jockey-assignment-item small,
+.jockey-race-strip__item small {
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-next-race__body small,
+.jockey-race-strip__item small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.jockey-invite-list,
+.jockey-assignment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.jockey-invite-item,
+.jockey-assignment-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.jockey-invite-item > div,
+.jockey-assignment-item > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.jockey-invite-item span:not(.jockey-badge) {
+  color: #f0a15c;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-dashboard-lower {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.62fr) minmax(300px, 0.7fr) minmax(300px, 0.68fr);
+  gap: 18px;
+}
+
+.jockey-visual-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 420px;
+  display: grid;
+  align-content: end;
+  padding: 18px;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-visual-card img,
+.jockey-result-card > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jockey-visual-card img {
+  position: absolute;
+  inset: 0;
+  transition: transform 620ms ease, filter 620ms ease;
+}
+
+.jockey-visual-card:hover img {
+  transform: scale(1.06);
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.jockey-visual-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(29, 48, 36, 0.02), rgba(15, 28, 20, 0.7));
+}
+
+.jockey-visual-card > div {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 9px;
+  padding: 16px;
+  border: 1px solid rgba(238, 231, 212, 0.26);
+  border-radius: 8px;
+  background: rgba(22, 38, 30, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.jockey-visual-card p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.5;
+}
+
+.jockey-assignment-item {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.jockey-result-card > img {
+  max-height: 170px;
+  border: 1px solid rgba(238, 231, 212, 0.18);
+  border-radius: 8px;
+}
+
+.jockey-result-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.jockey-result-card__stats div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-result-card__stats span {
+  color: var(--jockey-text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-result-card__stats strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.12;
+}
+
+.jockey-race-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jockey-race-strip__item {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-race-strip__item div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffd08a;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.jockey-invitations-page {
+  display: grid;
+  gap: 18px;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.jockey-invitations-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 24px;
+  align-items: end;
+  min-height: 430px;
+  padding: clamp(24px, 4vw, 46px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-invitations-hero > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.jockey-invitations-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(22, 38, 30, 0.96) 0%, rgba(22, 38, 30, 0.7) 48%, rgba(22, 38, 30, 0.24) 100%),
+    radial-gradient(circle at 80% 18%, rgba(240, 161, 92, 0.22), transparent 34%);
+}
+
+.jockey-invitations-hero__copy,
+.jockey-invitations-hero__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.jockey-invitations-hero__copy h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.65rem, 5.8vw, 5.2rem);
+  line-height: 0.92;
+}
+
+.jockey-invitations-hero__copy p:not(.jockey-kicker) {
+  max-width: 58ch;
+  margin: 18px 0 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.65;
+}
+
+.jockey-invitations-hero__panel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 8px;
+  background: rgba(22, 38, 30, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.jockey-invitations-hero__panel strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.jockey-invitations-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-invitation-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jockey-invitation-stat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-invitation-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 161, 92, 0.34);
+  background: rgba(238, 231, 212, 0.14);
+  box-shadow: 0 18px 38px rgba(16, 29, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-invitation-stat svg {
+  color: #f0a15c;
+}
+
+.jockey-invitation-stat span,
+.jockey-invitation-stat small {
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-invitation-stat strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1;
+}
+
+.jockey-invitation-board {
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-invitation-board__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jockey-invitation-board__header h2 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.jockey-segmented {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 999px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-segmented button {
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--jockey-text-soft);
+  background: transparent;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.jockey-segmented button:hover,
+.jockey-segmented__active {
+  color: #294536 !important;
+  background: var(--jockey-text-strong) !important;
+}
+
+.jockey-invitation-list {
+  display: grid;
+  gap: 14px;
+}
+
+.jockey-invitation-card {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+  min-width: 0;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-invitation-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(240, 161, 92, 0.36);
+  background: rgba(238, 231, 212, 0.12);
+  box-shadow: 0 22px 48px rgba(19, 31, 24, 0.28);
+}
+
+.jockey-invitation-card__media {
+  position: relative;
+  overflow: hidden;
+  min-height: 330px;
+}
+
+.jockey-invitation-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 620ms ease, filter 620ms ease;
+}
+
+.jockey-invitation-card:hover .jockey-invitation-card__media img {
+  transform: scale(1.06);
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.jockey-invitation-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(29, 48, 36, 0.02), rgba(15, 28, 20, 0.56));
+}
+
+.jockey-invitation-card__media .jockey-badge {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.jockey-invitation-card__body {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.jockey-invitation-card__title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jockey-invitation-card__title h3 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 0.98;
+}
+
+.jockey-invitation-card__title > strong {
+  max-width: 16ch;
+  color: #ffd08a;
+  font-size: 0.86rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.jockey-invitation-card__body p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-invitation-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.jockey-invitation-meta div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-invitation-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--jockey-text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-invitation-meta strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.jockey-invitation-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.jockey-invitation-card__actions .jockey-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.jockey-empty {
+  padding: 28px;
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 8px;
+  color: var(--jockey-text-soft);
+  text-align: center;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-schedule-page {
+  display: grid;
+  gap: 18px;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.jockey-schedule-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 24px;
+  align-items: end;
+  min-height: 430px;
+  padding: clamp(24px, 4vw, 46px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-schedule-hero > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.jockey-schedule-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(22, 38, 30, 0.96) 0%, rgba(22, 38, 30, 0.7) 48%, rgba(22, 38, 30, 0.24) 100%),
+    radial-gradient(circle at 80% 18%, rgba(240, 161, 92, 0.22), transparent 34%);
+}
+
+.jockey-schedule-hero__copy,
+.jockey-schedule-hero__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.jockey-schedule-hero__copy h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.65rem, 5.8vw, 5.2rem);
+  line-height: 0.92;
+}
+
+.jockey-schedule-hero__copy p:not(.jockey-kicker) {
+  max-width: 58ch;
+  margin: 18px 0 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.65;
+}
+
+.jockey-schedule-hero__panel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 8px;
+  background: rgba(22, 38, 30, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.jockey-schedule-hero__panel strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.jockey-schedule-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-schedule-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jockey-schedule-stat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-schedule-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 161, 92, 0.34);
+  background: rgba(238, 231, 212, 0.14);
+  box-shadow: 0 18px 38px rgba(16, 29, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-schedule-stat svg {
+  color: #f0a15c;
+}
+
+.jockey-schedule-stat span,
+.jockey-schedule-stat small {
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-schedule-stat strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1;
+}
+
+.jockey-schedule-board {
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-schedule-board__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jockey-schedule-board__header h2 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.jockey-schedule-list {
+  display: grid;
+  gap: 14px;
+}
+
+.jockey-schedule-slot {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(240px, 0.38fr) minmax(0, 1fr);
+  min-width: 0;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-schedule-slot:hover {
+  transform: translateY(-3px);
+  border-color: rgba(240, 161, 92, 0.36);
+  background: rgba(238, 231, 212, 0.12);
+  box-shadow: 0 22px 48px rgba(19, 31, 24, 0.28);
+}
+
+.jockey-schedule-slot__media {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.jockey-schedule-slot__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 620ms ease, filter 620ms ease;
+}
+
+.jockey-schedule-slot:hover .jockey-schedule-slot__media img {
+  transform: scale(1.06);
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.jockey-schedule-slot__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(29, 48, 36, 0.02), rgba(15, 28, 20, 0.56));
+}
+
+.jockey-schedule-slot__media .jockey-badge {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.jockey-schedule-slot__body {
+  display: grid;
+  grid-template-columns: 122px minmax(0, 1fr);
+  gap: 16px;
+  align-content: start;
+  padding: 20px;
+}
+
+.jockey-schedule-slot__time {
+  display: grid;
+  gap: 6px;
+  align-self: start;
+  padding: 12px;
+  border: 1px solid rgba(240, 161, 92, 0.28);
+  border-radius: 8px;
+  background: rgba(240, 161, 92, 0.1);
+}
+
+.jockey-schedule-slot__time span {
+  color: #ffd08a;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.jockey-schedule-slot__time strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.jockey-schedule-slot__race {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.jockey-schedule-slot__race h3 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  line-height: 1;
+}
+
+.jockey-schedule-slot__race small,
+.jockey-schedule-slot__footer small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-schedule-slot__meta,
+.jockey-schedule-slot__footer {
+  grid-column: 1 / -1;
+}
+
+.jockey-schedule-slot__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.jockey-schedule-slot__meta div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-schedule-slot__meta span {
+  color: var(--jockey-text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-schedule-slot__meta strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.jockey-schedule-slot__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.jockey-schedule-slot__footer svg {
+  color: #f0a15c;
+}
+
+.jockey-assignments-page {
+  display: grid;
+  gap: 18px;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.jockey-assignments-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 24px;
+  align-items: end;
+  min-height: 430px;
+  padding: clamp(24px, 4vw, 46px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.jockey-assignments-hero > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.jockey-assignments-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(22, 38, 30, 0.96) 0%, rgba(22, 38, 30, 0.7) 48%, rgba(22, 38, 30, 0.24) 100%),
+    radial-gradient(circle at 80% 18%, rgba(240, 161, 92, 0.22), transparent 34%);
+}
+
+.jockey-assignments-hero__copy,
+.jockey-assignments-hero__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.jockey-assignments-hero__copy h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.65rem, 5.8vw, 5.2rem);
+  line-height: 0.92;
+}
+
+.jockey-assignments-hero__copy p:not(.jockey-kicker) {
+  max-width: 58ch;
+  margin: 18px 0 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.65;
+}
+
+.jockey-assignments-hero__panel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 8px;
+  background: rgba(22, 38, 30, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.jockey-assignments-hero__panel strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.jockey-assignments-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-assignment-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jockey-assignment-stat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-assignment-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240, 161, 92, 0.34);
+  background: rgba(238, 231, 212, 0.14);
+  box-shadow: 0 18px 38px rgba(16, 29, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-assignment-stat svg {
+  color: #f0a15c;
+}
+
+.jockey-assignment-stat span,
+.jockey-assignment-stat small {
+  color: var(--jockey-text-muted);
+  line-height: 1.35;
+}
+
+.jockey-assignment-stat strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1;
+}
+
+.jockey-assignment-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.jockey-assignment-profile {
+  position: sticky;
+  top: 22px;
+  overflow: hidden;
+  display: grid;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-assignment-profile > img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.jockey-assignment-profile > div {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.jockey-assignment-profile strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.jockey-assignment-profile p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.45;
+}
+
+.jockey-assignment-board {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.jockey-assignment-board__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jockey-assignment-board__header h2 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.jockey-assignment-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.jockey-assignment-card {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr);
+  min-width: 0;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.jockey-assignment-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(240, 161, 92, 0.36);
+  background: rgba(238, 231, 212, 0.12);
+  box-shadow: 0 22px 48px rgba(19, 31, 24, 0.28);
+}
+
+.jockey-assignment-card__media {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.jockey-assignment-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 620ms ease, filter 620ms ease;
+}
+
+.jockey-assignment-card:hover .jockey-assignment-card__media img {
+  transform: scale(1.06);
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.jockey-assignment-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(29, 48, 36, 0.02), rgba(15, 28, 20, 0.56));
+}
+
+.jockey-assignment-card__media .jockey-badge {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.jockey-assignment-card__body {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.jockey-assignment-card__title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jockey-assignment-card__title h3 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 0.98;
+}
+
+.jockey-assignment-card__title > strong {
+  max-width: 16ch;
+  color: #ffd08a;
+  font-size: 0.86rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.jockey-assignment-card__body p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-assignment-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.jockey-assignment-meta div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-assignment-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--jockey-text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-assignment-meta strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.jockey-results-page {
+  display: grid;
+  gap: 22px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.jockey-results-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 430px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.4fr);
+  align-items: end;
+  gap: 22px;
+  overflow: hidden;
+  padding: clamp(22px, 4vw, 44px);
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.08);
+  box-shadow: 0 26px 70px rgba(19, 34, 25, 0.26);
+}
+
+.jockey-results-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(27, 45, 34, 0.9), rgba(27, 45, 34, 0.46) 52%, rgba(27, 45, 34, 0.18)),
+    radial-gradient(circle at 18% 18%, rgba(255, 123, 43, 0.28), transparent 28%);
+}
+
+.jockey-results-hero > img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 36%;
+  filter: saturate(0.9) contrast(1.02);
+}
+
+.jockey-results-hero__copy {
+  max-width: 760px;
+}
+
+.jockey-results-hero__copy h1 {
+  max-width: 13ch;
+  margin: 8px 0 14px;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(3.3rem, 8vw, 6.8rem);
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+.jockey-results-hero__copy p {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--jockey-text-soft);
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.jockey-results-hero__panel {
+  display: grid;
+  gap: 12px;
+  justify-self: end;
+  width: min(100%, 310px);
+  padding: 18px;
+  border: 1px solid rgba(238, 231, 212, 0.26);
+  border-radius: 8px;
+  background: rgba(38, 62, 47, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.jockey-results-hero__panel strong {
+  color: #ffd08a;
+  font-family: "Sora", sans-serif;
+  font-size: clamp(3rem, 6vw, 5.2rem);
+  line-height: 0.9;
+}
+
+.jockey-results-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.4;
+}
+
+.jockey-results-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.jockey-results-stat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(238, 231, 212, 0.18);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.jockey-results-stat:hover {
+  border-color: rgba(255, 208, 138, 0.42);
+  background: rgba(238, 231, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+.jockey-results-stat svg {
+  color: #ffd08a;
+}
+
+.jockey-results-stat span,
+.jockey-results-stat small {
+  min-width: 0;
+  color: var(--jockey-text-muted);
+  font-weight: 900;
+}
+
+.jockey-results-stat strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.55rem, 3vw, 2.45rem);
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+
+.jockey-results-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.36fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.jockey-results-feature,
+.jockey-results-board {
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: 0 20px 52px rgba(15, 30, 21, 0.18);
+}
+
+.jockey-results-feature {
+  position: sticky;
+  top: 18px;
+  overflow: hidden;
+  display: grid;
+}
+
+.jockey-results-feature > img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.02);
+}
+
+.jockey-results-feature > div:not(.jockey-results-feature__metrics) {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.jockey-results-feature h2 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.65rem, 3vw, 2.55rem);
+  line-height: 0.98;
+}
+
+.jockey-results-feature p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+}
+
+.jockey-results-feature__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+.jockey-results-feature__metrics div,
+.jockey-results-row__metrics div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-results-feature__metrics span,
+.jockey-results-row__metrics span {
+  color: var(--jockey-text-muted);
+  font-size: 0.74rem;
+  font-weight: 1000;
+}
+
+.jockey-results-feature__metrics strong,
+.jockey-results-row__metrics strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.jockey-results-board {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.jockey-results-board__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.jockey-results-board__header h2 {
+  margin: 5px 0 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1;
+}
+
+.jockey-results-list {
+  display: grid;
+  gap: 10px;
+}
+
+.jockey-results-row {
+  display: grid;
+  grid-template-columns: 82px minmax(170px, 1fr) minmax(300px, 0.9fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.jockey-results-row:hover {
+  border-color: rgba(255, 208, 138, 0.34);
+  background: rgba(255, 255, 255, 0.095);
+  transform: translateY(-2px);
+}
+
+.jockey-results-row__date {
+  width: 70px;
+  min-height: 70px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 208, 138, 0.34);
+  border-radius: 8px;
+  color: #ffd08a;
+  background: rgba(255, 208, 138, 0.1);
+  font-family: "Sora", sans-serif;
+  text-align: center;
+}
+
+.jockey-results-row__date span {
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.jockey-results-row__date strong {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.jockey-results-row__main {
+  min-width: 0;
+}
+
+.jockey-results-row__main h3 {
+  margin: 5px 0 8px;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+  line-height: 1.02;
+}
+
+.jockey-results-row__main p {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--jockey-text-soft);
+  font-weight: 800;
+}
+
+.jockey-results-row__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.jockey-results-row > .jockey-badge {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.jockey-profile-page {
+  display: grid;
+  gap: 22px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.jockey-profile-hero {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.36fr) minmax(0, 1fr) minmax(240px, 0.34fr);
+  align-items: end;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 208, 138, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(238, 231, 212, 0.14), rgba(238, 231, 212, 0.06));
+  box-shadow: 0 24px 64px rgba(15, 30, 21, 0.22);
+}
+
+.jockey-profile-hero__portrait {
+  position: relative;
+  overflow: hidden;
+  min-height: 360px;
+  border: 1px solid rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.09);
+}
+
+.jockey-profile-hero__portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 48%, rgba(20, 34, 26, 0.78));
+}
+
+.jockey-profile-hero__portrait img {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  object-position: center top;
+  filter: saturate(0.94) contrast(1.02);
+  transition: transform 360ms ease;
+}
+
+.jockey-profile-hero__portrait:hover img {
+  transform: scale(1.035);
+}
+
+.jockey-profile-hero__portrait .jockey-badge {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.jockey-profile-hero__copy {
+  display: grid;
+  gap: 14px;
+  align-self: center;
+  padding: clamp(6px, 2vw, 20px);
+}
+
+.jockey-profile-hero__copy h1 {
+  margin: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(3.6rem, 8vw, 7rem);
+  line-height: 0.84;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+.jockey-profile-hero__copy p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--jockey-text-soft);
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.jockey-profile-hero__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jockey-profile-hero__tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(238, 231, 212, 0.18);
+  border-radius: 999px;
+  color: var(--jockey-text-soft);
+  background: rgba(255, 255, 255, 0.07);
+  font-weight: 900;
+}
+
+.jockey-profile-hero__panel {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(255, 208, 138, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 208, 138, 0.1);
+}
+
+.jockey-profile-hero__panel strong {
+  color: #ffd08a;
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.65rem);
+  line-height: 0.98;
+}
+
+.jockey-profile-hero__panel p {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.4;
+}
+
+.jockey-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.jockey-profile-stat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(238, 231, 212, 0.18);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.jockey-profile-stat:hover {
+  border-color: rgba(255, 208, 138, 0.42);
+  background: rgba(238, 231, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+.jockey-profile-stat svg {
+  color: #ffd08a;
+}
+
+.jockey-profile-stat span,
+.jockey-profile-stat small {
+  min-width: 0;
+  color: var(--jockey-text-muted);
+  font-weight: 900;
+}
+
+.jockey-profile-stat strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+
+.jockey-profile-layout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.jockey-profile-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(238, 231, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+  box-shadow: 0 20px 52px rgba(15, 30, 21, 0.16);
+}
+
+.jockey-profile-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jockey-profile-card__header h2 {
+  margin: 5px 0 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.jockey-profile-card__header > svg {
+  flex: 0 0 auto;
+  color: #ffd08a;
+}
+
+.jockey-profile-contact {
+  grid-column: span 5;
+}
+
+.jockey-profile-license {
+  grid-column: span 7;
+}
+
+.jockey-profile-next {
+  grid-column: span 5;
+}
+
+.jockey-profile-result {
+  grid-column: span 3;
+}
+
+.jockey-profile-activity {
+  grid-column: span 4;
+}
+
+.jockey-profile-detail-list,
+.jockey-profile-license__grid,
+.jockey-profile-result__metrics,
+.jockey-profile-activity__list {
+  display: grid;
+  gap: 10px;
+}
+
+.jockey-profile-detail-list div,
+.jockey-profile-license__grid div,
+.jockey-profile-result__metrics div,
+.jockey-profile-activity__item {
+  min-width: 0;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.jockey-profile-detail-list div {
+  display: grid;
+  grid-template-columns: 18px 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+}
+
+.jockey-profile-detail-list svg {
+  color: #ffd08a;
+}
+
+.jockey-profile-detail-list span,
+.jockey-profile-license__grid span,
+.jockey-profile-result__metrics span {
+  color: var(--jockey-text-muted);
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.jockey-profile-detail-list strong,
+.jockey-profile-license__grid strong,
+.jockey-profile-result__metrics strong,
+.jockey-profile-activity__item strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.jockey-profile-license__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.jockey-profile-license__grid div,
+.jockey-profile-result__metrics div {
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+}
+
+.jockey-profile-next__body {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.jockey-profile-next__body > div:last-child {
+  display: grid;
+  gap: 6px;
+}
+
+.jockey-profile-next__body strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.28rem;
+  line-height: 1.1;
+}
+
+.jockey-profile-next__body span,
+.jockey-profile-next__body small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--jockey-text-soft);
+  line-height: 1.35;
+}
+
+.jockey-profile-result__metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.jockey-profile-activity__item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+}
+
+.jockey-profile-activity__item > span {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 208, 138, 0.34);
+  border-radius: 8px;
+  color: #ffd08a;
+  background: rgba(255, 208, 138, 0.1);
+  font-family: "Sora", sans-serif;
+  font-weight: 900;
+}
+
+.jockey-profile-activity__item div {
+  display: grid;
+  gap: 5px;
+}
+
+.jockey-profile-activity__item small {
+  color: var(--jockey-text-muted);
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jockey-content,
+  .jockey-nav__link,
+  .jockey-button,
+  .jockey-icon-button,
+  .jockey-notification-popover,
+  .jockey-notification-item,
+  .jockey-notification-popover__footer,
+  .jockey-stat-card,
+  .jockey-card,
+  .jockey-visual-card,
+  .jockey-visual-card img,
+  .jockey-race-strip__item,
+  .jockey-invitation-stat,
+  .jockey-segmented button,
+  .jockey-invitation-card,
+  .jockey-invitation-card__media img,
+  .jockey-schedule-stat,
+  .jockey-schedule-slot,
+  .jockey-schedule-slot__media img,
+  .jockey-assignment-stat,
+  .jockey-assignment-card,
+  .jockey-assignment-card__media img,
+  .jockey-results-stat,
+  .jockey-results-row,
+  .jockey-profile-stat,
+  .jockey-profile-hero__portrait img {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .jockey-topbar,
+  .jockey-hero,
+  .jockey-dashboard-grid,
+  .jockey-dashboard-lower,
+  .jockey-invitations-hero,
+  .jockey-invitation-card,
+  .jockey-schedule-hero,
+  .jockey-schedule-slot,
+  .jockey-assignments-hero,
+  .jockey-assignment-layout,
+  .jockey-assignment-card,
+  .jockey-results-hero,
+  .jockey-results-layout,
+  .jockey-results-row,
+  .jockey-profile-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .jockey-topbar {
+    display: grid;
+    justify-items: stretch;
+  }
+
+  .jockey-nav {
+    border-radius: 18px;
+  }
+
+  .jockey-stats,
+  .jockey-race-strip,
+  .jockey-invitation-stats,
+  .jockey-schedule-stats,
+  .jockey-assignment-stats,
+  .jockey-results-stats,
+  .jockey-profile-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jockey-assignment-profile,
+  .jockey-results-feature {
+    position: static;
+  }
+
+  .jockey-results-hero__panel,
+  .jockey-results-row > .jockey-badge {
+    justify-self: start;
+  }
+
+  .jockey-profile-contact,
+  .jockey-profile-license,
+  .jockey-profile-next,
+  .jockey-profile-result,
+  .jockey-profile-activity {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .jockey-page {
+    padding-inline: 14px;
+  }
+
+  .jockey-topbar__actions,
+  .jockey-hero__actions,
+  .jockey-button,
+  .jockey-nav__link,
+  .jockey-notification-menu,
+  .jockey-notification-trigger {
+    width: 100%;
+  }
+
+  .jockey-stats,
+  .jockey-race-strip,
+  .jockey-next-race__body,
+  .jockey-result-card__stats,
+  .jockey-invitation-stats,
+  .jockey-invitation-meta,
+  .jockey-schedule-stats,
+  .jockey-schedule-slot__body,
+  .jockey-schedule-slot__meta,
+  .jockey-assignment-stats,
+  .jockey-assignment-meta,
+  .jockey-results-stats,
+  .jockey-results-row__metrics,
+  .jockey-results-feature__metrics,
+  .jockey-profile-stats,
+  .jockey-profile-license__grid,
+  .jockey-profile-next__body,
+  .jockey-profile-result__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .jockey-hero {
+    min-height: 560px;
+    align-items: end;
+    padding: 18px;
+  }
+
+  .jockey-invitations-hero {
+    min-height: 520px;
+    align-items: end;
+    padding: 18px;
+  }
+
+  .jockey-schedule-hero {
+    min-height: 520px;
+    align-items: end;
+    padding: 18px;
+  }
+
+  .jockey-assignments-hero {
+    min-height: 520px;
+    align-items: end;
+    padding: 18px;
+  }
+
+  .jockey-results-hero {
+    min-height: 540px;
+    align-items: end;
+    padding: 18px;
+  }
+
+  .jockey-hero__copy h1,
+  .jockey-invitations-hero__copy h1,
+  .jockey-schedule-hero__copy h1,
+  .jockey-assignments-hero__copy h1,
+  .jockey-results-hero__copy h1 {
+    max-width: 11ch;
+    font-size: clamp(2.35rem, 13vw, 3.65rem);
+  }
+
+  .jockey-profile-hero__copy h1 {
+    font-size: clamp(3rem, 16vw, 4.8rem);
+  }
+
+  .jockey-profile-hero__portrait,
+  .jockey-profile-hero__portrait img {
+    min-height: 420px;
+  }
+
+  .jockey-profile-detail-list div {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+
+  .jockey-profile-detail-list span {
+    display: none;
+  }
+
+  .jockey-notification-popover {
+    right: auto;
+    left: 0;
+    width: min(100%, calc(100vw - 28px));
+    transform-origin: top left;
+  }
+
+  .jockey-notification-popover::before {
+    right: auto;
+    left: 18px;
+  }
+
+  .jockey-invite-item {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .jockey-invitation-board__header,
+  .jockey-invitation-card__title,
+  .jockey-invitation-card__actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .jockey-schedule-board__header,
+  .jockey-schedule-slot__footer,
+  .jockey-assignment-board__header,
+  .jockey-assignment-card__title,
+  .jockey-results-board__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .jockey-segmented,
+  .jockey-segmented button,
+  .jockey-invitation-card__actions .jockey-button {
+    width: 100%;
+  }
+
+  .jockey-invitation-card__title > strong {
+    max-width: none;
+    text-align: left;
+  }
+
+  .jockey-assignment-card__title > strong {
+    max-width: none;
+    text-align: left;
+  }
+
+  .jockey-visual-card {
+    min-height: 340px;
+  }
+}

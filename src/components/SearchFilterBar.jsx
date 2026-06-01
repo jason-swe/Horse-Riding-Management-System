@@ -1,16 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
 
-const SearchFilterBar = ({ onSearch, onFilterChange, initialValue = "" }) => {
-  const [selectedFilter, setSelectedFilter] = useState("all");
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  const filterOptions = [
+const SearchFilterBar = ({
+  onSearch,
+  onFilterChange,
+  initialValue = "",
+  placeholder = "Search horses, jockeys, or tournaments...",
+  filterOptions = [
     { value: "all", label: "All Categories" },
     { value: "active", label: "Active" },
     { value: "upcoming", label: "Upcoming" },
     { value: "completed", label: "Completed" },
-  ];
+  ],
+}) => {
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const selectedLabel = filterOptions.find((option) => option.value === selectedFilter)?.label ?? "All Categories";
 
@@ -32,36 +37,15 @@ const SearchFilterBar = ({ onSearch, onFilterChange, initialValue = "" }) => {
   };
 
   return (
-    <div style={{
-      display: "flex",
-      gap: "16px",
-      marginBottom: "24px",
-      flexWrap: "wrap",
-      alignItems: "center"
-    }}>
-      <div style={{
-        position: "relative",
-        flex: 1,
-        minWidth: "300px"
-      }}>
+    <div className="search-filter-bar">
+      <div className="search-filter-bar__field">
+        <Search className="search-filter-bar__icon" size={18} aria-hidden="true" />
         <input
+          className="search-filter-bar__input"
           type="text"
-          placeholder="Search horses, jockeys, or tournaments..."
+          placeholder={placeholder}
           value={initialValue}
           onChange={(e) => onSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            borderRadius: "12px",
-            border: "1px solid rgba(238, 231, 212, 0.3)",
-            backgroundColor: "rgba(238, 231, 212, 0.05)",
-            color: "#EEE7D4",
-            fontSize: "0.9rem",
-            outline: "none",
-            transition: "border-color 160ms ease",
-          }}
-          onFocus={(e) => e.target.style.borderColor = "#EEE7D4"}
-          onBlur={(e) => e.target.style.borderColor = "rgba(238, 231, 212, 0.3)"}
         />
       </div>
 
@@ -74,7 +58,7 @@ const SearchFilterBar = ({ onSearch, onFilterChange, initialValue = "" }) => {
           aria-expanded={isOpen}
         >
           <span>{selectedLabel}</span>
-          <span className="search-filter-dropdown__chevron" aria-hidden="true">v</span>
+          <ChevronDown className="search-filter-dropdown__chevron" size={18} aria-hidden="true" />
         </button>
 
         <div className={`search-filter-dropdown__menu ${isOpen ? "search-filter-dropdown__menu--open" : ""}`} role="listbox">

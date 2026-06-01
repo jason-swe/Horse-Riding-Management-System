@@ -208,7 +208,7 @@ function LandingPage() {
 
           <div className="horse-details__stage">
             <div className="horse-details__watermark" aria-hidden="true">
-              RACE
+              HORSE
             </div>
 
             <div className="horse-details__frame">
@@ -230,7 +230,7 @@ function LandingPage() {
 
         <section className="testimonials" aria-label="Riders testimonials">
           <div className="testimonials__header">
-            <h3 className="testimonials__title">What Participants Are Saying</h3>
+            <h3 className="testimonials__title">What Riders Are Saying</h3>
             <div className="testimonials__controls" />
           </div>
 

@@ -1,8 +1,37 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "../index.css";
 import "../App.css";
 
+const roleOptions = [
+  "Horse Owner",
+  "Jockey",
+  "Race Referee",
+  "Spectator",
+  "Admin",
+];
+
 function SignUp() {
+  const [selectedRole, setSelectedRole] = useState("");
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const rolePickerRef = useRef(null);
+
+  useEffect(() => {
+    const closeRolePicker = (event) => {
+      if (!rolePickerRef.current?.contains(event.target)) {
+        setIsRoleOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeRolePicker);
+    return () => document.removeEventListener("pointerdown", closeRolePicker);
+  }, []);
+
+  const chooseRole = (role) => {
+    setSelectedRole(role);
+    setIsRoleOpen(false);
+  };
+
   return (
     <main className="signup-page" aria-label="Sign up page">
       <section className="signup-page__shell">
@@ -37,14 +66,43 @@ function SignUp() {
               </div>
 
               <div className="signup-field">
-                <label htmlFor="signup-last-name">Role</label>
-                <input
-                  id="signup-last-name"
-                  type="text"
-                  name="role"
-                  placeholder="Horse Owner / Jockey / Referee / Spectator"
-                  autoComplete="organization-title"
-                />
+                <label id="signup-role-label" htmlFor="signup-role">Role</label>
+                <div className={`signup-role-picker ${isRoleOpen ? "signup-role-picker--open" : ""}`} ref={rolePickerRef}>
+                  <input id="signup-role" type="hidden" name="role" value={selectedRole} />
+                  <button
+                    className="signup-role-picker__button"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={isRoleOpen}
+                    aria-labelledby="signup-role-label"
+                    onClick={() => setIsRoleOpen((open) => !open)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        setIsRoleOpen(false);
+                      }
+                    }}
+                  >
+                    <span className={selectedRole ? "" : "signup-role-picker__placeholder"}>
+                      {selectedRole || "Choose your role"}
+                    </span>
+                    <span className="signup-role-picker__chevron" aria-hidden="true" />
+                  </button>
+
+                  <div className="signup-role-picker__menu" role="listbox" aria-labelledby="signup-role-label">
+                    {roleOptions.map((role) => (
+                      <button
+                        className={`signup-role-picker__option ${selectedRole === role ? "signup-role-picker__option--active" : ""}`}
+                        type="button"
+                        role="option"
+                        aria-selected={selectedRole === role}
+                        key={role}
+                        onClick={() => chooseRole(role)}
+                      >
+                        <span>{role}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

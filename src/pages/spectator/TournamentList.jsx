@@ -1,50 +1,54 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Calendar, Trophy } from "lucide-react";
+import { ArrowRight, Calendar, CircleDollarSign, Flag, Gauge, SearchX, Trophy, UsersRound } from "lucide-react";
 import SearchFilterBar from "../../components/SearchFilterBar.jsx";
 import { tournaments } from "./tournamentData.js";
 import "./spectator.css";
 
 const TournamentCard = ({ tournament }) => {
-  const statusStyles = {
-    Active: { color: "#72df8a", bg: "rgba(78, 207, 107, 0.12)", border: "rgba(78, 207, 107, 0.34)" },
-    Upcoming: { color: "#ffbd63", bg: "rgba(255, 179, 71, 0.12)", border: "rgba(255, 179, 71, 0.34)" },
-    Completed: { color: "#bbb", bg: "rgba(150, 150, 150, 0.12)", border: "rgba(150, 150, 150, 0.34)" },
+  const statusMeta = {
+    Active: { label: "Active", className: "tournament-status--active" },
+    Upcoming: { label: "Upcoming", className: "tournament-status--upcoming" },
+    Completed: { label: "Closed", className: "tournament-status--completed" },
   };
-
-  const style = statusStyles[tournament.status] || statusStyles.Completed;
+  const status = statusMeta[tournament.status] ?? statusMeta.Completed;
 
   return (
-    <div className="spectator-card tournament-card">
-      <div
-        className="tournament-card__image"
-        style={{ backgroundImage: `url(${tournament.image})` }}
-      />
-      <div className="tournament-card__body">
-        <span className="spectator-badge tournament-card__status" style={{
-            borderColor: style.border,
-            color: style.color,
-            backgroundColor: style.bg,
-          }}>
-            {tournament.status}
+    <article className="tournament-card tournament-card--redesign">
+      <Link className="tournament-card__image" to={`/spectator/tournaments/${tournament.id}`}>
+        <img src={tournament.image} alt={tournament.name} />
+        <span className={`tournament-card__status ${status.className}`}>
+          {status.label}
         </span>
+      </Link>
+
+      <div className="tournament-card__body">
         <h3>{tournament.name}</h3>
+        <p>{tournament.location}</p>
       </div>
+
       <div className="tournament-card__meta">
-        <div>
-          <MapPin size={14} /> <span>{tournament.location}</span>
-        </div>
         <div>
           <Calendar size={14} /> <span>{tournament.date}</span>
         </div>
-        <div className="tournament-card__prize">
-          <Trophy size={14} /> <span>Prize: {tournament.prize}</span>
+        <div>
+          <Flag size={14} /> <span>{tournament.track} - {tournament.distance}</span>
+        </div>
+        <div>
+          <UsersRound size={14} /> <span>{tournament.entries} entries</span>
+        </div>
+        <div>
+          <Gauge size={14} /> <span>{tournament.entries > 14 ? "High liquidity" : "Focused field"}</span>
         </div>
       </div>
-      <Link className="spectator-button spectator-button--primary tournament-card__button" to={`/spectator/tournaments/${tournament.id}`}>
-        View Details
-      </Link>
-    </div>
+
+      <div className="tournament-card__footer">
+        <span><Trophy size={15} /> {tournament.prize}</span>
+        <Link className="tournament-card__link" to={`/spectator/tournaments/${tournament.id}`} aria-label={`View ${tournament.name}`}>
+          <ArrowRight size={18} />
+        </Link>
+      </div>
+    </article>
   );
 };
 
@@ -52,46 +56,87 @@ const TournamentList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
 
+  const counts = tournaments.reduce(
+    (acc, tournament) => {
+      acc[tournament.status.toLowerCase()] += 1;
+      return acc;
+    },
+    { active: 0, upcoming: 0, completed: 0 }
+  );
+
+  const activePrizePool = tournaments
+    .filter((tournament) => tournament.status === "Active")
+    .reduce((sum, tournament) => sum + Number(tournament.prize.replace(/[$,]/g, "")), 0);
+
+  const statusOrder = { Active: 0, Upcoming: 1, Completed: 2 };
+
   const filteredTournaments = tournaments.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const haystack = `${t.name} ${t.location} ${t.track} ${t.date}`.toLowerCase();
+    const matchesSearch = haystack.includes(searchQuery.toLowerCase());
     const matchesFilter = filter === "all" || t.status.toLowerCase() === filter.toLowerCase();
     return matchesSearch && matchesFilter;
+  }).sort((a, b) => {
+    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+    if (statusDiff !== 0) return statusDiff;
+    return new Date(a.date) - new Date(b.date);
   });
 
   return (
-    <div className="spectator-page">
-      <header style={{ marginBottom: "32px" }}>
-        <h1 style={{
-          fontFamily: '"Sora", sans-serif',
-          fontSize: "2.5rem",
-          margin: "0 0 8px 0",
-          color: "#EEE7D4",
-          letterSpacing: "-0.04em"
-        }}>
-          Tournaments
-        </h1>
-        <p style={{ color: "rgba(238, 231, 212, 0.6)", fontSize: "1rem" }}>
-          Explore upcoming and active horse racing tournaments across the globe.
-        </p>
-      </header>
+    <div className="spectator-page tournament-hub-page">
+      <section className="tournament-board-header">
+        <div>
+          <p className="spectator-eyebrow">Tournament Board</p>
+          <h1>Find a race worth backing.</h1>
+          <p>
+            Scan prize pool, field size, track surface, distance, and market status before opening a tournament.
+          </p>
+        </div>
 
-      <SearchFilterBar
-        onSearch={setSearchQuery}
-        onFilterChange={setFilter}
-        initialValue={searchQuery}
-      />
+        <div className="tournament-board-metrics">
+          <article className="tournament-metric tournament-metric--active">
+            <Trophy size={18} />
+            <strong>{counts.active}</strong>
+            <span>Active</span>
+          </article>
+          <article className="tournament-metric tournament-metric--upcoming">
+            <Calendar size={18} />
+            <strong>{counts.upcoming}</strong>
+            <span>Upcoming</span>
+          </article>
+          <article className="tournament-metric tournament-metric--pool">
+            <CircleDollarSign size={18} />
+            <strong>${(activePrizePool / 1000000).toFixed(1)}M</strong>
+            <span>Pools</span>
+          </article>
+          <article className="tournament-metric tournament-metric--entries">
+            <UsersRound size={18} />
+            <strong>{tournaments.reduce((sum, tournament) => sum + tournament.entries, 0)}</strong>
+            <span>Entries</span>
+          </article>
+        </div>
+      </section>
 
-      <div className="spectator-grid">
+      <section className="tournament-filter-panel">
+        <div className="tournament-filter-panel__header">
+          <span>Tournament Board</span>
+          <strong>{filteredTournaments.length}</strong>
+        </div>
+
+        <SearchFilterBar
+          onSearch={setSearchQuery}
+          onFilterChange={setFilter}
+          initialValue={searchQuery}
+          placeholder="Search tournament, city, track, or date..."
+        />
+      </section>
+
+      <div className="tournament-grid">
         {filteredTournaments.length > 0 ? (
           filteredTournaments.map(t => <TournamentCard key={t.id} tournament={t} />)
         ) : (
-          <div style={{
-            gridColumn: "1/-1",
-            textAlign: "center",
-            padding: "40px",
-            color: "rgba(238, 231, 212, 0.5)"
-          }}>
-            No tournaments found matching your search.
+          <div className="spectator-empty-state">
+            <SearchX size={22} />
+            <span>No tournaments found matching your search.</span>
           </div>
         )}
       </div>

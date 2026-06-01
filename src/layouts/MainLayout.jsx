@@ -13,7 +13,7 @@ const MainLayout = () => {
 
   return (
     <div className="page-shell" style={{
-      backgroundColor: "#1D3024",
+      backgroundColor: "#3E5B49",
       minHeight: "100vh",
       color: "#f5f7f3",
       display: "flex",
@@ -147,9 +147,9 @@ const MainLayout = () => {
           justify-content: center;
           gap: 14px;
           padding: 8px 10px;
-          border: 1px solid rgba(238, 231, 212, 0.08);
+          border: 1px solid rgba(238, 231, 212, 0.24);
           border-radius: 999px;
-          background: rgba(238, 231, 212, 0.035);
+          background: rgba(238, 231, 212, 0.1);
           backdrop-filter: blur(10px);
         }
         .nav-link {
@@ -161,7 +161,7 @@ const MainLayout = () => {
           min-height: 42px;
           padding: 0 22px;
           border-radius: 999px;
-          color: rgba(245, 247, 243, 0.62);
+          color: #E6DDC8;
           text-decoration: none;
           font-size: 0.88rem;
           font-weight: 700;
@@ -173,7 +173,7 @@ const MainLayout = () => {
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          background: linear-gradient(180deg, rgba(238, 231, 212, 0.16), rgba(238, 231, 212, 0.05));
+          background: linear-gradient(180deg, rgba(238, 231, 212, 0.2), rgba(238, 231, 212, 0.1));
           opacity: 0;
           transform: scale(0.86);
           transition: opacity 180ms ease, transform 180ms ease;
@@ -187,7 +187,7 @@ const MainLayout = () => {
           transform: scale(1);
         }
         .nav-link--active {
-          color: #1D3024;
+          color: #3E5B49;
           background: #EEE7D4;
           box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
         }
@@ -276,7 +276,7 @@ const MainLayout = () => {
         }
         .footer-copyright {
           font-size: 0.88rem;
-          color: rgba(245, 247, 243, 0.4);
+          color: #D4C8B3;
         }
       `}</style>
     </div>
