@@ -15,12 +15,8 @@ import {
   celebrationImages,
   horseJockeyImages,
   jockeyActionImages,
-  jockeyAssignments,
-  jockeyInvitations,
-  jockeyProfile,
-  jockeyResults,
-  jockeySchedule,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -33,13 +29,19 @@ const statusClass = (status) => {
 };
 
 function JockeyDashboard() {
-  const pendingInvitations = jockeyInvitations.filter((item) => item.status === "Pending");
-  const confirmedRaces = jockeySchedule.filter((race) => race.status === "Confirmed");
-  const nextRace = jockeySchedule[0];
-  const latestResult = jockeyResults[0];
+  const { assignments, error, invitations, isLoading, profile, results, schedule } = useJockeyApiData();
+  const pendingInvitations = invitations.filter((item) => item.status === "Pending");
+  const confirmedRaces = schedule.filter((race) => ["Accepted", "Confirmed"].includes(race.status));
+  const nextRace = schedule[0];
+  const latestResult = results[0];
 
   return (
     <div className="jockey-dashboard">
+      {(isLoading || error) && (
+        <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live jockey data..." : error}
+        </div>
+      )}
       <section className="jockey-hero">
         <img src={jockeyActionImages[1]} alt="Jockey accelerating on a race track" />
         <div className="jockey-hero__copy">
@@ -52,9 +54,9 @@ function JockeyDashboard() {
           </div>
         </div>
         <aside className="jockey-hero__panel">
-          <span className="jockey-badge jockey-badge--green"><BadgeCheck size={14} /> {jockeyProfile.status}</span>
-          <strong>{jockeyProfile.name}</strong>
-          <p>{jockeyProfile.license} / {jockeyProfile.weightClass}</p>
+          <span className="jockey-badge jockey-badge--green"><BadgeCheck size={14} /> {profile.status}</span>
+          <strong>{profile.name}</strong>
+          <p>{profile.license} / {profile.weightClass}</p>
         </aside>
       </section>
 
@@ -62,8 +64,8 @@ function JockeyDashboard() {
         {[
           { label: "Pending invites", value: pendingInvitations.length, note: "Need response", icon: Send },
           { label: "Confirmed races", value: confirmedRaces.length, note: "Locked race slots", icon: CalendarDays },
-          { label: "Win rate", value: jockeyProfile.winRate, note: "Season form", icon: Trophy },
-          { label: "Podium rate", value: jockeyProfile.podiumRate, note: "Top-three finishes", icon: Award },
+          { label: "Win rate", value: profile.winRate, note: "Season form", icon: Trophy },
+          { label: "Podium rate", value: profile.podiumRate, note: "Top-three finishes", icon: Award },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -127,8 +129,8 @@ function JockeyDashboard() {
           <img src={horseJockeyImages[0]} alt="Horse and jockey pairing before a race" />
           <div>
             <span className="jockey-kicker">Current pairing</span>
-            <h2>{jockeyAssignments[0].horse}</h2>
-            <p>{jockeyAssignments[0].note}</p>
+            <h2>{assignments[0].horse}</h2>
+            <p>{assignments[0].note}</p>
           </div>
         </article>
 
@@ -141,7 +143,7 @@ function JockeyDashboard() {
             <UserRound size={20} />
           </div>
           <div className="jockey-assignment-list">
-            {jockeyAssignments.map((assignment) => (
+            {assignments.map((assignment) => (
               <div className="jockey-assignment-item" key={assignment.id}>
                 <span className={`jockey-badge ${statusClass(assignment.status)}`}>{assignment.status}</span>
                 <div>
@@ -171,7 +173,7 @@ function JockeyDashboard() {
       </section>
 
       <section className="jockey-race-strip">
-        {jockeySchedule.map((race) => (
+        {schedule.map((race) => (
           <article className="jockey-race-strip__item" key={race.id}>
             <div><Clock3 size={16} /><span>{race.time}</span></div>
             <strong>{race.race}</strong>

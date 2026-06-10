@@ -1,19 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { authApi } from "../api/authApi";
+import { saveRoleApplicationIntent } from "../auth/authStorage";
 import "../index.css";
 import "../App.css";
 
-const roleOptions = [
-  "Horse Owner",
-  "Jockey",
-  "Race Referee",
-  "Spectator",
-  "Admin",
+const fallbackRoleOptions = [
+  { value: "horse_owner", label: "Horse Owner" },
+  { value: "jockey", label: "Jockey" },
+  { value: "race_referee", label: "Race Referee" },
+  { value: "spectator", label: "Spectator" },
+  { value: "admin", label: "Admin" },
 ];
 
 function SignUp() {
   const [selectedRole, setSelectedRole] = useState("");
   const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const [roleOptions, setRoleOptions] = useState(fallbackRoleOptions);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    terms: false,
+  });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const rolePickerRef = useRef(null);
 
   useEffect(() => {
@@ -27,9 +40,99 @@ function SignUp() {
     return () => document.removeEventListener("pointerdown", closeRolePicker);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRoles() {
+      try {
+        const data = await authApi.getRoles();
+        if (!cancelled && Array.isArray(data.roles) && data.roles.length) {
+          setRoleOptions(data.roles.map((role) => ({
+            value: role.value,
+            label: role.label,
+            description: role.description,
+          })));
+        }
+      } catch {
+        if (!cancelled) {
+          setRoleOptions(fallbackRoleOptions);
+        }
+      }
+    }
+
+    loadRoles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const chooseRole = (role) => {
-    setSelectedRole(role);
+    setSelectedRole(role.value);
+    setError("");
+    setMessage("");
     setIsRoleOpen(false);
+  };
+
+  const selectedRoleOption = roleOptions.find((role) => role.value === selectedRole);
+
+  const updateField = (field, value) => {
+    setError("");
+    setMessage("");
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const validateForm = () => {
+    if (!form.fullName.trim()) return "Full name is required.";
+    if (!selectedRole) return "Please choose a role.";
+    if (!form.email.trim()) return "Email is required.";
+    if (form.password.length < 8) return "Password must be at least 8 characters.";
+    if (form.password !== form.confirmPassword) return "Confirm password does not match.";
+    if (!form.terms) return "Please agree to the tournament rules and privacy policy.";
+    return "";
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const validationError = validateForm();
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await authApi.register({
+        full_name: form.fullName,
+        email: form.email,
+        password: form.password,
+      });
+      const verificationOtp = data.verification?.otp;
+      saveRoleApplicationIntent(selectedRole, form.email);
+
+      if (verificationOtp) {
+        await authApi.verifyAccount(verificationOtp);
+        setMessage(
+          selectedRole === "spectator"
+            ? "Account created and verified. You can login now."
+            : "Account created and verified. Login next to submit your role application."
+        );
+      } else {
+        setMessage(
+          selectedRole === "spectator"
+            ? "Account created. Please verify your account before login."
+            : "Account created. After verification, login to submit your role application."
+        );
+      }
+    } catch (apiError) {
+      setError(apiError.message || "Unable to create account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -52,7 +155,7 @@ function SignUp() {
             Register once to manage race registrations, horse details, schedules, results, and predictions.
           </p>
 
-          <form className="signup-page__form" onSubmit={(event) => event.preventDefault()}>
+          <form className="signup-page__form" onSubmit={handleSubmit}>
             <div className="signup-page__grid">
               <div className="signup-field">
                 <label htmlFor="signup-first-name">Full name</label>
@@ -62,6 +165,9 @@ function SignUp() {
                   name="fullName"
                   placeholder="Your full name"
                   autoComplete="name"
+                  value={form.fullName}
+                  onChange={(event) => updateField("fullName", event.target.value)}
+                  required
                 />
               </div>
 
@@ -82,8 +188,8 @@ function SignUp() {
                       }
                     }}
                   >
-                    <span className={selectedRole ? "" : "signup-role-picker__placeholder"}>
-                      {selectedRole || "Choose your role"}
+                    <span className={selectedRoleOption ? "" : "signup-role-picker__placeholder"}>
+                      {selectedRoleOption?.label || "Choose your role"}
                     </span>
                     <span className="signup-role-picker__chevron" aria-hidden="true" />
                   </button>
@@ -91,14 +197,14 @@ function SignUp() {
                   <div className="signup-role-picker__menu" role="listbox" aria-labelledby="signup-role-label">
                     {roleOptions.map((role) => (
                       <button
-                        className={`signup-role-picker__option ${selectedRole === role ? "signup-role-picker__option--active" : ""}`}
+                        className={`signup-role-picker__option ${selectedRole === role.value ? "signup-role-picker__option--active" : ""}`}
                         type="button"
                         role="option"
-                        aria-selected={selectedRole === role}
-                        key={role}
+                        aria-selected={selectedRole === role.value}
+                        key={role.value}
                         onClick={() => chooseRole(role)}
                       >
-                        <span>{role}</span>
+                        <span>{role.label}</span>
                       </button>
                     ))}
                   </div>
@@ -114,6 +220,9 @@ function SignUp() {
                 name="email"
                 placeholder="you@example.com"
                 autoComplete="email"
+                value={form.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                required
               />
             </div>
 
@@ -126,6 +235,9 @@ function SignUp() {
                   name="password"
                   placeholder="Create password"
                   autoComplete="new-password"
+                  value={form.password}
+                  onChange={(event) => updateField("password", event.target.value)}
+                  required
                 />
               </div>
 
@@ -137,17 +249,29 @@ function SignUp() {
                   name="confirmPassword"
                   placeholder="Repeat password"
                   autoComplete="new-password"
+                  value={form.confirmPassword}
+                  onChange={(event) => updateField("confirmPassword", event.target.value)}
+                  required
                 />
               </div>
             </div>
 
             <label className="signup-page__agree" htmlFor="signup-terms">
-              <input id="signup-terms" type="checkbox" name="terms" />
+              <input
+                id="signup-terms"
+                type="checkbox"
+                name="terms"
+                checked={form.terms}
+                onChange={(event) => updateField("terms", event.target.checked)}
+              />
               I agree to the tournament rules and privacy policy
             </label>
 
-            <button className="signup-page__submit" type="submit">
-              Sign Up
+            {error && <p className="auth-message auth-message--error">{error}</p>}
+            {message && <p className="auth-message auth-message--success">{message}</p>}
+
+            <button className="signup-page__submit" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating account..." : "Sign Up"}
             </button>
 
             <div className="signup-page__divider">

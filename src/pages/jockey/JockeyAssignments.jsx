@@ -3,17 +3,15 @@ import {
   BadgeCheck,
   CalendarDays,
   ClipboardCheck,
-  Flag,
   Home,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
 import {
   horseJockeyImages,
-  jockeyAssignments,
-  jockeyProfile,
   jockeyTrackImages,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -27,19 +25,25 @@ const statusClass = (status) => {
 
 function JockeyAssignments() {
   const [filter, setFilter] = useState("All");
+  const { assignments, error, isLoading, profile } = useJockeyApiData();
 
   const visibleAssignments = useMemo(
-    () => jockeyAssignments.filter((assignment) => filter === "All" || assignment.status === filter),
-    [filter]
+    () => assignments.filter((assignment) => filter === "All" || assignment.status === filter),
+    [assignments, filter]
   );
 
-  const confirmedCount = jockeyAssignments.filter((assignment) => assignment.status === "Confirmed").length;
-  const pendingCount = jockeyAssignments.filter((assignment) => assignment.status === "Pending").length;
-  const reviewCount = jockeyAssignments.filter((assignment) => assignment.status === "Review").length;
-  const featuredAssignment = visibleAssignments[0] ?? jockeyAssignments[0];
+  const acceptedCount = assignments.filter((assignment) => assignment.status === "Accepted").length;
+  const pendingCount = assignments.filter((assignment) => assignment.status === "Pending").length;
+  const rejectedCount = assignments.filter((assignment) => assignment.status === "Rejected").length;
+  const featuredAssignment = visibleAssignments[0] ?? assignments[0];
 
   return (
     <div className="jockey-assignments-page">
+      {(isLoading || error) && (
+        <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live assignments..." : error}
+        </div>
+      )}
       <section className="jockey-assignments-hero">
         <img src={horseJockeyImages[1]} alt="Jockey and horse pairing in stable lane" />
         <div className="jockey-assignments-hero__copy">
@@ -56,10 +60,10 @@ function JockeyAssignments() {
 
       <section className="jockey-assignment-stats" aria-label="Assignment summary">
         {[
-          { label: "All pairings", value: jockeyAssignments.length, note: "Horse assignments", icon: Home },
-          { label: "Confirmed", value: confirmedCount, note: "Ready to ride", icon: BadgeCheck },
+          { label: "All pairings", value: assignments.length, note: "Horse assignments", icon: Home },
+          { label: "Accepted", value: acceptedCount, note: "Ready to ride", icon: BadgeCheck },
           { label: "Pending", value: pendingCount, note: "Needs response", icon: ClipboardCheck },
-          { label: "Review", value: reviewCount, note: "Owner follow-up", icon: Flag },
+          { label: "Rejected", value: rejectedCount, note: "Declined invites", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -77,9 +81,9 @@ function JockeyAssignments() {
         <aside className="jockey-assignment-profile">
           <img src={jockeyTrackImages[1]} alt="Race track context for jockey assignments" />
           <div>
-            <span className="jockey-badge jockey-badge--green"><ShieldCheck size={14} /> {jockeyProfile.status}</span>
-            <strong>{jockeyProfile.name}</strong>
-            <p>{jockeyProfile.stableConnection} / {jockeyProfile.weightClass}</p>
+            <span className="jockey-badge jockey-badge--green"><ShieldCheck size={14} /> {profile.status}</span>
+            <strong>{profile.name}</strong>
+            <p>{profile.stableConnection} / {profile.weightClass}</p>
           </div>
         </aside>
 
@@ -90,7 +94,7 @@ function JockeyAssignments() {
               <h2>{filter === "All" ? "All horse pairings" : `${filter} pairings`}</h2>
             </div>
             <div className="jockey-segmented">
-              {["All", "Confirmed", "Pending", "Review"].map((item) => (
+              {["All", "Accepted", "Pending", "Rejected", "Cancelled"].map((item) => (
                 <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                   {item}
                 </button>
@@ -119,7 +123,7 @@ function JockeyAssignments() {
 
                   <div className="jockey-assignment-meta">
                     <div><span><CalendarDays size={13} /> Race target</span><strong>{assignment.race}</strong></div>
-                    <div><span><UserRound size={13} /> Rider role</span><strong>{jockeyProfile.license}</strong></div>
+                    <div><span><UserRound size={13} /> Rider role</span><strong>{profile.license}</strong></div>
                     <div><span><Home size={13} /> Stable link</span><strong>{assignment.owner}</strong></div>
                     <div><span><ShieldCheck size={13} /> Pairing state</span><strong>{assignment.status}</strong></div>
                   </div>

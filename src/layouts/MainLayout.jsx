@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import LogoutButton from "../auth/LogoutButton";
 import "../App.css";
 
 const MainLayout = () => {
@@ -9,6 +10,7 @@ const MainLayout = () => {
     { name: "Leaderboard", path: "/spectator/leaderboard" },
     { name: "Predictions", path: "/spectator/predictions" },
     { name: "Results", path: "/spectator/results" },
+    { name: "Role Access", path: "/spectator/role-applications" },
   ];
 
   return (
@@ -47,7 +49,7 @@ const MainLayout = () => {
             <div className="avatar-small" />
             <span className="user-name">Guest User</span>
           </Link>
-          <Link className="logout-btn" to="/login">Logout</Link>
+          <LogoutButton className="logout-btn">Logout</LogoutButton>
         </div>
       </header>
 

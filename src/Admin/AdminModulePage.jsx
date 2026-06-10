@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import { adminModules } from "./adminModules";
+import { useAdminModuleApi } from "./useAdminModuleApi";
 
 /* ── Human-readable field labels ───────────────────────── */
 const fieldLabels = {
@@ -37,7 +38,7 @@ const fieldLabels = {
 
 /* ── Column labels for each module table ───────────────── */
 const tableColumnKeys = {
-  users:         ["ID", "Name", "Role", "Status", "Last login"],
+  users:         ["ID", "Name", "Role", "Status", "Verification"],
   horses:        ["Horse ID", "Horse name", "Owner", "Breed", "Ready", "Next race"],
   schedule:      ["Race", "Tournament", "Date", "Round", "Referee", "Status"],
   results:       ["Race", "Winner", "Time", "Prize", "Referee report"],
@@ -615,24 +616,28 @@ function AdminModulePage() {
   const [formState, setFormState] = useState(defaultFormState);
   const [messages, setMessages] = useState([]);
   const [expandedTool, setExpandedTool] = useState(null);
+  const adminApiState = useAdminModuleApi(moduleName);
 
   // -- CRUD State
   const [localTables, setLocalTables] = useState([]);
   const [editRowData, setEditRowData] = useState(null);
 
   useEffect(() => {
-    if (moduleData?.tables) {
+    if (adminApiState.liveData?.tables) {
+      setLocalTables(JSON.parse(JSON.stringify(adminApiState.liveData.tables)));
+    } else if (moduleData?.tables) {
       setLocalTables(JSON.parse(JSON.stringify(moduleData.tables)));
     } else {
       setLocalTables([]);
     }
-  }, [moduleName, moduleData]);
+  }, [moduleName, moduleData, adminApiState.liveData]);
 
   const filterConfig = moduleData?.filters || {};
   const searchPlaceholder = filterConfig.searchPlaceholder || "Search records...";
   const statusOptions = filterConfig.statusOptions || ["All", "Active", "Pending", "Review"];
   const controls = moduleControls[moduleName];
-  const columns = tableColumnKeys[moduleName] || [];
+  const columns = localTables[0]?.columns || tableColumnKeys[moduleName] || [];
+  const summaryCards = adminApiState.liveData?.summary || moduleData?.summary || [];
 
   /* Auto-dismiss messages after 4 s */
   useEffect(() => {
@@ -707,10 +712,27 @@ function AdminModulePage() {
     setActiveModal(null);
   };
 
-  const handleRowAction = (actionLabel) => {
+  const handleRowAction = async (actionLabel) => {
     const id = selectedRow?.row?.[0] || "item";
-    addMessage(`✓ ${actionLabel} applied to ${id}.`);
-    setSelectedRow(null);
+
+    try {
+      const handledByApi = await adminApiState.applyRowAction({
+        actionLabel,
+        id,
+        note: draftNote,
+      });
+
+      addMessage(`✓ ${actionLabel} applied to ${id}.`);
+
+      if (handledByApi) {
+        closeAll();
+        return;
+      }
+
+      setSelectedRow(null);
+    } catch (apiError) {
+      addMessage(`Unable to apply ${actionLabel}: ${apiError.message || "API request failed."}`);
+    }
   };
 
   const handleDelete = () => {
@@ -748,7 +770,7 @@ function AdminModulePage() {
     >
       {/* Summary metrics */}
       <section className="admin-metrics admin-metrics--module" aria-label="Module summary">
-        {moduleData.summary.map((card) => (
+        {summaryCards.map((card) => (
           <article key={card.label} className="admin-metric-card">
             <p className="admin-metric-card__label">{card.label}</p>
             <div className="admin-metric-card__value">{card.value}</div>
@@ -786,6 +808,12 @@ function AdminModulePage() {
           {messages.map((msg, i) => (
             <div key={i} className="admin-toast">{msg}</div>
           ))}
+        </section>
+      )}
+
+      {(adminApiState.isLoading || adminApiState.error) && (
+        <section className={`admin-live-state ${adminApiState.error ? "admin-live-state--warning" : ""}`} aria-live="polite">
+          {adminApiState.isLoading ? "Loading live admin data..." : adminApiState.error}
         </section>
       )}
 

@@ -1530,6 +1530,12 @@
   padding: 18px;
 }
 
+.owner-empty--error {
+  border-color: rgba(255, 152, 128, 0.42);
+  color: #ffd5c7;
+  background: rgba(180, 48, 48, 0.16);
+}
+
 .owner-form-card {
   display: grid;
   gap: 18px;
@@ -3349,6 +3355,10 @@
   gap: 8px;
   color: #9AF0AD;
   font-weight: 900;
+}
+
+.owner-success--error {
+  color: #ffd5c7;
 }
 
 .owner-detail-hero {

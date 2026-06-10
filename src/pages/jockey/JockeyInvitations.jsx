@@ -11,8 +11,8 @@ import {
 import {
   horseJockeyImages,
   jockeyActionImages,
-  jockeyInvitations,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -26,7 +26,9 @@ const statusClass = (status) => {
 
 function JockeyInvitations() {
   const [filter, setFilter] = useState("All");
-  const [invitations, setInvitations] = useState(jockeyInvitations);
+  const [actionError, setActionError] = useState("");
+  const [activeActionId, setActiveActionId] = useState("");
+  const { error, invitations, isLoading, respondToAssignment } = useJockeyApiData();
 
   const visibleInvitations = useMemo(
     () => invitations.filter((invite) => filter === "All" || invite.status === filter),
@@ -38,12 +40,26 @@ function JockeyInvitations() {
   const rejectedCount = invitations.filter((invite) => invite.status === "Rejected").length;
   const featuredInvite = invitations.find((invite) => invite.status === "Pending") ?? invitations[0];
 
-  const updateInvitation = (id, status) => {
-    setInvitations((current) => current.map((invite) => (invite.id === id ? { ...invite, status } : invite)));
+  const updateInvitation = async (id, status) => {
+    setActionError("");
+    setActiveActionId(id);
+
+    try {
+      await respondToAssignment(id, status);
+    } catch (apiError) {
+      setActionError(apiError.message || "Unable to update this invitation.");
+    } finally {
+      setActiveActionId("");
+    }
   };
 
   return (
     <div className="jockey-invitations-page">
+      {(isLoading || error || actionError) && (
+        <div className={`jockey-sync-note ${error || actionError ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live invitations..." : actionError || error}
+        </div>
+      )}
       <section className="jockey-invitations-hero">
         <img src={jockeyActionImages[2]} alt="Jockey riding during a race invitation decision" />
         <div className="jockey-invitations-hero__copy">
@@ -84,7 +100,7 @@ function JockeyInvitations() {
             <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
           </div>
           <div className="jockey-segmented">
-            {["All", "Pending", "Accepted", "Rejected"].map((item) => (
+              {["All", "Pending", "Accepted", "Rejected", "Cancelled"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>
@@ -119,11 +135,11 @@ function JockeyInvitations() {
                 </div>
 
                 <div className="jockey-invitation-card__actions">
-                  <button className="jockey-button" disabled={invite.status === "Rejected"} onClick={() => updateInvitation(invite.id, "Rejected")} type="button">
-                    <XCircle size={17} /> Reject
+                  <button className="jockey-button" disabled={invite.status === "Rejected" || activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "Rejected")} type="button">
+                    <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Reject"}
                   </button>
-                  <button className="jockey-button jockey-button--primary" disabled={invite.status === "Accepted"} onClick={() => updateInvitation(invite.id, "Accepted")} type="button">
-                    <ShieldCheck size={17} /> Accept
+                  <button className="jockey-button jockey-button--primary" disabled={invite.status === "Accepted" || activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "Accepted")} type="button">
+                    <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept"}
                   </button>
                 </div>
               </div>

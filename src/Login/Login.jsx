@@ -1,8 +1,59 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { authApi } from "../api/authApi";
+import { useAuth } from "../auth/AuthContext";
+import { clearRoleApplicationIntent, getRoleApplicationIntent } from "../auth/authStorage";
+import { getPostLoginRoute, getRequiredRoleForPath } from "../auth/roleRoutes";
 import "../index.css";
 import "../App.css";
 
 function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+  const [form, setForm] = useState({ email: "", password: "", remember: false });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateField = (field, value) => {
+    setError("");
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const data = await authApi.login({
+        email: form.email,
+        password: form.password,
+      });
+      const roles = signIn(data);
+      const requestedPath = location.state?.from?.pathname;
+      const requestedRole = getRequiredRoleForPath(requestedPath);
+      const roleIntent = getRoleApplicationIntent(form.email);
+      const fallbackRoute = getPostLoginRoute(roles);
+      const shouldApplyForRole = roles.includes("spectator") && roleIntent?.role && !roles.includes(roleIntent.role);
+      const nextRoute = shouldApplyForRole
+        ? `/spectator/role-applications?role=${roleIntent.role}`
+        : requestedRole && roles.includes(requestedRole)
+          ? requestedPath
+          : fallbackRoute;
+
+      if (shouldApplyForRole) {
+        clearRoleApplicationIntent();
+      }
+
+      navigate(nextRoute, { replace: true });
+    } catch (apiError) {
+      setError(apiError.message || "Unable to login. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="login-page" aria-label="Login page">
       <section className="login-page__shell">
@@ -24,7 +75,7 @@ function Login() {
             The login flow matches the current horse-racing management style.
           </p>
 
-          <form className="login-page__form" onSubmit={(event) => event.preventDefault()}>
+          <form className="login-page__form" onSubmit={handleSubmit}>
             <div className="login-field">
               <label htmlFor="login-email">Email address</label>
               <input
@@ -33,6 +84,9 @@ function Login() {
                 name="email"
                 placeholder="you@example.com"
                 autoComplete="email"
+                value={form.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                required
               />
             </div>
 
@@ -44,12 +98,21 @@ function Login() {
                 name="password"
                 placeholder="Enter your password"
                 autoComplete="current-password"
+                value={form.password}
+                onChange={(event) => updateField("password", event.target.value)}
+                required
               />
             </div>
 
             <div className="login-page__row">
               <label className="login-remember" htmlFor="login-remember">
-                <input id="login-remember" type="checkbox" name="remember" />
+                <input
+                  id="login-remember"
+                  type="checkbox"
+                  name="remember"
+                  checked={form.remember}
+                  onChange={(event) => updateField("remember", event.target.checked)}
+                />
                 Remember me
               </label>
 
@@ -58,8 +121,10 @@ function Login() {
               </a>
             </div>
 
-            <button className="login-page__submit" type="submit">
-              Login
+            {error && <p className="auth-message auth-message--error">{error}</p>}
+
+            <button className="login-page__submit" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Logging in..." : "Login"}
             </button>
 
             <div className="login-page__divider">

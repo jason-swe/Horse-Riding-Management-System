@@ -4,15 +4,15 @@ import {
   CalendarDays,
   ClipboardCheck,
   Clock3,
-  Flag,
+  XCircle,
   MapPin,
   Trophy,
 } from "lucide-react";
 import {
   jockeyActionImages,
-  jockeySchedule,
   jockeyTrackImages,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -26,19 +26,25 @@ const statusClass = (status) => {
 
 function JockeySchedule() {
   const [filter, setFilter] = useState("All");
+  const { error, isLoading, schedule } = useJockeyApiData();
 
   const visibleRaces = useMemo(
-    () => jockeySchedule.filter((race) => filter === "All" || race.status === filter),
-    [filter]
+    () => schedule.filter((race) => filter === "All" || race.status === filter),
+    [filter, schedule]
   );
 
-  const confirmedCount = jockeySchedule.filter((race) => race.status === "Confirmed").length;
-  const pendingCount = jockeySchedule.filter((race) => race.status === "Pending").length;
-  const reviewCount = jockeySchedule.filter((race) => race.status === "Review").length;
-  const nextRace = visibleRaces[0] ?? jockeySchedule[0];
+  const acceptedCount = schedule.filter((race) => race.status === "Accepted").length;
+  const pendingCount = schedule.filter((race) => race.status === "Pending").length;
+  const rejectedCount = schedule.filter((race) => race.status === "Rejected").length;
+  const nextRace = visibleRaces[0] ?? schedule[0];
 
   return (
     <div className="jockey-schedule-page">
+      {(isLoading || error) && (
+        <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live schedule..." : error}
+        </div>
+      )}
       <section className="jockey-schedule-hero">
         <img src={jockeyTrackImages[3]} alt="Race track schedule view for jockey" />
         <div className="jockey-schedule-hero__copy">
@@ -55,10 +61,10 @@ function JockeySchedule() {
 
       <section className="jockey-schedule-stats" aria-label="Schedule summary">
         {[
-          { label: "All slots", value: jockeySchedule.length, note: "Personal race windows", icon: CalendarDays },
-          { label: "Confirmed", value: confirmedCount, note: "Locked rides", icon: BadgeCheck },
+          { label: "All slots", value: schedule.length, note: "Personal race windows", icon: CalendarDays },
+          { label: "Accepted", value: acceptedCount, note: "Locked rides", icon: BadgeCheck },
           { label: "Pending", value: pendingCount, note: "Awaiting decision", icon: ClipboardCheck },
-          { label: "Review", value: reviewCount, note: "Needs owner update", icon: Flag },
+          { label: "Rejected", value: rejectedCount, note: "Declined slots", icon: XCircle },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -79,7 +85,7 @@ function JockeySchedule() {
             <h2>{filter === "All" ? "All race slots" : `${filter} race slots`}</h2>
           </div>
           <div className="jockey-segmented">
-            {["All", "Confirmed", "Pending", "Review"].map((item) => (
+            {["All", "Accepted", "Pending", "Rejected", "Cancelled"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>

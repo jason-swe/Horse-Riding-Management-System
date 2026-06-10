@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Award,
   BadgeCheck,
@@ -33,6 +33,9 @@ import {
   ownerResults,
   ownerSchedule,
 } from "./ownerData";
+import { ownerApi } from "../../api/ownerApi";
+import { toHorsePayload } from "./ownerAdapters";
+import { useOwnerHorse, useOwnerHorses, useOwnerProfile } from "./useOwnerData";
 
 const statusClass = (status) => {
   if (["Ready", "Approved", "Assigned", "Confirmed", "Published", "Won", "Verified"].includes(status)) {
@@ -137,8 +140,11 @@ const jockeyImages = [
 function OwnerHorses() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
+  const { horses, isLoading, error } = useOwnerHorses();
+  const firstHorse = horses[0];
+  const statusOptions = ["All", ...Array.from(new Set(horses.map((horse) => horse.status)))];
 
-  const filteredHorses = ownerHorses.filter((horse) => {
+  const filteredHorses = horses.filter((horse) => {
     const text = `${horse.name} ${horse.breed} ${horse.jockey} ${horse.status}`.toLowerCase();
     return text.includes(query.toLowerCase()) && (status === "All" || horse.status === status);
   });
@@ -157,20 +163,23 @@ function OwnerHorses() {
           </div>
         </div>
         <aside className="owner-horses-hero__panel">
-          <span className="owner-badge owner-badge--green"><BadgeCheck size={14} /> {ownerHorses.filter((horse) => horse.status === "Ready").length} race-ready</span>
-          <strong>{ownerHorses[0].name}</strong>
-          <p>{ownerHorses[0].healthNote}</p>
+          <span className="owner-badge owner-badge--green"><BadgeCheck size={14} /> {horses.filter((horse) => horse.status === "Ready").length} race-ready</span>
+          <strong>{firstHorse?.name || "No horses yet"}</strong>
+          <p>{firstHorse?.healthNote || "Create the first horse profile to begin owner API tracking."}</p>
         </aside>
       </section>
 
       <StatStrip
         items={[
-          { label: "Stable horses", value: ownerHorses.length, note: "Registered profiles", icon: HeartPulse },
-          { label: "Race-ready", value: ownerHorses.filter((horse) => horse.status === "Ready").length, note: "Cleared for schedule", icon: BadgeCheck },
-          { label: "Assigned jockeys", value: ownerHorses.filter((horse) => horse.jockey !== "Unassigned").length, note: "Confirmed relationships", icon: UsersRound },
-          { label: "Next entries", value: ownerHorses.filter((horse) => horse.nextRace !== "Unassigned").length, note: "Upcoming race windows", icon: CalendarDays },
+          { label: "Stable horses", value: horses.length, note: "Registered profiles", icon: HeartPulse },
+          { label: "Race-ready", value: horses.filter((horse) => horse.status === "Ready").length, note: "Cleared for schedule", icon: BadgeCheck },
+          { label: "Assigned jockeys", value: horses.filter((horse) => horse.jockey !== "Unassigned").length, note: "Confirmed relationships", icon: UsersRound },
+          { label: "Next entries", value: horses.filter((horse) => horse.nextRace !== "Unassigned").length, note: "Upcoming race windows", icon: CalendarDays },
         ]}
       />
+
+      {isLoading && <div className="owner-empty">Loading stable horses from API...</div>}
+      {error && <div className="owner-empty owner-empty--error">{error}</div>}
 
       <div className="owner-toolbar">
         <label className="owner-search">
@@ -180,10 +189,7 @@ function OwnerHorses() {
         <label className="owner-select">
           <Filter size={17} />
           <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option>All</option>
-            <option>Ready</option>
-            <option>Inspection set</option>
-            <option>Needs review</option>
+            {statusOptions.map((option) => <option key={option}>{option}</option>)}
           </select>
         </label>
       </div>
@@ -206,7 +212,7 @@ function OwnerHorses() {
 
               <div className="owner-roster-card__facts">
                 <span>{horse.breed}</span>
-                <span>{horse.age} yrs</span>
+                <span>{horse.age === "Not set" ? horse.age : `${horse.age} yrs`}</span>
                 <span>{horse.height}</span>
                 <span>{horse.weight}</span>
               </div>
@@ -234,49 +240,112 @@ function OwnerHorses() {
 
 function OwnerHorseForm({ mode = "new" }) {
   const { horseId } = useParams();
-  const existingHorse = ownerHorses.find((horse) => horse.id === horseId) ?? ownerHorses[0];
   const isEdit = mode === "edit";
-  const horseIndex = ownerHorses.findIndex((horse) => horse.id === existingHorse.id);
+  const navigate = useNavigate();
+  const { horse: existingHorse, isLoading, error: loadError } = useOwnerHorse(isEdit ? horseId : null);
+  const horseIndex = ownerHorses.findIndex((horse) => horse.id === existingHorse?.id);
   const horseImage = horseRosterImages[Math.max(horseIndex, 0) % horseRosterImages.length];
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
-    name: isEdit ? existingHorse.name : "",
-    breed: isEdit ? existingHorse.breed : "Thoroughbred",
-    age: isEdit ? existingHorse.age : 5,
-    height: isEdit ? existingHorse.height : "16.0hh",
-    weight: isEdit ? existingHorse.weight : "460 kg",
-    status: isEdit ? existingHorse.status : "Needs review",
-    healthNote: isEdit ? existingHorse.healthNote : "",
-    nextRace: isEdit ? existingHorse.nextRace : "Unassigned",
+    name: "",
+    registrationNumber: "",
+    breed: "Thoroughbred",
+    age: 5,
+    height: "Not set",
+    weight: "",
+    status: "Ready",
+    healthNote: "",
+    nextRace: "Unassigned",
   });
+
+  useEffect(() => {
+    if (!existingHorse) return;
+
+    setForm({
+      name: existingHorse.name,
+      registrationNumber: existingHorse.registrationNumber,
+      breed: existingHorse.breed,
+      age: existingHorse.age,
+      height: existingHorse.height,
+      weight: existingHorse.weight,
+      status: existingHorse.status,
+      healthNote: existingHorse.healthNote,
+      nextRace: existingHorse.nextRace,
+    });
+  }, [existingHorse]);
 
   const updateField = (field, value) => {
     setSaved(false);
+    setError("");
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const actionPath = isEdit ? `/owner/horses/${existingHorse.id}` : "/owner/horses";
+  const actionPath = isEdit && existingHorse ? `/owner/horses/${existingHorse.id}` : "/owner/horses";
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!form.name.trim()) {
+      setError("Horse name is required.");
+      return;
+    }
+
+    if (!form.registrationNumber.trim()) {
+      setError("Registration number is required.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+    setSaved(false);
+
+    try {
+      const payload = toHorsePayload(form);
+
+      if (isEdit && existingHorse) {
+        await ownerApi.updateHorse(existingHorse.id, payload);
+        setSaved(true);
+      } else {
+        const data = await ownerApi.createHorse(payload);
+        navigate(`/owner/horses/${data.horse._id}`, { replace: true });
+      }
+    } catch (apiError) {
+      setError(apiError.message || "Unable to save horse profile.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isEdit && isLoading) {
+    return <div className="owner-empty">Loading horse profile from API...</div>;
+  }
+
+  if (isEdit && loadError) {
+    return <div className="owner-empty owner-empty--error">{loadError}</div>;
+  }
 
   return (
     <div className="owner-horse-form-page">
       <section className="owner-horse-form-hero">
         <div className="owner-horse-form-hero__copy">
           <Link className="owner-detail-back" to={actionPath}>Back to {isEdit ? "profile" : "horses"}</Link>
-          <p className="owner-eyebrow">{isEdit ? `${existingHorse.id} profile` : "New horse profile"}</p>
-          <h1>{isEdit ? `Edit ${existingHorse.name}` : "Create a race-ready horse file"}</h1>
+          <p className="owner-eyebrow">{isEdit ? `${existingHorse?.registrationNumber} profile` : "New horse profile"}</p>
+          <h1>{isEdit ? `Edit ${existingHorse?.name}` : "Create a race-ready horse file"}</h1>
           <p>Update the details owners, admins, and referees need before approving a tournament entry.</p>
         </div>
         <aside className="owner-horse-form-preview" aria-label="Horse profile preview">
-          <img src={horseImage} alt={`${isEdit ? existingHorse.name : "New horse"} profile preview`} />
+          <img src={existingHorse?.imageUrl || horseImage} alt={`${isEdit ? existingHorse?.name : "New horse"} profile preview`} />
           <div className="owner-horse-form-preview__card">
             <span className={`owner-badge ${statusClass(form.status)}`}>{form.status}</span>
             <strong>{form.name || "Unnamed horse"}</strong>
-            <small>{form.breed} / {form.age} yrs / {form.nextRace || "No race assigned"}</small>
+            <small>{form.registrationNumber || "No registration"} / {form.breed}</small>
           </div>
         </aside>
       </section>
 
-      <form className="owner-horse-form-shell" onSubmit={(event) => { event.preventDefault(); setSaved(true); }}>
+      <form className="owner-horse-form-shell" onSubmit={handleSubmit}>
         <div className="owner-form-main">
           <section className="owner-form-section">
             <div className="owner-form-section__header">
@@ -285,6 +354,7 @@ function OwnerHorseForm({ mode = "new" }) {
             </div>
             <div className="owner-form-grid">
               <label>Name<input value={form.name} onChange={(event) => updateField("name", event.target.value)} required /></label>
+              <label>Registration number<input value={form.registrationNumber} onChange={(event) => updateField("registrationNumber", event.target.value)} required /></label>
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
               <label>Age<input type="number" min="1" value={form.age} onChange={(event) => updateField("age", event.target.value)} /></label>
               <label>Height<input value={form.height} onChange={(event) => updateField("height", event.target.value)} /></label>
@@ -298,7 +368,7 @@ function OwnerHorseForm({ mode = "new" }) {
               <h2>Approval state</h2>
             </div>
             <div className="owner-form-grid">
-              <FormSelect label="Status" value={form.status} options={["Ready", "Inspection set", "Needs review", "Pending documents", "Temporarily inactive"]} onChange={(value) => updateField("status", value)} />
+              <FormSelect label="Status" value={form.status} options={["Ready", "Needs review", "Closed"]} onChange={(value) => updateField("status", value)} />
               <label className="owner-form-span">Next race<input value={form.nextRace} onChange={(event) => updateField("nextRace", event.target.value)} /></label>
             </div>
           </section>
@@ -312,9 +382,12 @@ function OwnerHorseForm({ mode = "new" }) {
           </section>
 
           <div className="owner-form-actions">
-            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Profile saved locally.</span>}
+            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Profile saved to API.</span>}
+            {error && <span className="owner-success owner-success--error">{error}</span>}
             <Link className="owner-button" to={actionPath}>Cancel</Link>
-            <button className="owner-button owner-button--primary" type="submit">{isEdit ? "Save Changes" : "Create Horse"}</button>
+            <button className="owner-button owner-button--primary" disabled={isSubmitting} type="submit">
+              {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Create Horse"}
+            </button>
           </div>
         </div>
       </form>
@@ -324,7 +397,15 @@ function OwnerHorseForm({ mode = "new" }) {
 
 function OwnerHorseDetail() {
   const { horseId } = useParams();
-  const horse = ownerHorses.find((item) => item.id === horseId) ?? ownerHorses[0];
+  const { horse, isLoading, error } = useOwnerHorse(horseId);
+  if (isLoading) {
+    return <div className="owner-empty">Loading horse profile from API...</div>;
+  }
+
+  if (error || !horse) {
+    return <div className="owner-empty owner-empty--error">{error || "Horse not found."}</div>;
+  }
+
   const horseIndex = ownerHorses.findIndex((item) => item.id === horse.id);
   const horseImage = horseRosterImages[Math.max(horseIndex, 0) % horseRosterImages.length];
   const registrations = ownerRegistrations.filter((item) => item.horseId === horse.id);
@@ -337,7 +418,7 @@ function OwnerHorseDetail() {
       <section className="owner-detail-hero">
         <div className="owner-detail-hero__copy">
           <Link className="owner-detail-back" to="/owner/horses">Back to horses</Link>
-          <p className="owner-eyebrow">{horse.id} / {horse.breed}</p>
+          <p className="owner-eyebrow">{horse.registrationNumber} / {horse.breed}</p>
           <h1>{horse.name}</h1>
           <p>{horse.healthNote}</p>
           <div className="owner-hero__actions">
@@ -347,7 +428,7 @@ function OwnerHorseDetail() {
           </div>
         </div>
         <aside className="owner-detail-hero__media">
-          <img src={horseImage} alt={`${horse.name} horse profile`} />
+          <img src={horse.imageUrl || horseImage} alt={`${horse.name} horse profile`} />
           <div className="owner-detail-photo-card">
             <span className={`owner-badge ${statusClass(horse.status)}`}>{horse.status}</span>
             <strong>{horse.record}</strong>
@@ -358,7 +439,7 @@ function OwnerHorseDetail() {
 
       <section className="owner-detail-summary" aria-label="Horse summary">
         {[
-          { label: "Age", value: `${horse.age} yrs`, icon: HeartPulse },
+          { label: "Age", value: horse.age === "Not set" ? horse.age : `${horse.age} yrs`, icon: HeartPulse },
           { label: "Height", value: horse.height, icon: Flag },
           { label: "Weight", value: horse.weight, icon: Award },
           { label: "Next race", value: horse.nextRace, icon: CalendarDays },
@@ -849,31 +930,41 @@ function OwnerResults() {
 }
 
 function OwnerProfile() {
+  const { profile, isLoading, error } = useOwnerProfile();
+
+  if (isLoading) {
+    return <div className="owner-empty">Loading owner profile from API...</div>;
+  }
+
+  if (error || !profile) {
+    return <div className="owner-empty owner-empty--error">{error || "Owner profile not found."}</div>;
+  }
+
   return (
     <div className="owner-profile-page">
       <section className="owner-profile-hero">
-        <img src={profileStableImage} alt={`${ownerProfile.stable} stable profile background`} />
+        <img src={profileStableImage} alt={`${profile.stable} stable profile background`} />
         <div className="owner-profile-hero__copy">
           <p className="owner-eyebrow">Stable profile</p>
-          <h1>{ownerProfile.stable} account.</h1>
+          <h1>{profile.stable} account.</h1>
           <p>Review owner identity, verification, contact information, and notification preferences.</p>
         </div>
         <aside className="owner-profile-card">
-          <img src={profileHeroImage} alt={`${ownerProfile.name} owner portrait`} />
+          <img src={profileHeroImage} alt={`${profile.name} owner portrait`} />
           <div>
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <strong>{ownerProfile.name}</strong>
-            <small>{ownerProfile.location} / {ownerProfile.joined}</small>
+            <strong>{profile.name}</strong>
+            <small>{profile.location} / {profile.joined}</small>
           </div>
         </aside>
       </section>
 
       <section className="owner-profile-stats" aria-label="Owner account summary">
         {[
-          { label: "Season", value: ownerProfile.season, note: "Current profile cycle", icon: CalendarDays },
-          { label: "Win rate", value: ownerProfile.winRate, note: "Stable performance", icon: Trophy },
-          { label: "Earnings", value: ownerProfile.earnings, note: "Settled prizes", icon: Award },
-          { label: "Status", value: ownerProfile.status, note: "Account access", icon: ShieldCheck },
+          { label: "Season", value: profile.season, note: "Current profile cycle", icon: CalendarDays },
+          { label: "Win rate", value: profile.winRate, note: "Stable performance", icon: Trophy },
+          { label: "Earnings", value: profile.earnings, note: "Settled prizes", icon: Award },
+          { label: "Status", value: profile.status, note: "Account access", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -897,12 +988,13 @@ function OwnerProfile() {
             <UserRound size={20} />
           </div>
           <div className="owner-profile-contact-grid">
-            <div><span>Name</span><strong>{ownerProfile.name}</strong></div>
-            <div><span>Stable</span><strong>{ownerProfile.stable}</strong></div>
-            <div><span><Mail size={13} /> Email</span><strong>{ownerProfile.email}</strong></div>
-            <div><span><Phone size={13} /> Phone</span><strong>{ownerProfile.phone}</strong></div>
-            <div><span><MapPin size={13} /> Location</span><strong>{ownerProfile.location}</strong></div>
-            <div><span><ShieldCheck size={13} /> Status</span><strong>{ownerProfile.status}</strong></div>
+            <div><span>Name</span><strong>{profile.name}</strong></div>
+            <div><span>Stable</span><strong>{profile.stable}</strong></div>
+            <div><span><Mail size={13} /> Email</span><strong>{profile.email}</strong></div>
+            <div><span><Phone size={13} /> Phone</span><strong>{profile.phone}</strong></div>
+            <div><span><MapPin size={13} /> Location</span><strong>{profile.location}</strong></div>
+            <div><span><ShieldCheck size={13} /> License</span><strong>{profile.licenseNumber}</strong></div>
+            <div><span><ShieldCheck size={13} /> Status</span><strong>{profile.status}</strong></div>
           </div>
         </article>
 
@@ -916,7 +1008,7 @@ function OwnerProfile() {
           </div>
           <div className="owner-profile-verify__body">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <strong>{ownerProfile.season}</strong>
+            <strong>{profile.season}</strong>
             <p>Account can submit horse registrations, manage jockey assignments, and track prize outcomes.</p>
           </div>
         </aside>

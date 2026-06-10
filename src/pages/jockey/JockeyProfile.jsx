@@ -11,13 +11,10 @@ import {
   UserRound,
 } from "lucide-react";
 import {
-  jockeyAssignments,
   jockeyNotifications,
   jockeyPortraits,
-  jockeyProfile,
-  jockeyResults,
-  jockeySchedule,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -30,41 +27,47 @@ const statusClass = (status) => {
 };
 
 function JockeyProfile() {
-  const nextRace = jockeySchedule[0];
-  const latestResult = jockeyResults[0];
-  const confirmedAssignments = jockeyAssignments.filter((assignment) => assignment.status === "Confirmed").length;
+  const { assignments, error, isLoading, profile, results, schedule } = useJockeyApiData();
+  const nextRace = schedule[0];
+  const latestResult = results[0];
+  const confirmedAssignments = assignments.filter((assignment) => assignment.status === "Accepted").length;
 
   return (
     <div className="jockey-profile-page">
+      {(isLoading || error) && (
+        <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live profile..." : error}
+        </div>
+      )}
       <section className="jockey-profile-hero">
         <div className="jockey-profile-hero__portrait">
-          <img src={jockeyPortraits[0]} alt={`${jockeyProfile.name} jockey portrait`} />
-          <span className={`jockey-badge ${statusClass(jockeyProfile.status)}`}><BadgeCheck size={14} /> {jockeyProfile.status}</span>
+          <img src={jockeyPortraits[0]} alt={`${profile.name} jockey portrait`} />
+          <span className={`jockey-badge ${statusClass(profile.status)}`}><BadgeCheck size={14} /> {profile.status}</span>
         </div>
 
         <div className="jockey-profile-hero__copy">
           <p className="jockey-kicker">Athlete profile</p>
-          <h1>{jockeyProfile.name}</h1>
-          <p>{jockeyProfile.license} riding in the {jockeyProfile.weightClass}, connected with {jockeyProfile.stableConnection} for the current season.</p>
+          <h1>{profile.name}</h1>
+          <p>{profile.license} riding in the {profile.weightClass}, connected with {profile.stableConnection} for the current season.</p>
           <div className="jockey-profile-hero__tags">
-            <span><UserRound size={14} /> {jockeyProfile.id}</span>
-            <span><MapPin size={14} /> {jockeyProfile.location}</span>
-            <span><CalendarDays size={14} /> {jockeyProfile.season}</span>
+            <span><UserRound size={14} /> {profile.id}</span>
+            <span><MapPin size={14} /> {profile.location}</span>
+            <span><CalendarDays size={14} /> {profile.season}</span>
           </div>
         </div>
 
         <aside className="jockey-profile-hero__panel">
           <span className="jockey-kicker">Next availability</span>
-          <strong>{jockeyProfile.availability}</strong>
+          <strong>{profile.availability}</strong>
           <p>{nextRace.race} / {nextRace.horse}</p>
         </aside>
       </section>
 
       <section className="jockey-profile-stats" aria-label="Jockey profile performance summary">
         {[
-          { label: "Win rate", value: jockeyProfile.winRate, note: "Season form", icon: Trophy },
-          { label: "Podium rate", value: jockeyProfile.podiumRate, note: "Top-three pace", icon: Award },
-          { label: "Earnings", value: jockeyProfile.earnings, note: "Published purse", icon: BadgeCheck },
+          { label: "Win rate", value: profile.winRate, note: "Season form", icon: Trophy },
+          { label: "Podium rate", value: profile.podiumRate, note: "Top-three pace", icon: Award },
+          { label: "Earnings", value: profile.earnings, note: "Published purse", icon: BadgeCheck },
           { label: "Confirmed", value: confirmedAssignments, note: "Horse pairings", icon: Home },
         ].map((item) => {
           const Icon = item.icon;
@@ -90,10 +93,10 @@ function JockeyProfile() {
           </div>
 
           <div className="jockey-profile-detail-list">
-            <div><Mail size={16} /><span>Email</span><strong>{jockeyProfile.email}</strong></div>
-            <div><Phone size={16} /><span>Phone</span><strong>{jockeyProfile.phone}</strong></div>
-            <div><MapPin size={16} /><span>Base</span><strong>{jockeyProfile.location}</strong></div>
-            <div><Home size={16} /><span>Stable</span><strong>{jockeyProfile.stableConnection}</strong></div>
+            <div><Mail size={16} /><span>Email</span><strong>{profile.email}</strong></div>
+            <div><Phone size={16} /><span>Phone</span><strong>{profile.phone}</strong></div>
+            <div><MapPin size={16} /><span>Base</span><strong>{profile.location}</strong></div>
+            <div><Home size={16} /><span>Stable</span><strong>{profile.stableConnection}</strong></div>
           </div>
         </article>
 
@@ -107,10 +110,10 @@ function JockeyProfile() {
           </div>
 
           <div className="jockey-profile-license__grid">
-            <div><span>License</span><strong>{jockeyProfile.license}</strong></div>
-            <div><span>Weight class</span><strong>{jockeyProfile.weightClass}</strong></div>
-            <div><span>Season</span><strong>{jockeyProfile.season}</strong></div>
-            <div><span>Status</span><strong>{jockeyProfile.status}</strong></div>
+            <div><span>License</span><strong>{profile.license}</strong></div>
+            <div><span>Weight class</span><strong>{profile.weightClass}</strong></div>
+            <div><span>Season</span><strong>{profile.season}</strong></div>
+            <div><span>Status</span><strong>{profile.status}</strong></div>
           </div>
         </article>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { Bell, CheckCircle2, Trophy, UserRound } from "lucide-react";
+import LogoutButton from "../../auth/LogoutButton";
 import { ownerNotifications } from "./ownerData";
 import "./owner.css";
 
@@ -106,7 +107,7 @@ function OwnerLayout() {
             <UserRound size={17} />
             Profile
           </Link>
-          <Link className="owner-button owner-button--ghost" to="/login">Logout</Link>
+          <LogoutButton className="owner-button owner-button--ghost">Logout</LogoutButton>
         </div>
       </header>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { Bell, CheckCircle2, Trophy, UserRound } from "lucide-react";
+import LogoutButton from "../../auth/LogoutButton";
 import { jockeyNotifications } from "./jockeyData";
 import "./jockey.css";
 
@@ -105,7 +106,7 @@ function JockeyLayout() {
             <UserRound size={17} />
             Profile
           </Link>
-          <Link className="jockey-button jockey-button--ghost" to="/login">Logout</Link>
+          <LogoutButton className="jockey-button jockey-button--ghost">Logout</LogoutButton>
         </div>
       </header>
 

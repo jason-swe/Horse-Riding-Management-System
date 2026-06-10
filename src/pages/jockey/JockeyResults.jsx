@@ -2,9 +2,8 @@ import { useMemo, useState } from "react";
 import { Award, BadgeCheck, Clock3, Flag, Trophy } from "lucide-react";
 import {
   celebrationImages,
-  jockeyProfile,
-  jockeyResults,
 } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
@@ -25,24 +24,30 @@ const finishLabel = (position) => {
 
 function JockeyResults() {
   const [filter, setFilter] = useState("All");
+  const { error, isLoading, profile, results } = useJockeyApiData();
 
   const visibleResults = useMemo(() => {
-    return jockeyResults.filter((result) => {
+    return results.filter((result) => {
       if (filter === "Wins") return result.position === 1;
       if (filter === "Podiums") return result.position <= 3;
       if (filter === "Published") return result.status === "Published";
       return true;
     });
-  }, [filter]);
+  }, [filter, results]);
 
-  const bestResult = jockeyResults.reduce((best, result) => (
+  const bestResult = results.reduce((best, result) => (
     result.position < best.position ? result : best
-  ), jockeyResults[0]);
-  const podiumCount = jockeyResults.filter((result) => result.position <= 3).length;
-  const winCount = jockeyResults.filter((result) => result.position === 1).length;
+  ), results[0]);
+  const podiumCount = results.filter((result) => result.position <= 3).length;
+  const winCount = results.filter((result) => result.position === 1).length;
 
   return (
     <div className="jockey-results-page">
+      {(isLoading || error) && (
+        <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
+          {isLoading ? "Loading live results..." : error}
+        </div>
+      )}
       <section className="jockey-results-hero">
         <img src={celebrationImages[1]} alt="Jockey celebrating a published race result" />
         <div className="jockey-results-hero__copy">
@@ -59,9 +64,9 @@ function JockeyResults() {
 
       <section className="jockey-results-stats" aria-label="Jockey result summary">
         {[
-          { label: "Season earnings", value: jockeyProfile.earnings, note: "Published purse", icon: Award },
-          { label: "Win rate", value: jockeyProfile.winRate, note: `${winCount} season win`, icon: Trophy },
-          { label: "Podium rate", value: jockeyProfile.podiumRate, note: `${podiumCount} top-three finishes`, icon: BadgeCheck },
+          { label: "Season earnings", value: profile.earnings, note: "Published purse", icon: Award },
+          { label: "Win rate", value: profile.winRate, note: `${winCount} season win`, icon: Trophy },
+          { label: "Podium rate", value: profile.podiumRate, note: `${podiumCount} top-three finishes`, icon: BadgeCheck },
           { label: "Best time", value: bestResult.time, note: bestResult.horse, icon: Clock3 },
         ].map((item) => {
           const Icon = item.icon;
@@ -81,12 +86,12 @@ function JockeyResults() {
           <img src={celebrationImages[0]} alt="Jockey after winning a race" />
           <div>
             <span className="jockey-kicker">Latest result</span>
-            <h2>{jockeyResults[0].race}</h2>
-            <p>{jockeyResults[0].horse} finished #{jockeyResults[0].position} with an official time of {jockeyResults[0].time}.</p>
+            <h2>{results[0].race}</h2>
+            <p>{results[0].horse} finished #{results[0].position} with an official time of {results[0].time}.</p>
           </div>
           <div className="jockey-results-feature__metrics">
-            <div><span>Finish</span><strong>#{jockeyResults[0].position}</strong></div>
-            <div><span>Prize</span><strong>{jockeyResults[0].prize}</strong></div>
+            <div><span>Finish</span><strong>#{results[0].position}</strong></div>
+            <div><span>Prize</span><strong>{results[0].prize}</strong></div>
           </div>
         </aside>
 

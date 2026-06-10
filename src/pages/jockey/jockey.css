@@ -12,6 +12,28 @@
     linear-gradient(180deg, #314c3d 0%, #294536 52%, #22392d 100%);
 }
 
+.jockey-sync-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 1120px);
+  margin: 0 auto 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(103, 211, 141, 0.34);
+  border-radius: 8px;
+  background: rgba(103, 211, 141, 0.12);
+  color: #DDF8E5;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.jockey-sync-note--warning {
+  border-color: rgba(240, 161, 92, 0.38);
+  background: rgba(240, 161, 92, 0.13);
+  color: #FFE0B8;
+}
+
 .jockey-page * {
   box-sizing: border-box;
   text-wrap: pretty;

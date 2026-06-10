@@ -14,6 +14,7 @@ import Predictions from "./pages/spectator/Predictions";
 import PredictionDetail from "./pages/spectator/PredictionDetail";
 import Profile from "./pages/spectator/Profile";
 import Results from "./pages/spectator/Results";
+import RoleApplications from "./pages/applications/RoleApplications";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import OwnerLayout from "./pages/owner/OwnerLayout";
 import JockeyAssignments from "./pages/jockey/JockeyAssignments";
@@ -23,6 +24,8 @@ import JockeyLayout from "./pages/jockey/JockeyLayout";
 import JockeyProfile from "./pages/jockey/JockeyProfile";
 import JockeyResults from "./pages/jockey/JockeyResults";
 import JockeySchedule from "./pages/jockey/JockeySchedule";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import WorkspaceChooser from "./auth/WorkspaceChooser";
 import {
   OwnerHorseDetail,
   OwnerHorseForm,
@@ -38,11 +41,12 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/:module" element={<AdminModulePage />} />
+      <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/:module" element={<ProtectedRoute role="admin"><AdminModulePage /></ProtectedRoute>} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/owner" element={<OwnerLayout />}>
+      <Route path="/choose-role" element={<WorkspaceChooser />} />
+      <Route path="/owner" element={<ProtectedRoute role="horse_owner"><OwnerLayout /></ProtectedRoute>}>
         <Route index element={<OwnerDashboard />} />
         <Route path="horses" element={<OwnerHorses />} />
         <Route path="horses/new" element={<OwnerHorseForm />} />
@@ -55,7 +59,7 @@ function App() {
         <Route path="profile" element={<OwnerProfile />} />
       </Route>
 
-      <Route path="/jockey" element={<JockeyLayout />}>
+      <Route path="/jockey" element={<ProtectedRoute role="jockey"><JockeyLayout /></ProtectedRoute>}>
         <Route index element={<JockeyDashboard />} />
         <Route path="invitations" element={<JockeyInvitations />} />
         <Route path="schedule" element={<JockeySchedule />} />
@@ -65,7 +69,7 @@ function App() {
       </Route>
 
       {/* User Dashboards Layout */}
-      <Route element={<MainLayout />}>
+      <Route element={<ProtectedRoute role="spectator"><MainLayout /></ProtectedRoute>}>
         <Route path="/spectator" element={<SpectatorHome />} />
         <Route path="/spectator/tournaments" element={<TournamentList />} />
         <Route path="/spectator/tournaments/:tournamentId" element={<TournamentDetail />} />
@@ -74,6 +78,7 @@ function App() {
         <Route path="/spectator/predictions/:tournamentId" element={<PredictionDetail />} />
         <Route path="/spectator/profile" element={<Profile />} />
         <Route path="/spectator/results" element={<Results />} />
+        <Route path="/spectator/role-applications" element={<RoleApplications />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
