@@ -36,6 +36,15 @@ import {
   OwnerResults,
   OwnerSchedule,
 } from "./pages/owner/OwnerPages";
+import RefereeDashboard from "./Referee/RefereeDashboard";
+import RefereeRaces from "./Referee/RefereeRaces";
+import RefereeRaceDetail from "./Referee/RefereeRaceDetail";
+import HorseInspection from "./Referee/HorseInspection";
+import JockeyInspection from "./Referee/JockeyInspection";
+import RaceMonitor from "./Referee/RaceMonitor";
+import ViolationManagement from "./Referee/ViolationManagement";
+import RaceResult from "./Referee/RaceResult";
+import RaceReport from "./Referee/RaceReport";
 
 function App() {
   return (
@@ -46,6 +55,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/choose-role" element={<WorkspaceChooser />} />
+
       <Route path="/owner" element={<ProtectedRoute role="horse_owner"><OwnerLayout /></ProtectedRoute>}>
         <Route index element={<OwnerDashboard />} />
         <Route path="horses" element={<OwnerHorses />} />
@@ -68,7 +78,16 @@ function App() {
         <Route path="profile" element={<JockeyProfile />} />
       </Route>
 
-      {/* User Dashboards Layout */}
+      <Route path="/referee" element={<ProtectedRoute role="race_referee"><RefereeDashboard /></ProtectedRoute>} />
+      <Route path="/referee/races" element={<ProtectedRoute role="race_referee"><RefereeRaces /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId" element={<ProtectedRoute role="race_referee"><RefereeRaceDetail /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/horse-inspection" element={<ProtectedRoute role="race_referee"><HorseInspection /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/jockey-inspection" element={<ProtectedRoute role="race_referee"><JockeyInspection /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/monitor" element={<ProtectedRoute role="race_referee"><RaceMonitor /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/violations" element={<ProtectedRoute role="race_referee"><ViolationManagement /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/result" element={<ProtectedRoute role="race_referee"><RaceResult /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/report" element={<ProtectedRoute role="race_referee"><RaceReport /></ProtectedRoute>} />
+
       <Route element={<ProtectedRoute role="spectator"><MainLayout /></ProtectedRoute>}>
         <Route path="/spectator" element={<SpectatorHome />} />
         <Route path="/spectator/tournaments" element={<TournamentList />} />
