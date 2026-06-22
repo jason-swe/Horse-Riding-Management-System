@@ -1,4 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import LogoutButton from "../auth/LogoutButton";
 
 function AdminLayout({ title, eyebrow, description, children, actions }) {
   return (
@@ -70,13 +72,9 @@ function AdminLayout({ title, eyebrow, description, children, actions }) {
               <span className="admin-user-name">Admin</span>
               <span className="admin-user-role">System administrator</span>
             </div>
-            <Link className="admin-logout-btn" to="/login" title="Sign out" aria-label="Sign out">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </Link>
+            <LogoutButton className="admin-logout-btn" title="Sign out" ariaLabel="Sign out">
+              <LogOut size={16} />
+            </LogoutButton>
           </div>
         </aside>
 

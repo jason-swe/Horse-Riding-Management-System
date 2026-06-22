@@ -291,10 +291,10 @@ export const adminModules = {
   },
   registrations: {
     title: "Registrations",
-    eyebrow: "Approval queue",
+    eyebrow: "Race entry approval",
     description:
-      "Approve horse owner, jockey, referee, and spectator participation requests before they enter the tournament workflow.",
-    primaryActions: ["Approve request", "Reject request", "Review details"],
+      "Review horse race registrations from owners before the horse can proceed to jockey invitation and race participation.",
+    primaryActions: ["Approve entry", "Reject entry", "Review details"],
     filters: {
       searchPlaceholder: "Search reg ID, participant, role, target...",
       statusOptions: ["All", "Approved", "Pending", "Review"],
@@ -306,10 +306,10 @@ export const adminModules = {
     ],
     sections: [
       {
-        title: "Request review",
+        title: "Race entry review",
         items: [
-          "Check participant identity and role.",
-          "Verify horse and jockey data before approval.",
+          "Check horse identity and owner context.",
+          "Verify race eligibility before approval.",
           "Send approval or rejection feedback.",
         ],
       },
@@ -317,7 +317,7 @@ export const adminModules = {
         title: "Queue control",
         items: [
           "Prioritize race-critical approvals.",
-          "Monitor pending items by role.",
+          "Monitor pending horse race entries.",
           "Keep a log of all actions.",
         ],
       },
@@ -325,11 +325,11 @@ export const adminModules = {
     tools: [
       {
         title: "Approval inbox",
-        content: "List requests with approve/reject actions so admins can process them one by one.",
+        content: "List horse race registrations with approve/reject actions so admins can process them one by one.",
       },
       {
-        title: "Bulk review",
-        content: "Support multi-select review for routine accounts and racing participants.",
+        title: "Eligibility review",
+        content: "Surface horse, owner, race, and tournament context before admin approval.",
       },
     ],
     tables: [
@@ -337,10 +337,10 @@ export const adminModules = {
         title: "Registration queue",
         columns: ["Reg ID", "Participant", "Role", "Target", "Submitted", "Status"],
         rows: [
-          ["REG-201", "Minh Le", "Horse Owner", "Storm Arrow", "Today 08:15", "Approved"],
-          ["REG-202", "Anh Khoa", "Jockey", "Blue Horizon", "Today 08:20", "Pending"],
-          ["REG-203", "Thanh Ha", "Spectator", "Prediction access", "Today 08:31", "Approved"],
-          ["REG-204", "Cam Tu", "Horse Owner", "Golden Mane", "Today 09:02", "Review"],
+          ["REG-201", "Storm Arrow", "Horse Race Entry", "Spring Cup / Heat 1", "Today 08:15", "Approved"],
+          ["REG-202", "Blue Horizon", "Horse Race Entry", "Spring Cup / Heat 2", "Today 08:20", "Pending"],
+          ["REG-203", "Golden Mane", "Horse Race Entry", "Derby Trial / Final", "Today 08:31", "Approved"],
+          ["REG-204", "Silver Wind", "Horse Race Entry", "Derby Trial / Heat 1", "Today 09:02", "Review"],
         ],
       },
     ],

@@ -1,0 +1,228 @@
+import { useCallback, useEffect, useState } from "react";
+import { ownerApi } from "../../api/ownerApi";
+import { useAuth } from "../../auth/AuthContext";
+import { toHorseApprovalStatus, toOwnerHorse, toOwnerJockey, toOwnerProfile, toOwnerRegistration, toOwnerTournament } from "./ownerAdapters";
+
+export function useOwnerHorses() {
+  const [horses, setHorses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadHorses = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getHorses();
+      setHorses((data.horses || []).map(toOwnerHorse));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load horses.");
+      setHorses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHorses();
+  }, [loadHorses]);
+
+  return { horses, isLoading, error, reload: loadHorses };
+}
+
+export function useOwnerHorse(horseId) {
+  const [horse, setHorse] = useState(null);
+  const [isLoading, setIsLoading] = useState(Boolean(horseId));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHorse() {
+      if (!horseId) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const data = await ownerApi.getHorse(horseId);
+        if (!cancelled) {
+          setHorse(toOwnerHorse(data.horse));
+        }
+      } catch (apiError) {
+        if (!cancelled) {
+          setError(apiError.message || "Unable to load horse.");
+          setHorse(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadHorse();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [horseId]);
+
+  return { horse, isLoading, error };
+}
+
+export function useOwnerProfile() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadProfile = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getProfile();
+      setProfile(toOwnerProfile(data.profile, user));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load owner profile.");
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  return { profile, isLoading, error, reload: loadProfile };
+}
+
+export function useOwnerHorseApprovalStatus(horseId) {
+  const [approvalStatus, setApprovalStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(Boolean(horseId));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadApprovalStatus() {
+      if (!horseId) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const data = await ownerApi.getHorseApprovalStatus(horseId);
+        if (!cancelled) {
+          setApprovalStatus(toHorseApprovalStatus(data));
+        }
+      } catch (apiError) {
+        if (!cancelled) {
+          setError(apiError.message || "Unable to load approval status.");
+          setApprovalStatus(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadApprovalStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [horseId]);
+
+  return { approvalStatus, isLoading, error };
+}
+
+export function useOwnerJockeys() {
+  const [jockeys, setJockeys] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadJockeys = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getJockeys();
+      setJockeys((data.jockeys || []).map(toOwnerJockey));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load available jockeys.");
+      setJockeys([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadJockeys();
+  }, [loadJockeys]);
+
+  return { jockeys, isLoading, error, reload: loadJockeys };
+}
+
+export function useOwnerTournaments() {
+  const [tournaments, setTournaments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadTournaments = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getTournaments();
+      setTournaments((data.tournaments || []).map(toOwnerTournament));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load tournaments.");
+      setTournaments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTournaments();
+  }, [loadTournaments]);
+
+  return { tournaments, isLoading, error, reload: loadTournaments };
+}
+
+export function useOwnerRegistrations() {
+  const [registrations, setRegistrations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadRegistrations = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getRegistrations();
+      setRegistrations((data.registrations || []).map(toOwnerRegistration));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load registrations.");
+      setRegistrations([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRegistrations();
+  }, [loadRegistrations]);
+
+  return { registrations, isLoading, error, reload: loadRegistrations };
+}
