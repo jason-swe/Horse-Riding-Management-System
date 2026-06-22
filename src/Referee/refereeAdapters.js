@@ -1,0 +1,172 @@
+import { getRacePhase } from "./refereeConstants";
+
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
+export function getId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value._id || value.id || "";
+}
+
+function getUserName(value, fallback) {
+  const user = value?.user_id || value?.user;
+  return user?.full_name || value?.full_name || value?.name || fallback;
+}
+
+function extract(payload, keys) {
+  for (const key of keys) {
+    if (Array.isArray(payload?.[key])) return payload[key];
+  }
+  return [];
+}
+
+function raceIdOf(value) {
+  return getId(value?.race_id || value?.race);
+}
+
+function formatDateTime(value) {
+  if (!value) return { date: "Unscheduled", time: "TBD" };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return { date: String(value), time: "TBD" };
+  return {
+    date: date.toLocaleDateString(),
+    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
+}
+
+function adaptParticipant(item) {
+  const registration = item.registration || item;
+  const horse = item.horse || registration.horse_id || {};
+  const owner = item.owner || registration.owner_id || horse.owner_id || {};
+  const assignment = item.assignment || null;
+  const jockey = assignment?.jockey_id || {};
+
+  return {
+    registrationId: getId(registration),
+    horseId: getId(horse),
+    horseName: horse.name || "Unknown horse",
+    breed: horse.breed || "Not recorded",
+    age: horse.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(horse.date_of_birth).getFullYear()) : null,
+    weight: horse.weight ?? null,
+    owner: getUserName(owner, owner.stable_name || "Unknown owner"),
+    jockeyId: getId(jockey),
+    jockeyName: assignment ? getUserName(jockey, "Unknown jockey") : "Not assigned",
+    jockeyLicense: jockey.license_number || "Not recorded",
+    assignmentId: getId(assignment),
+    assignmentStatus: assignment?.status || "unassigned",
+    lane: registration.lane ?? assignment?.lane ?? null,
+  };
+}
+
+function adaptCheck(check) {
+  return {
+    id: getId(check),
+    raceId: raceIdOf(check),
+    horseId: getId(check.horse_id),
+    jockeyId: getId(check.jockey_id),
+    phase: check.phase || "pre_race",
+    status: check.status,
+    checklist: check.checklist || {},
+    issues: asArray(check.issues),
+    eventType: check.event_type || "",
+    severity: check.severity || "",
+    timeMarker: check.time_marker || "",
+    description: check.description || "",
+    evidenceUrls: asArray(check.evidence_urls),
+    linkedViolationId: getId(check.linked_violation_id),
+    healthStatus: check.health_status || "",
+    weight: check.weight ?? null,
+    note: check.check_note || "",
+    isEligible: check.is_eligible,
+    checkedAt: check.checked_at || null,
+  };
+}
+
+function adaptViolation(value) {
+  const horse = value.horse_id || {};
+  const jockey = value.jockey_id || {};
+  return {
+    id: getId(value),
+    raceId: raceIdOf(value),
+    horseId: getId(horse),
+    jockeyId: getId(jockey),
+    horseCheckId: getId(value.horse_check_id),
+    type: value.violation_type || "other",
+    subjectName: getId(jockey) ? getUserName(jockey, "Unknown jockey") : horse.name || "Unknown horse",
+    severity: value.severity || "",
+    timeMarker: value.time_marker || "",
+    evidenceUrls: asArray(value.evidence_urls),
+    decision: value.decision || "",
+    penalty: value.penalty || "pending_review",
+    description: value.description || "",
+    status: value.status || "recorded",
+    timestamp: value.created_at || value.updated_at || null,
+  };
+}
+
+function adaptResult(value) {
+  const horse = value.horse_id || {};
+  const jockey = value.jockey_id || {};
+  return {
+    id: getId(value),
+    raceId: raceIdOf(value),
+    horseId: getId(horse),
+    horseName: horse.name || "Unknown horse",
+    jockeyId: getId(jockey),
+    jockeyName: getUserName(jockey, "Unknown jockey"),
+    position: value.position,
+    finishTime: value.finish_time,
+    score: value.score,
+    note: value.note || "",
+    status: value.status || "draft",
+  };
+}
+
+function adaptReport(value) {
+  return {
+    id: getId(value),
+    raceId: raceIdOf(value),
+    title: value.report_title || "",
+    content: value.report_content || "",
+    raceCondition: value.race_condition || "",
+    weather: value.weather || "",
+    trackCondition: value.track_condition || "",
+    conclusion: value.conclusion || "",
+    status: value.status || "draft",
+    submittedAt: value.submitted_at || null,
+  };
+}
+
+export function adaptRefereeApiData({ races, participantPayloads, results, violations, checks, reports }) {
+  const raceRows = extract(races, ["races", "data"]);
+  const participantMap = new Map(
+    asArray(participantPayloads).map(({ raceId, payload }) => [raceId, extract(payload, ["participants", "data"]).map(adaptParticipant)])
+  );
+  const allChecks = extract(checks, ["horse_checks", "checks", "data"]).map(adaptCheck);
+  const allViolations = extract(violations, ["violations", "data"]).map(adaptViolation);
+  const allResults = extract(results, ["race_results", "results", "data"]).map(adaptResult);
+  const allReports = extract(reports, ["referee_reports", "reports", "data"]).map(adaptReport);
+
+  return raceRows.map((race) => {
+    const id = getId(race);
+    const schedule = formatDateTime(race.race_date);
+    const raceResults = allResults.filter((item) => item.raceId === id);
+    return {
+      id,
+      name: race.name || "Unnamed race",
+      tournament: race.tournament_id?.name || "Tournament not recorded",
+      track: race.location || "Track not recorded",
+      date: schedule.date,
+      startTime: schedule.time,
+      status: String(race.status || "scheduled").toLowerCase(),
+      phase: getRacePhase(race.status),
+      participants: participantMap.get(id) || [],
+      checks: allChecks.filter((item) => item.raceId === id),
+      violations: allViolations.filter((item) => item.raceId === id),
+      result: raceResults,
+      resultStatus: raceResults.find((item) => ["published", "confirmed"].includes(item.status))?.status || raceResults[0]?.status || null,
+      report: allReports.find((item) => item.raceId === id) || null,
+      raw: race,
+    };
+  });
+}

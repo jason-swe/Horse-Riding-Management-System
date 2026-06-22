@@ -1,14 +1,9 @@
 import { useState } from "react";
 import { Award, CircleDollarSign, Clock3, Flag, History, Medal, Timer, Trophy } from "lucide-react";
 import DataTable from "../../components/DataTable.jsx";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
+import { useSpectatorRaceResults } from "./useSpectatorData.js";
 import "./spectator.css";
-
-const raceResults = [
-  { position: 1, horse: "Thunderbolt", jockey: "Alex Rider", race: "Derby Trial", lane: 4, time: "1:10.42", margin: "Winner", status: "Official", reward: "+420 pts" },
-  { position: 2, horse: "Silver Flash", jockey: "Chris Evans", race: "Derby Trial", lane: 2, time: "1:11.03", margin: "+0.61s", status: "Official", reward: "+180 pts" },
-  { position: 3, horse: "Golden Gallop", jockey: "Elena Gilbert", race: "Derby Trial", lane: 7, time: "1:11.88", margin: "+1.46s", status: "Official", reward: "-" },
-  { position: 4, horse: "Midnight Run", jockey: "David Miller", race: "Derby Trial", lane: 1, time: "1:12.21", margin: "+1.79s", status: "Review", reward: "-" },
-];
 
 const history = [
   { race: "Kentucky Derby Classic", pick: "Thunderbolt", result: "Won", amount: "200 pts", odds: "2.10x", reward: "420 pts", settled: "12 May, 19:42" },
@@ -25,9 +20,11 @@ const summaryStats = [
 
 const Results = () => {
   const [view, setView] = useState("results");
-  const latestWinner = raceResults[0];
+  const { error, isLoading, results: liveResults, usedFallback } = useSpectatorRaceResults();
+  const displayResults = liveResults;
+  const latestWinner = displayResults[0];
   const winningBets = history.filter((item) => item.result === "Won").length;
-  const visibleRows = view === "results" ? raceResults : history;
+  const visibleRows = view === "results" ? displayResults : history;
 
   const resultColumns = [
     { header: "Pos", field: "position", render: (row) => (
@@ -66,8 +63,18 @@ const Results = () => {
     { header: "Settled", field: "settled" },
   ];
 
+  if (isLoading) {
+    return <section className="spectator-page results-page"><LoadingSkeleton ariaLabel="Loading race results" rows={5} variant="table" /></section>;
+  }
+
   return (
     <section className="spectator-page results-page">
+      {(error || usedFallback) && (
+        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
+          {error || "Showing sample race results until published backend results are available."}
+        </section>
+      )}
+
       <div className="results-hero">
         <div className="results-hero__copy">
           <p className="spectator-eyebrow">Official results</p>
@@ -77,19 +84,27 @@ const Results = () => {
           </p>
           <div className="results-hero__meta" aria-label="Latest result summary">
             <span><Clock3 size={15} /> Published 18 minutes ago</span>
-            <span><Trophy size={15} /> {latestWinner.horse}</span>
+            <span><Trophy size={15} /> {latestWinner?.horse || "No winner yet"}</span>
             <span><Medal size={15} /> {winningBets} winning slips</span>
           </div>
         </div>
-        <aside className="results-winner-card" aria-label="Latest winner">
-          <span className="results-winner-card__label">Latest winner</span>
-          <strong>{latestWinner.horse}</strong>
-          <p>{latestWinner.race} / lane {latestWinner.lane} / official time {latestWinner.time}</p>
-          <div className="results-winner-card__footer">
-            <span className="results-status results-status--official">Published</span>
-            <span>{latestWinner.reward}</span>
-          </div>
-        </aside>
+        {latestWinner ? (
+          <aside className="results-winner-card" aria-label="Latest winner">
+            <span className="results-winner-card__label">Latest winner</span>
+            <strong>{latestWinner.horse}</strong>
+            <p>{latestWinner.race} / lane {latestWinner.lane} / official time {latestWinner.time}</p>
+            <div className="results-winner-card__footer">
+              <span className="results-status results-status--official">Published</span>
+              <span>{latestWinner.reward}</span>
+            </div>
+          </aside>
+        ) : (
+          <aside className="results-winner-card" aria-label="No published winner">
+            <span className="results-winner-card__label">Latest winner</span>
+            <strong>No published results</strong>
+            <p>Published race results will appear here after admin confirmation.</p>
+          </aside>
+        )}
       </div>
 
       <div className="results-summary" aria-label="Results summary">
@@ -117,7 +132,7 @@ const Results = () => {
             <button className={`results-tab ${view === "results" ? "results-tab--active" : ""}`} type="button" onClick={() => setView("results")}>
               <Flag size={16} />
               Race results
-              <span>{raceResults.length}</span>
+              <span>{displayResults.length}</span>
             </button>
             <button className={`results-tab ${view === "history" ? "results-tab--active" : ""}`} type="button" onClick={() => setView("history")}>
               <History size={16} />

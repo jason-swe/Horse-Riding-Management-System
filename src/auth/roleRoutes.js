@@ -2,6 +2,7 @@ export const ROLE_ROUTES = {
   admin: "/admin",
   horse_owner: "/owner",
   jockey: "/jockey",
+  race_referee: "/referee",
   spectator: "/spectator",
 };
 
@@ -38,6 +39,7 @@ export function getRequiredRoleForPath(pathname = "") {
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/owner")) return "horse_owner";
   if (pathname.startsWith("/jockey")) return "jockey";
+  if (pathname.startsWith("/referee")) return "race_referee";
   if (pathname.startsWith("/spectator")) return "spectator";
   return null;
 }

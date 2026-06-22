@@ -5,11 +5,11 @@ import {
   BriefcaseBusiness,
   ClipboardCheck,
   FileText,
-  Loader2,
   Send,
   ShieldCheck,
   UserRoundCheck,
 } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { roleApplicationApi } from "../../api/roleApplicationApi";
 import { useAuth } from "../../auth/AuthContext";
 import { getRoleLabel } from "../../auth/roleRoutes";
@@ -119,12 +119,7 @@ function FileField({ label, file, onChange, required }) {
 
 function ApplicationHistory({ applications, isLoading, error }) {
   if (isLoading) {
-    return (
-      <div className="role-application-state">
-        <Loader2 size={20} />
-        <span>Loading your role requests...</span>
-      </div>
-    );
+    return <LoadingSkeleton ariaLabel="Loading role applications" rows={3} variant="list" />;
   }
 
   if (error) {

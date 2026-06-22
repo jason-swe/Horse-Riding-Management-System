@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Activity, CalendarDays, Crown, Flag, Flame, MapPin, Medal, Star, Trophy, UsersRound } from "lucide-react";
 import SearchFilterBar from "../../components/SearchFilterBar.jsx";
 import DataTable from "../../components/DataTable.jsx";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { tournaments } from "./tournamentData.js";
+import { useSpectatorRaceResults, useSpectatorTournaments } from "./useSpectatorData.js";
 import "./spectator.css";
 
 const HORSE_IMAGES = [
@@ -97,7 +99,7 @@ const SignalCell = ({ signal }) => {
   );
 };
 
-const TournamentRail = ({ selectedTournament, onSelect }) => (
+const TournamentRail = ({ selectedTournament, tournaments: boardTournaments, onSelect }) => (
   <div className="lb-tournament-rail" aria-label="Tournament leaderboard context">
     <div className="lb-tournament-rail__header">
       <span className="lb-badge lb-badge--ghost"><Flag size={13} /> Tournament context</span>
@@ -110,7 +112,7 @@ const TournamentRail = ({ selectedTournament, onSelect }) => (
       <span><Flag size={14} /> {selectedTournament.track} / {selectedTournament.distance}</span>
     </div>
     <div className="lb-tournament-rail__list">
-      {TOURNAMENT_BOARD.map((tournament) => (
+      {boardTournaments.map((tournament) => (
         <button
           className={`lb-tournament-chip ${selectedTournament.id === tournament.id ? "lb-tournament-chip--active" : ""}`}
           key={tournament.id}
@@ -140,15 +142,23 @@ const Leaderboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("horses");
   const [performanceFilter, setPerformanceFilter] = useState("all");
+  const { tournaments: liveTournaments } = useSpectatorTournaments();
+  const { error, horseLeaderboard, isLoading, usedFallback } = useSpectatorRaceResults();
+  const tournamentBoard = liveTournaments
+    .filter((tournament) => tournament.status !== "Completed")
+    .slice(0, 4);
   const [selectedTournamentId, setSelectedTournamentId] = useState(TOURNAMENT_BOARD[0]?.id ?? tournaments[0].id);
 
-  const activeData = activeTab === "horses" ? MOCK_HORSES : MOCK_JOCKEYS;
+  const liveHorseData = horseLeaderboard;
+  const activeData = activeTab === "horses" ? liveHorseData : MOCK_JOCKEYS;
   const isHorseBoard = activeTab === "horses";
-  const selectedTournament = TOURNAMENT_BOARD.find((tournament) => tournament.id === selectedTournamentId) ?? TOURNAMENT_BOARD[0];
+  const selectedTournament = tournamentBoard.find((tournament) => tournament.id === selectedTournamentId)
+    ?? tournamentBoard[0]
+    ?? TOURNAMENT_BOARD[0];
   const leader = activeData[0];
   const totalWins = activeData.reduce((sum, item) => sum + item.wins, 0);
   const totalStarts = activeData.reduce((sum, item) => sum + item.starts, 0);
-  const averageWinRate = Math.round((totalWins / totalStarts) * 100);
+  const averageWinRate = totalStarts ? Math.round((totalWins / totalStarts) * 100) : 0;
 
   const leaderboardFilters = [
     { value: "all", label: "All ranks" },
@@ -195,8 +205,18 @@ const Leaderboard = () => {
     { header: "Rating", field: "rating", render: (row) => <span className="lb-badge">{row.rating}</span> },
   ];
 
+  if (isLoading) {
+    return <section className="lb-page"><LoadingSkeleton ariaLabel="Loading leaderboard" rows={6} variant="table" /></section>;
+  }
+
   return (
     <section className="lb-page">
+      {(error || (usedFallback && activeTab === "horses")) && (
+        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
+          {error || "Showing sample leaderboard until published backend results are available."}
+        </section>
+      )}
+
       <nav className="lb-tabs lb-tabs--top" role="tablist" aria-label="Leaderboard type">
         <button
           className={`lb-tab ${activeTab === "horses" ? "lb-tab--active" : ""}`}
@@ -231,25 +251,35 @@ const Leaderboard = () => {
             <span><Trophy size={15} /> {totalWins} wins logged</span>
           </div>
         </div>
-        <aside className="lb-leader-card">
-          <div className="lb-leader-card__image-wrap">
-            <img className="lb-leader-card__image" src={leader.image} alt={leader.name} />
-          </div>
-          <div className="lb-leader-card__body">
-            <span className="lb-leader-card__label">Current leader</span>
-            <strong className="lb-leader-card__name">{leader.name}</strong>
-            <span className="lb-leader-card__stat">{leader.wins} wins / {leader.starts} starts</span>
-            <span className="lb-badge lb-badge--accent"><Crown size={13} /> Rank #1</span>
-          </div>
-        </aside>
+        {leader ? (
+          <aside className="lb-leader-card">
+            <div className="lb-leader-card__image-wrap">
+              <img className="lb-leader-card__image" src={leader.image} alt={leader.name} />
+            </div>
+            <div className="lb-leader-card__body">
+              <span className="lb-leader-card__label">Current leader</span>
+              <strong className="lb-leader-card__name">{leader.name}</strong>
+              <span className="lb-leader-card__stat">{leader.wins} wins / {leader.starts} starts</span>
+              <span className="lb-badge lb-badge--accent"><Crown size={13} /> Rank #1</span>
+            </div>
+          </aside>
+        ) : (
+          <aside className="lb-leader-card">
+            <div className="lb-leader-card__body">
+              <span className="lb-leader-card__label">Current leader</span>
+              <strong className="lb-leader-card__name">No ranked entries</strong>
+              <span className="lb-leader-card__stat">Published results will build this board.</span>
+            </div>
+          </aside>
+        )}
       </div>
 
-      <TournamentRail selectedTournament={selectedTournament} onSelect={setSelectedTournamentId} />
+      <TournamentRail selectedTournament={selectedTournament} tournaments={tournamentBoard} onSelect={setSelectedTournamentId} />
 
       <div className="lb-metrics">
         <MetricTile icon={<Flame size={18} />} label="Win Rate" value={`${averageWinRate}%`} sub="Board average" accent="green" />
         <MetricTile icon={<Activity size={18} />} label="Starts" value={totalStarts} sub="Verified races" />
-        <MetricTile icon={<Star size={18} />} label={isHorseBoard ? "Top Form" : "Top Rating"} value={isHorseBoard ? leader.form : leader.rating} sub={leader.name} accent="amber" />
+        <MetricTile icon={<Star size={18} />} label={isHorseBoard ? "Top Form" : "Top Rating"} value={leader ? (isHorseBoard ? leader.form : leader.rating) : "-"} sub={leader?.name || "No leader"} accent="amber" />
         <MetricTile icon={<UsersRound size={18} />} label="Tracking" value={filteredData.length} sub="Visible entries" />
       </div>
 

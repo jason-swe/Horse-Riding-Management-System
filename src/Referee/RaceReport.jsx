@@ -1,182 +1,324 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { refereeApi } from "../api/refereeApi";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import RefereeLayout from "./RefereeLayout";
-import { assignedRaces, RESULT_STATUSES } from "./refereeData";
+import { RESULT_STATUSES } from "./refereeConstants";
+import { useRefereeData } from "./useRefereeData";
+
+function buildReportForm(race) {
+  return {
+    title: race?.report?.title || `${race?.name || "Race"} official report`,
+    content: race?.report?.content || "",
+    raceCondition: race?.report?.raceCondition || "normal",
+    weather: race?.report?.weather || "",
+    trackCondition: race?.report?.trackCondition || "",
+    conclusion: race?.report?.conclusion || "",
+  };
+}
 
 function RaceReport() {
   const { raceId } = useParams();
-  const race = assignedRaces.find((r) => r.id === raceId);
+  const { error, getRace, isLoading, reload } = useRefereeData();
+  const race = getRace(raceId);
+  const [form, setForm] = useState(buildReportForm(null));
+  const [messages, setMessages] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  if (!race) return <RefereeLayout title="Not Found" eyebrow="" description=""><p>Race not found.</p></RefereeLayout>;
+  useEffect(() => {
+    setForm(buildReportForm(race));
+  }, [race]);
 
-  const isPublished = race.resultStatus === RESULT_STATUSES.PUBLISHED;
-  const confirmedTime = new Date().toLocaleString();
+  if (isLoading) {
+    return (
+      <RefereeLayout title="Race Report" eyebrow="" description="">
+        <LoadingSkeleton ariaLabel="Loading race report" variant="detail" />
+      </RefereeLayout>
+    );
+  }
+
+  if (!race) {
+    return (
+      <RefereeLayout title="Not Found" eyebrow="" description="">
+        <p>Race not found.</p>
+      </RefereeLayout>
+    );
+  }
+
+  const reportStatus = race.report?.status || "draft";
+  const isSubmitted = reportStatus === "submitted";
+  const isPublished = race.resultStatus === RESULT_STATUSES.PUBLISHED || isSubmitted;
+  const confirmedTime = race.report?.submittedAt ? new Date(race.report.submittedAt).toLocaleString() : new Date().toLocaleString();
+
+  const addMsg = (message) => setMessages((prev) => [message, ...prev].slice(0, 4));
+  const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+
+  const buildPayload = () => ({
+    race_id: race.id,
+    report_title: form.title,
+    report_content: form.content,
+    race_condition: form.raceCondition,
+    weather: form.weather,
+    track_condition: form.trackCondition,
+    conclusion: form.conclusion,
+  });
+
+  const handleSaveDraft = async () => {
+    if (!form.title.trim()) {
+      addMsg("Report title is required.");
+      return null;
+    }
+
+    try {
+      setIsSaving(true);
+
+      {
+        const payload = buildPayload();
+        let savedReportId = race.report?.id;
+
+        if (race.report?.id) {
+          const data = await refereeApi.updateRefereeReport(race.report.id, payload);
+          savedReportId = data.referee_report?._id || data.referee_report?.id || race.report.id;
+        } else {
+          const data = await refereeApi.createRefereeReport(payload);
+          savedReportId = data.referee_report?._id || data.referee_report?.id;
+        }
+
+        await reload();
+        addMsg("Report draft saved.");
+        return savedReportId;
+      }
+
+    } catch (apiError) {
+      addMsg(apiError.message || "Unable to save referee report.");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const savedReportId = await handleSaveDraft();
+    if (!savedReportId) return;
+
+    try {
+      setIsSaving(true);
+      const reportId = typeof savedReportId === "string" ? savedReportId : race.report?.id;
+
+      if (!reportId) {
+        addMsg("Draft saved. Reload the report before submitting.");
+        return;
+      }
+
+      await refereeApi.submitRefereeReport(reportId);
+      await reload();
+      addMsg("Report submitted.");
+    } catch (apiError) {
+      addMsg(apiError.message || "Unable to submit referee report.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleExport = () => {
-    alert("PDF export would trigger here in a real implementation.\nAll report data would be compiled and sent to a PDF service.");
+    window.print();
   };
 
   return (
     <RefereeLayout
       title="Race Report"
-      eyebrow={`Official document · ${race.name}`}
-      description="Official race report generated after result confirmation. Contains all race data, violations, and official rankings."
+      eyebrow={`Official document - ${race.name}`}
+      description="Create, update, and submit the official referee report for this race."
       actions={
         <>
           {isPublished && (
             <button className="admin-header__button" type="button" onClick={handleExport}>
-              Export PDF
+              Print Report
             </button>
           )}
           <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>
-            ← Race Detail
+            Back to Race Detail
           </Link>
         </>
       }
     >
-      {!isPublished && (
-        <section className="admin-panel">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Not available</p>
-            <h2>Report Pending</h2>
-          </div>
-          <p style={{ color: "rgba(245,247,243,0.64)" }}>
-            The official report is only available after the race result has been confirmed and published.
-          </p>
-          <div style={{ marginTop: 14 }}>
-            <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}/result`}>
-              Go to Race Result →
-            </Link>
-          </div>
+      {error && <section className="admin-live-state admin-live-state--warning" role="alert">{error}</section>}
+
+      {!!messages.length && (
+        <section className="admin-toast-stack" aria-live="polite">
+          {messages.map((message, index) => <div key={index} className="admin-toast">{message}</div>)}
         </section>
       )}
 
-      {isPublished && (
-        <>
-          {/* Race Information */}
-          <section className="admin-panel">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">01 · Race Information</p>
-              <h2>{race.name}</h2>
-            </div>
-            <div className="referee-report-grid">
-              <div><span className="referee-info-label">Race ID</span><span>{race.id}</span></div>
-              <div><span className="referee-info-label">Tournament</span><span>{race.tournament}</span></div>
-              <div><span className="referee-info-label">Track</span><span>{race.track}</span></div>
-              <div><span className="referee-info-label">Date</span><span>{race.date}</span></div>
-              <div><span className="referee-info-label">Start Time</span><span>{race.startTime}</span></div>
-              <div><span className="referee-info-label">Status</span><span>{race.status}</span></div>
-            </div>
-          </section>
+      <section className="admin-panel">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">Report Draft</p>
+          <h2>Referee Report</h2>
+        </div>
+        <form className="admin-form-grid" onSubmit={(event) => event.preventDefault()}>
+          <label className="admin-field">
+            <span>Report Title</span>
+            <input value={form.title} onChange={(event) => updateField("title", event.target.value)} disabled={isSubmitted} />
+          </label>
+          <label className="admin-field">
+            <span>Race Condition</span>
+            <input value={form.raceCondition} onChange={(event) => updateField("raceCondition", event.target.value)} disabled={isSubmitted} />
+          </label>
+          <label className="admin-field">
+            <span>Weather</span>
+            <input value={form.weather} onChange={(event) => updateField("weather", event.target.value)} disabled={isSubmitted} />
+          </label>
+          <label className="admin-field">
+            <span>Track Condition</span>
+            <input value={form.trackCondition} onChange={(event) => updateField("trackCondition", event.target.value)} disabled={isSubmitted} />
+          </label>
+          <label className="admin-field">
+            <span>Report Content</span>
+            <textarea value={form.content} onChange={(event) => updateField("content", event.target.value)} disabled={isSubmitted} />
+          </label>
+          <label className="admin-field">
+            <span>Conclusion</span>
+            <textarea value={form.conclusion} onChange={(event) => updateField("conclusion", event.target.value)} disabled={isSubmitted} />
+          </label>
+        </form>
+        <div className="admin-tool-card__footer" style={{ marginTop: 14 }}>
+          <span className={`referee-status-badge referee-status-badge--${isSubmitted ? "green" : "gray"}`}>
+            {isSubmitted ? "Submitted" : "Draft"}
+          </span>
+          {!isSubmitted && (
+            <>
+              <button className="admin-header__button admin-header__button--ghost" disabled={isSaving} type="button" onClick={handleSaveDraft}>
+                {isSaving ? "Saving..." : "Save Draft"}
+              </button>
+              <button className="admin-header__button referee-btn--confirm" disabled={isSaving} type="button" onClick={handleSubmit}>
+                Submit Report
+              </button>
+            </>
+          )}
+        </div>
+      </section>
 
-          {/* Participants */}
-          <section className="admin-panel">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">02 · Participants</p>
-              <h2>Horses &amp; Jockeys</h2>
-            </div>
-            <div className="admin-data-table__wrap">
-              <table className="admin-data-table">
-                <thead>
-                  <tr><th>Lane</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>License</th></tr>
-                </thead>
-                <tbody>
-                  {race.participants.map((p) => (
-                    <tr key={p.horseId}>
-                      <td>{p.lane}</td>
-                      <td><strong>{p.horseName}</strong></td>
-                      <td>{p.owner}</td>
-                      <td>{p.jockeyName}</td>
-                      <td>{p.jockeyLicense}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+      <section className="admin-panel">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">01 - Race Information</p>
+          <h2>{race.name}</h2>
+        </div>
+        <div className="referee-report-grid">
+          <div><span className="referee-info-label">Race ID</span><span>{race.id}</span></div>
+          <div><span className="referee-info-label">Tournament</span><span>{race.tournament}</span></div>
+          <div><span className="referee-info-label">Track</span><span>{race.track}</span></div>
+          <div><span className="referee-info-label">Date</span><span>{race.date}</span></div>
+          <div><span className="referee-info-label">Start Time</span><span>{race.startTime}</span></div>
+          <div><span className="referee-info-label">Status</span><span>{race.status}</span></div>
+        </div>
+      </section>
 
-          {/* Violations */}
-          <section className="admin-panel">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">03 · Violations</p>
-              <h2>Recorded Incidents</h2>
-            </div>
-            {race.violations.length === 0 ? (
-              <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No violations were recorded.</p>
-            ) : (
-              <div className="admin-data-table__wrap">
-                <table className="admin-data-table">
-                  <thead>
-                    <tr><th>ID</th><th>Type</th><th>Subject</th><th>Penalty</th><th>Description</th></tr>
-                  </thead>
-                  <tbody>
-                    {race.violations.map((v) => (
-                      <tr key={v.id}>
-                        <td>{v.id}</td>
-                        <td>{v.type}</td>
-                        <td>{v.subjectName}</td>
-                        <td>{v.penalty}</td>
-                        <td>{v.description || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+      <section className="admin-panel">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">02 - Participants</p>
+          <h2>Horses &amp; Jockeys</h2>
+        </div>
+        {race.participants.length === 0 ? (
+          <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No participants available from the API yet.</p>
+        ) : (
+          <div className="admin-data-table__wrap">
+            <table className="admin-data-table">
+              <thead>
+                <tr><th>Lane</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>License</th></tr>
+              </thead>
+              <tbody>
+                {race.participants.map((participant) => (
+                  <tr key={participant.horseId}>
+                    <td>{participant.lane}</td>
+                    <td><strong>{participant.horseName}</strong></td>
+                    <td>{participant.owner}</td>
+                    <td>{participant.jockeyName}</td>
+                    <td>{participant.jockeyLicense}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-          {/* Results */}
-          <section className="admin-panel">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">04 · Official Results</p>
-              <h2>Final Rankings</h2>
-            </div>
-            <div className="admin-data-table__wrap">
-              <table className="admin-data-table">
-                <thead>
-                  <tr><th>Position</th><th>Horse</th><th>Jockey</th><th>Finish Time</th><th>Penalty</th></tr>
-                </thead>
-                <tbody>
-                  {(race.result || []).sort((a, b) => a.position - b.position).map((r) => (
-                    <tr key={r.horseId}>
-                      <td>
-                        <span className="referee-position-badge">
-                          {r.position === 1 ? "1st" : r.position === 2 ? "2nd" : r.position === 3 ? "3rd" : `#${r.position}`}
-                        </span>
-                      </td>
-                      <td><strong>{r.horseName}</strong></td>
-                      <td>{r.jockeyName}</td>
-                      <td>{r.finishTime}</td>
-                      <td>{r.penaltyApplied ? <span className="referee-status-badge referee-status-badge--amber">Yes</span> : "No"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+      <section className="admin-panel">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">03 - Violations</p>
+          <h2>Recorded Incidents</h2>
+        </div>
+        {race.violations.length === 0 ? (
+          <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No violations were recorded.</p>
+        ) : (
+          <div className="admin-data-table__wrap">
+            <table className="admin-data-table">
+              <thead>
+                <tr><th>ID</th><th>Type</th><th>Subject</th><th>Penalty</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                {race.violations.map((violation) => (
+                  <tr key={violation.id}>
+                    <td>{violation.id}</td>
+                    <td>{violation.type}</td>
+                    <td>{violation.subjectName}</td>
+                    <td>{violation.penalty}</td>
+                    <td>{violation.description || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-          {/* Referee Information */}
-          <section className="admin-panel referee-report-footer">
-            <div className="admin-panel__header">
-              <p className="admin-panel__eyebrow">05 · Referee Information</p>
-              <h2>Official Signature</h2>
+      <section className="admin-panel">
+        <div className="admin-panel__header">
+          <p className="admin-panel__eyebrow">04 - Official Results</p>
+          <h2>Final Rankings</h2>
+        </div>
+        {!race.result?.length ? (
+          <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No race results have been recorded yet.</p>
+        ) : (
+          <div className="admin-data-table__wrap">
+            <table className="admin-data-table">
+              <thead>
+                <tr><th>Position</th><th>Horse</th><th>Jockey</th><th>Finish Time</th><th>Penalty</th></tr>
+              </thead>
+              <tbody>
+                {[...(race.result || [])].sort((a, b) => a.position - b.position).map((result) => (
+                  <tr key={result.horseId}>
+                    <td><span className="referee-position-badge">#{result.position}</span></td>
+                    <td><strong>{result.horseName}</strong></td>
+                    <td>{result.jockeyName}</td>
+                    <td>{result.finishTime}</td>
+                    <td>{result.penaltyApplied ? <span className="referee-status-badge referee-status-badge--amber">Yes</span> : "No"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {isSubmitted && (
+        <section className="admin-panel referee-report-footer">
+          <div className="admin-panel__header">
+            <p className="admin-panel__eyebrow">05 - Referee Information</p>
+            <h2>Official Signature</h2>
+          </div>
+          <div className="referee-report-grid">
+            <div><span className="referee-info-label">Submitted At</span><span>{confirmedTime}</span></div>
+            <div><span className="referee-info-label">Report Status</span>
+              <span className="referee-status-badge referee-status-badge--green">Submitted</span>
             </div>
-            <div className="referee-report-grid">
-              <div><span className="referee-info-label">Referee ID</span><span>RF-01</span></div>
-              <div><span className="referee-info-label">Referee Name</span><span>Le Quang</span></div>
-              <div><span className="referee-info-label">License Level</span><span>National</span></div>
-              <div><span className="referee-info-label">Confirmed At</span><span>{confirmedTime}</span></div>
-              <div><span className="referee-info-label">Result Status</span>
-                <span className="referee-status-badge referee-status-badge--green">Published</span>
-              </div>
+          </div>
+          <div className="referee-report-seal">
+            <div>
+              <strong>Officially Submitted</strong>
+              <p>This report has been submitted by the assigned Race Referee.</p>
             </div>
-            <div className="referee-report-seal">
-              <div>
-                <strong>Officially Confirmed</strong>
-                <p>This result has been confirmed by the assigned Race Referee and is final.</p>
-              </div>
-            </div>
-          </section>
-        </>
+          </div>
+        </section>
       )}
     </RefereeLayout>
   );

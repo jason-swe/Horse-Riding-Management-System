@@ -9,6 +9,7 @@ import MainLayout from "./layouts/MainLayout";
 import SpectatorHome from "./pages/spectator/SpectatorHome";
 import TournamentList from "./pages/spectator/TournamentList";
 import TournamentDetail from "./pages/spectator/TournamentDetail";
+import RaceDetail from "./pages/spectator/RaceDetail";
 import Leaderboard from "./pages/spectator/Leaderboard";
 import Predictions from "./pages/spectator/Predictions";
 import PredictionDetail from "./pages/spectator/PredictionDetail";
@@ -45,6 +46,8 @@ import RaceMonitor from "./Referee/RaceMonitor";
 import ViolationManagement from "./Referee/ViolationManagement";
 import RaceResult from "./Referee/RaceResult";
 import RaceReport from "./Referee/RaceReport";
+import AuthRecovery from "./auth/AuthRecovery";
+import VerifyAccount from "./auth/VerifyAccount";
 
 function App() {
   return (
@@ -54,6 +57,11 @@ function App() {
       <Route path="/admin/:module" element={<ProtectedRoute role="admin"><AdminModulePage /></ProtectedRoute>} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/verify-account" element={<VerifyAccount />} />
+      <Route path="/forgot-password" element={<AuthRecovery mode="forgot" />} />
+      <Route path="/reset-password" element={<AuthRecovery mode="reset" />} />
+      <Route path="/resend-verification" element={<AuthRecovery mode="resend" />} />
+      <Route path="/change-password" element={<ProtectedRoute><AuthRecovery mode="change" /></ProtectedRoute>} />
       <Route path="/choose-role" element={<WorkspaceChooser />} />
 
       <Route path="/owner" element={<ProtectedRoute role="horse_owner"><OwnerLayout /></ProtectedRoute>}>
@@ -92,9 +100,11 @@ function App() {
         <Route path="/spectator" element={<SpectatorHome />} />
         <Route path="/spectator/tournaments" element={<TournamentList />} />
         <Route path="/spectator/tournaments/:tournamentId" element={<TournamentDetail />} />
+        <Route path="/spectator/tournaments/:tournamentId/races/:raceId" element={<RaceDetail />} />
         <Route path="/spectator/leaderboard" element={<Leaderboard />} />
         <Route path="/spectator/predictions" element={<Predictions />} />
-        <Route path="/spectator/predictions/:tournamentId" element={<PredictionDetail />} />
+        <Route path="/spectator/predictions/races/:raceId" element={<PredictionDetail />} />
+        <Route path="/spectator/predictions/:tournamentId" element={<Navigate to="/spectator/predictions" replace />} />
         <Route path="/spectator/profile" element={<Profile />} />
         <Route path="/spectator/results" element={<Results />} />
         <Route path="/spectator/role-applications" element={<RoleApplications />} />

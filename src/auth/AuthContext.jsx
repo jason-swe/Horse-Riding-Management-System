@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(storedSession.token);
   const [user, setUser] = useState(storedSession.user);
   const [roles, setRoles] = useState(storedSession.roles);
+  const [profiles, setProfiles] = useState(storedSession.profiles || {});
   const [activeRole, setActiveRoleState] = useState(storedSession.activeRole);
   const [isLoading, setIsLoading] = useState(Boolean(storedSession.token));
 
@@ -26,17 +27,20 @@ export function AuthProvider({ children }) {
         if (cancelled) return;
 
         const nextRoles = data.roles || [];
+        const nextProfiles = data.profiles || {};
         const nextActiveRole = storedSession.activeRole && nextRoles.includes(storedSession.activeRole)
           ? storedSession.activeRole
           : null;
 
         setUser(data.user);
         setRoles(nextRoles);
+        setProfiles(nextProfiles);
         setActiveRoleState(nextActiveRole);
         saveSession({
           token: storedSession.token,
           user: data.user,
           roles: nextRoles,
+          profiles: nextProfiles,
           activeRole: nextActiveRole,
         });
       } catch {
@@ -45,6 +49,7 @@ export function AuthProvider({ children }) {
           setToken(null);
           setUser(null);
           setRoles([]);
+          setProfiles({});
           setActiveRoleState(null);
         }
       } finally {
@@ -61,20 +66,38 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleInvalidAuth = () => {
+      clearSession();
+      setToken(null);
+      setUser(null);
+      setRoles([]);
+      setProfiles({});
+      setActiveRoleState(null);
+      setIsLoading(false);
+    };
+
+    window.addEventListener("horse-racing-auth-invalid", handleInvalidAuth);
+    return () => window.removeEventListener("horse-racing-auth-invalid", handleInvalidAuth);
+  }, []);
+
   const signIn = (data) => {
     const nextToken = data.token;
     const nextUser = data.user;
     const nextRoles = data.roles || [];
+    const nextProfiles = data.profiles || {};
     const nextActiveRole = nextRoles.length === 1 ? nextRoles[0] : null;
 
     setToken(nextToken);
     setUser(nextUser);
     setRoles(nextRoles);
+    setProfiles(nextProfiles);
     setActiveRoleState(nextActiveRole);
     saveSession({
       token: nextToken,
       user: nextUser,
       roles: nextRoles,
+      profiles: nextProfiles,
       activeRole: nextActiveRole,
     });
 
@@ -103,6 +126,7 @@ export function AuthProvider({ children }) {
       setToken(null);
       setUser(null);
       setRoles([]);
+      setProfiles({});
       setActiveRoleState(null);
     }
   };
@@ -111,13 +135,14 @@ export function AuthProvider({ children }) {
     token,
     user,
     roles,
+    profiles,
     activeRole,
     isAuthenticated: Boolean(token),
     isLoading,
     signIn,
     signOut,
     chooseRole,
-  }), [token, user, roles, activeRole, isLoading]);
+  }), [token, user, roles, profiles, activeRole, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

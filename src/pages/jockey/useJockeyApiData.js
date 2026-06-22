@@ -14,13 +14,14 @@ export function useJockeyApiData() {
     setError("");
 
     try {
-      const [me, approvalStatus, assignments, schedule, results, stats] = await Promise.all([
+      const [me, approvalStatus, assignments, schedule, results, stats, violations] = await Promise.all([
         jockeyApi.getMe(),
         jockeyApi.getApprovalStatus(),
         jockeyApi.getAssignments(),
         jockeyApi.getSchedule(),
         jockeyApi.getResults(),
         jockeyApi.getStats(),
+        jockeyApi.getViolations(),
       ]);
 
       setState(adaptJockeyApiData({
@@ -30,6 +31,7 @@ export function useJockeyApiData() {
         schedule,
         results,
         stats,
+        violations,
         user,
       }));
     } catch (apiError) {
@@ -44,9 +46,20 @@ export function useJockeyApiData() {
     loadJockeyData();
   }, [loadJockeyData]);
 
-  const respondToAssignment = useCallback(async (id, status) => {
-    const action = status === "Accepted" ? jockeyApi.acceptAssignment : jockeyApi.rejectAssignment;
-    await action(id, status);
+  const respondToMeeting = useCallback(async (id, accepted) => {
+    const action = accepted ? jockeyApi.acceptMeeting : jockeyApi.rejectMeeting;
+    await action(id, accepted ? "Meeting accepted" : "Meeting rejected");
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
+  const respondToContract = useCallback(async (id, accepted) => {
+    const action = accepted ? jockeyApi.confirmContract : jockeyApi.rejectContract;
+    await action(id, accepted ? "Contract confirmed" : "Contract rejected");
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
+  const updateProfile = useCallback(async (payload) => {
+    await jockeyApi.updateMe(payload);
     await loadJockeyData();
   }, [loadJockeyData]);
 
@@ -55,6 +68,8 @@ export function useJockeyApiData() {
     isLoading,
     error,
     reload: loadJockeyData,
-    respondToAssignment,
+    respondToMeeting,
+    respondToContract,
+    updateProfile,
   };
 }

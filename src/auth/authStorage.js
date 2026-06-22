@@ -1,6 +1,7 @@
 const TOKEN_KEY = "horse_racing_token";
 const USER_KEY = "horse_racing_user";
 const ROLES_KEY = "horse_racing_roles";
+const PROFILES_KEY = "horse_racing_profiles";
 const ACTIVE_ROLE_KEY = "horse_racing_active_role";
 const ROLE_INTENT_KEY = "horse_racing_role_intent";
 
@@ -22,17 +23,19 @@ export function getStoredSession() {
     token: localStorage.getItem(TOKEN_KEY),
     user: readJson(USER_KEY, null),
     roles: readJson(ROLES_KEY, []),
+    profiles: readJson(PROFILES_KEY, {}),
     activeRole: localStorage.getItem(ACTIVE_ROLE_KEY),
   };
 }
 
-export function saveSession({ token, user, roles, activeRole }) {
+export function saveSession({ token, user, roles, profiles, activeRole }) {
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
   }
 
   localStorage.setItem(USER_KEY, JSON.stringify(user || null));
   localStorage.setItem(ROLES_KEY, JSON.stringify(roles || []));
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles || {}));
 
   if (activeRole) {
     localStorage.setItem(ACTIVE_ROLE_KEY, activeRole);
@@ -53,6 +56,7 @@ export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(ROLES_KEY);
+  localStorage.removeItem(PROFILES_KEY);
   localStorage.removeItem(ACTIVE_ROLE_KEY);
 }
 

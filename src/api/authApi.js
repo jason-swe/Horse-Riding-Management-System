@@ -26,6 +26,34 @@ export const authApi = {
     });
   },
 
+  resendVerification(email) {
+    return apiRequest("/auth/resend-verification", {
+      method: "POST",
+      body: { email },
+    });
+  },
+
+  forgotPassword(email) {
+    return apiRequest("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+    });
+  },
+
+  resetPassword(payload) {
+    return apiRequest("/auth/reset-password", {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  changePassword(payload) {
+    return apiRequest("/auth/change-password", {
+      method: "POST",
+      body: payload,
+    });
+  },
+
   me() {
     return apiRequest("/auth/me");
   },

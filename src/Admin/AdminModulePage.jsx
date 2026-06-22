@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import AdminLayout from "./AdminLayout";
 import { adminModules } from "./adminModules";
 import { useAdminModuleApi } from "./useAdminModuleApi";
@@ -616,6 +617,11 @@ function AdminModulePage() {
   const [formState, setFormState] = useState(defaultFormState);
   const [messages, setMessages] = useState([]);
   const [expandedTool, setExpandedTool] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
+  const [detailError, setDetailError] = useState("");
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [roleSelection, setRoleSelection] = useState("spectator");
+  const [roleAction, setRoleAction] = useState("");
   const adminApiState = useAdminModuleApi(moduleName);
 
   // -- CRUD State
@@ -669,6 +675,14 @@ function AdminModulePage() {
           <p className="admin-panel__eyebrow">Invalid route</p>
           <h2>No admin module available for this path.</h2>
         </article>
+      </AdminLayout>
+    );
+  }
+
+  if (adminApiState.isLoading) {
+    return (
+      <AdminLayout title={moduleData.title} eyebrow={moduleData.eyebrow} description={moduleData.description}>
+        <LoadingSkeleton ariaLabel={`Loading ${moduleData.title}`} rows={6} variant="table" />
       </AdminLayout>
     );
   }
@@ -735,6 +749,41 @@ function AdminModulePage() {
     }
   };
 
+  const openRowDetail = async (tableColumns, row) => {
+    setSelectedRow({ columns: tableColumns, row });
+    setSelectedDetail(null);
+    setDetailError("");
+
+    if (!adminApiState.supportsLiveData) return;
+
+    setIsDetailLoading(true);
+    try {
+      setSelectedDetail(await adminApiState.getRowDetail(row[0]));
+    } catch (apiError) {
+      setDetailError(apiError.message || "Unable to load record detail.");
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const handleRoleMutation = async (mode, roleName) => {
+    if (!selectedDetail?.id) return;
+    setRoleAction(`${mode}:${roleName}`);
+    setDetailError("");
+
+    try {
+      const nextDetail = mode === "assign"
+        ? await adminApiState.assignRole(selectedDetail.id, roleName)
+        : await adminApiState.removeRole(selectedDetail.id, roleName);
+      setSelectedDetail(nextDetail);
+      addMessage(`${mode === "assign" ? "Role assigned" : "Role removed"}: ${roleName}.`);
+    } catch (apiError) {
+      setDetailError(apiError.message || `Unable to ${mode} role.`);
+    } finally {
+      setRoleAction("");
+    }
+  };
+
   const handleDelete = () => {
     const id = selectedRow.row[0];
     if (window.confirm(`Are you sure you want to delete record ${id}?`)) {
@@ -747,7 +796,7 @@ function AdminModulePage() {
     }
   };
 
-  const closeAll = () => { setSelectedRow(null); setActiveModal(null); setDraftNote(""); setEditRowData(null); };
+  const closeAll = () => { setSelectedRow(null); setSelectedDetail(null); setDetailError(""); setActiveModal(null); setDraftNote(""); setEditRowData(null); };
 
   const actions = moduleData.primaryActions;
 
@@ -811,9 +860,9 @@ function AdminModulePage() {
         </section>
       )}
 
-      {(adminApiState.isLoading || adminApiState.error) && (
+      {adminApiState.error && (
         <section className={`admin-live-state ${adminApiState.error ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {adminApiState.isLoading ? "Loading live admin data..." : adminApiState.error}
+          {adminApiState.error}
         </section>
       )}
 
@@ -878,7 +927,7 @@ function AdminModulePage() {
                 </thead>
                 <tbody>
                   {table.rows.length ? table.rows.map((row) => (
-                    <tr key={row[0]} onClick={() => setSelectedRow({ columns, row })}
+                    <tr key={row[0]} onClick={() => openRowDetail(columns, row)}
                       style={{ cursor: "pointer" }}>
                       {row.map((cell, idx) => {
                         const colName = (columns[idx] || "").toLowerCase();
@@ -929,6 +978,84 @@ function AdminModulePage() {
                     );
                   })}
                 </div>
+
+                {isDetailLoading && <LoadingSkeleton ariaLabel="Loading record detail" variant="inline" />}
+                {detailError && <div className="admin-live-state admin-live-state--warning">{detailError}</div>}
+
+                {selectedDetail && (
+                  <section className="admin-api-detail">
+                    <div className="admin-panel__header">
+                      <p className="admin-panel__eyebrow">Backend detail</p>
+                      <h3>{selectedDetail.title}</h3>
+                    </div>
+                    <div className="admin-detail-grid">
+                      {selectedDetail.fields.map(([label, value]) => (
+                        <div className="admin-detail-item" key={label}>
+                          <span className="admin-detail-label">{label}</span>
+                          <span className="admin-detail-value">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedDetail.type === "user" && (
+                      <div className="admin-role-manager">
+                        <div className="admin-role-manager__header">
+                          <div><span className="admin-detail-label">Assigned roles</span><strong>{selectedDetail.roles.length} active</strong></div>
+                          <div className="admin-role-manager__assign">
+                            <select value={roleSelection} onChange={(event) => setRoleSelection(event.target.value)}>
+                              {Object.keys({ admin: 1, horse_owner: 1, jockey: 1, race_referee: 1, spectator: 1 }).map((role) => <option key={role} value={role}>{role.replaceAll("_", " ")}</option>)}
+                            </select>
+                            <button className="admin-header__button" disabled={Boolean(roleAction)} type="button" onClick={() => handleRoleMutation("assign", roleSelection)}>
+                              {roleAction.startsWith("assign:") ? "Assigning..." : "Assign role"}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="admin-role-manager__list">
+                          {selectedDetail.roles.map((role) => (
+                            <div className="admin-role-manager__item" key={role}>
+                              <span>{role.replaceAll("_", " ")}</span>
+                              <button className="admin-header__button admin-header__button--red" disabled={Boolean(roleAction) || selectedDetail.roles.length === 1} type="button" onClick={() => handleRoleMutation("remove", role)}>
+                                {roleAction === `remove:${role}` ? "Removing..." : "Remove"}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {!!selectedDetail.profiles.length && (
+                          <div className="admin-profile-summary">
+                            {selectedDetail.profiles.map((profile) => (
+                              <div key={profile.role}><span>{profile.label}</span><strong>{profile.status}</strong><small>Profile {profile.id}</small></div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedDetail.type === "application" && !!selectedDetail.applicationData.length && (
+                      <div className="admin-application-data">
+                        <span className="admin-detail-label">Application data</span>
+                        <div className="admin-detail-grid">
+                          {selectedDetail.applicationData.map(([key, value]) => (
+                            <div className="admin-detail-item" key={key}><span className="admin-detail-label">{key.replaceAll("_", " ")}</span><span className="admin-detail-value">{String(value ?? "-")}</span></div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedDetail.type === "application" && !!selectedDetail.documents.length && (
+                      <div className="admin-application-documents">
+                        <span className="admin-detail-label">Submitted documents</span>
+                        <div className="admin-application-documents__list">
+                          {selectedDetail.documents.map((document, index) => (
+                            <a href={document.url} key={`${document.type || "document"}-${index}`} rel="noreferrer" target="_blank">
+                              <span>{String(document.type || `Document ${index + 1}`).replaceAll("_", " ")}</span>
+                              <small>{document.note || "Open uploaded document"}</small>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                )}
 
                 <label className="admin-field" style={{ marginTop: 14 }}>
                   <span>Internal note</span>

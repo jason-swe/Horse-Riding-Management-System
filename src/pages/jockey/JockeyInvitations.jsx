@@ -3,11 +3,14 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  FileText,
+  Link as LinkIcon,
   MapPin,
   Send,
   ShieldCheck,
   XCircle,
 } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   horseJockeyImages,
   jockeyActionImages,
@@ -18,34 +21,57 @@ const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
-  if (["Rejected", "Expired"].includes(status)) {
+  if (["Rejected", "Expired", "Meeting rejected", "Contract rejected", "Cancelled"].includes(status)) {
     return "jockey-badge--muted";
   }
   return "jockey-badge--amber";
 };
 
+const getStageCopy = (rawStatus) => ({
+  meeting_invited: "Review the Meet details and respond to the owner's meeting invitation.",
+  meeting_accepted: "Meet accepted. Join at the scheduled time, then wait for the owner to record the agreed terms.",
+  terms_agreed: "The owner recorded the terms and is preparing the contract.",
+  contract_uploaded: "Review the terms and contract. Confirming the contract accepts the assignment.",
+  accepted: "Assignment accepted. This horse and race are now confirmed in your plan.",
+  meeting_rejected: "You declined this meeting invitation.",
+  contract_rejected: "You rejected this contract. The assignment is not accepted.",
+  cancelled: "The owner cancelled this assignment.",
+}[rawStatus] || "Track this assignment through its meeting and contract stages.");
+
+const getStatusGroup = (rawStatus) => ({
+  meeting_invited: "Meet",
+  meeting_accepted: "Meet",
+  terms_agreed: "Terms",
+  contract_uploaded: "Contract",
+  accepted: "Accepted",
+}[rawStatus] || "Closed");
+
 function JockeyInvitations() {
   const [filter, setFilter] = useState("All");
   const [actionError, setActionError] = useState("");
   const [activeActionId, setActiveActionId] = useState("");
-  const { error, invitations, isLoading, respondToAssignment } = useJockeyApiData();
+  const { error, invitations, isLoading, respondToContract, respondToMeeting } = useJockeyApiData();
 
   const visibleInvitations = useMemo(
-    () => invitations.filter((invite) => filter === "All" || invite.status === filter),
+    () => invitations.filter((invite) => filter === "All" || getStatusGroup(invite.rawStatus) === filter),
     [filter, invitations]
   );
 
-  const pendingCount = invitations.filter((invite) => invite.status === "Pending").length;
+  const pendingCount = invitations.filter((invite) => invite.rawStatus === "meeting_invited").length;
   const acceptedCount = invitations.filter((invite) => invite.status === "Accepted").length;
-  const rejectedCount = invitations.filter((invite) => invite.status === "Rejected").length;
-  const featuredInvite = invitations.find((invite) => invite.status === "Pending") ?? invitations[0];
+  const reviewCount = invitations.filter((invite) => invite.rawStatus === "contract_uploaded").length;
+  const featuredInvite = invitations.find((invite) => invite.rawStatus === "meeting_invited") ?? invitations[0];
 
-  const updateInvitation = async (id, status) => {
+  const updateInvitation = async (id, action) => {
     setActionError("");
     setActiveActionId(id);
 
     try {
-      await respondToAssignment(id, status);
+      if (action === "accept-meeting" || action === "reject-meeting") {
+        await respondToMeeting(id, action === "accept-meeting");
+      } else {
+        await respondToContract(id, action === "confirm-contract");
+      }
     } catch (apiError) {
       setActionError(apiError.message || "Unable to update this invitation.");
     } finally {
@@ -53,11 +79,15 @@ function JockeyInvitations() {
     }
   };
 
+  if (isLoading) {
+    return <div className="jockey-invitations-page"><LoadingSkeleton ariaLabel="Loading invitations" rows={4} variant="cards" /></div>;
+  }
+
   return (
     <div className="jockey-invitations-page">
-      {(isLoading || error || actionError) && (
+      {(error || actionError) && (
         <div className={`jockey-sync-note ${error || actionError ? "jockey-sync-note--warning" : ""}`}>
-          {isLoading ? "Loading live invitations..." : actionError || error}
+          {actionError || error}
         </div>
       )}
       <section className="jockey-invitations-hero">
@@ -76,9 +106,9 @@ function JockeyInvitations() {
 
       <section className="jockey-invitation-stats" aria-label="Invitation summary">
         {[
-          { label: "Pending", value: pendingCount, note: "Waiting for your response", icon: Send },
+          { label: "Meet invites", value: pendingCount, note: "Waiting for your response", icon: Send },
+          { label: "Contract review", value: reviewCount, note: "Needs your confirmation", icon: FileText },
           { label: "Accepted", value: acceptedCount, note: "Added to race plan", icon: CheckCircle2 },
-          { label: "Rejected", value: rejectedCount, note: "Declined locally", icon: XCircle },
           { label: "Total invites", value: invitations.length, note: "Owner requests", icon: CalendarDays },
         ].map((item) => {
           const Icon = item.icon;
@@ -100,7 +130,7 @@ function JockeyInvitations() {
             <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
           </div>
           <div className="jockey-segmented">
-              {["All", "Pending", "Accepted", "Rejected", "Cancelled"].map((item) => (
+              {["All", "Meet", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>
@@ -127,20 +157,60 @@ function JockeyInvitations() {
 
                 <p>{invite.note}</p>
 
+                <div className="jockey-invitation-stage" role="status">
+                  <ShieldCheck size={17} />
+                  <span>{getStageCopy(invite.rawStatus)}</span>
+                </div>
+
                 <div className="jockey-invitation-meta">
                   <div><span>Race</span><strong>{invite.race}</strong></div>
                   <div><span>Tournament</span><strong>{invite.tournament}</strong></div>
                   <div><span><Clock3 size={13} /> Time</span><strong>{invite.date}</strong></div>
                   <div><span><MapPin size={13} /> Venue</span><strong>{invite.venue}</strong></div>
+                  <div><span><Clock3 size={13} /> Meet time</span><strong>{invite.meetingTime || "Pending"}</strong></div>
+                  <div><span><FileText size={13} /> Contract</span><strong>{invite.contractTitle || invite.contractFileName || "Contract pending"}</strong></div>
                 </div>
 
+                <div className="jockey-invitation-review">
+                  <div>
+                    <span><LinkIcon size={13} /> Google Meet</span>
+                    {invite.meetingUrl ? <a href={invite.meetingUrl} rel="noreferrer" target="_blank">{invite.meetingUrl}</a> : <strong>Meeting link pending</strong>}
+                  </div>
+                  <div>
+                    <span><FileText size={13} /> Online contract</span>
+                    {invite.contractUrl ? <a href={invite.contractUrl} rel="noreferrer" target="_blank">{invite.contractFileName || invite.contractUrl}</a> : <strong>{invite.contractFileName || "Contract link pending"}</strong>}
+                  </div>
+                </div>
+
+                {invite.terms && (
+                  <div className="jockey-invitation-terms">
+                    <span><FileText size={14} /> Agreed terms</span>
+                    <p>{invite.terms}</p>
+                    {invite.meetingNote && <small>{invite.meetingNote}</small>}
+                  </div>
+                )}
+
                 <div className="jockey-invitation-card__actions">
-                  <button className="jockey-button" disabled={invite.status === "Rejected" || activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "Rejected")} type="button">
-                    <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Reject"}
-                  </button>
-                  <button className="jockey-button jockey-button--primary" disabled={invite.status === "Accepted" || activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "Accepted")} type="button">
-                    <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept"}
-                  </button>
+                  {invite.rawStatus === "meeting_invited" && (
+                    <>
+                      <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-meeting")} type="button">
+                        <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Decline Meet"}
+                      </button>
+                      <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "accept-meeting")} type="button">
+                        <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept Meet"}
+                      </button>
+                    </>
+                  )}
+                  {invite.rawStatus === "contract_uploaded" && (
+                    <>
+                      <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-contract")} type="button">
+                        <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Reject contract"}
+                      </button>
+                      <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "confirm-contract")} type="button">
+                        <CheckCircle2 size={17} /> {activeActionId === invite.id ? "Updating..." : "Confirm contract"}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </article>

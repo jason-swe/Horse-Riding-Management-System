@@ -48,6 +48,12 @@ function normalizeStatus(status, fallback = "Pending") {
   const value = String(status || fallback).toLowerCase();
   const map = {
     pending: "Pending",
+    meeting_invited: "Meeting invite",
+    meeting_accepted: "Meeting accepted",
+    meeting_rejected: "Meeting rejected",
+    terms_agreed: "Terms ready",
+    contract_uploaded: "Contract review",
+    contract_rejected: "Contract rejected",
     accepted: "Accepted",
     approved: "Accepted",
     confirmed: "Accepted",
@@ -68,6 +74,8 @@ function mapAssignment(item, index = 0) {
   const race = item.race_id || item.race || {};
   const horse = item.horse_id || item.horse || {};
   const owner = item.owner_id || item.owner || horse.owner_id || {};
+  const meeting = item.meeting || {};
+  const contract = item.contract || {};
   const status = normalizeStatus(item.status);
 
   return {
@@ -81,6 +89,18 @@ function mapAssignment(item, index = 0) {
     venue: race.location || item.location || "Race track",
     round: getName(race.round_id || item.round_id, item.round_name || "Race round"),
     note: item.invitation_message || item.response_message || item.note || "Owner invitation is ready for review.",
+    rawStatus: item.status || "",
+    meetingTitle: meeting.title || item.meeting_title || "Owner meeting",
+    meetingUrl: meeting.meeting_url || item.meeting_url || "",
+    meetingTime: formatRaceTime(meeting.meeting_time || item.meeting_time),
+    contractTitle: contract.title || item.contract_title || "Jockey agreement",
+    contractUrl: contract.file_url || item.contract_url || item.contract_link || "",
+    contractFileName: contract.file_name || item.contract_file_name || "",
+    contractNumber: contract.contract_number || item.contract_number || "",
+    contractNote: contract.note || "",
+    terms: item.terms?.agreed_terms || item.agreed_terms || "",
+    meetingNote: item.terms?.meeting_note || "",
+    responseMessage: contract.response_message || meeting.response_message || item.response_message || "",
   };
 }
 
@@ -123,12 +143,36 @@ function mapProfile(data, user, stats, approvalStatus) {
     status,
     stableConnection: profile.stable_name || jockeyProfile.stableConnection,
     weightClass: profile.weight ? `${profile.weight} kg class` : jockeyProfile.weightClass,
+    height: profile.height || "",
+    weight: profile.weight || "",
+    experienceYears: profile.experience_years || 0,
+    licenseNumber: profile.license_number || "",
+    apiStatus: profile.status || "active",
     winRate: totalRaces ? `${Math.round(winRate)}%` : jockeyProfile.winRate,
     podiumRate: totalRaces ? `${podiumRate}%` : jockeyProfile.podiumRate,
   };
 }
 
-export function adaptJockeyApiData({ me, assignments, schedule, results, stats, approvalStatus, user }) {
+function mapViolation(item, index = 0) {
+  const race = item.race_id || item.race || {};
+  const horse = item.horse_id || item.horse || {};
+  const referee = item.referee_id || item.referee || {};
+  const refereeUser = referee.user_id || referee.user || {};
+
+  return {
+    id: getId(item) || `VIO-${index + 1}`,
+    type: item.violation_type || "Recorded violation",
+    description: item.description || "No additional description.",
+    penalty: item.penalty || "No penalty recorded",
+    status: normalizeStatus(item.status, "Recorded"),
+    race: getName(race, "Race pending"),
+    horse: getName(horse, "Horse pending"),
+    referee: getName(refereeUser, "Race referee"),
+    date: formatRaceTime(item.created_at).split(", ")[0],
+  };
+}
+
+export function adaptJockeyApiData({ me, assignments, schedule, results, stats, violations, approvalStatus, user }) {
   const assignmentItems = asArray(assignments, "assignments").map(mapAssignment);
   const scheduleItems = asArray(schedule, "schedule").map((item, index) => {
     const mapped = item.race_id || item.horse_id ? mapAssignment(item, index) : mapAssignment({ ...item, status: item.status || "accepted" }, index);
@@ -144,6 +188,7 @@ export function adaptJockeyApiData({ me, assignments, schedule, results, stats, 
     };
   });
   const resultItems = asArray(results, "results").map(mapResult);
+  const violationItems = asArray(violations, "violations").map(mapViolation);
   const normalizedStats = stats?.stats || stats || {};
   const profile = mapProfile(me, user, normalizedStats, approvalStatus);
   const sourceAssignments = assignmentItems.length ? assignmentItems : jockeyAssignments;
@@ -157,6 +202,7 @@ export function adaptJockeyApiData({ me, assignments, schedule, results, stats, 
     schedule: sourceSchedule,
     results: sourceResults,
     stats: normalizedStats,
+    violations: violationItems,
     usedFallback: !assignmentItems.length && !scheduleItems.length && !resultItems.length,
   };
 }

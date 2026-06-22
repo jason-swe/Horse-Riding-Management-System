@@ -82,6 +82,15 @@ export function toOwnerProfile(apiProfile, user) {
   };
 }
 
+export function toOwnerProfilePayload(form) {
+  return {
+    stable_name: form.stable,
+    address: form.location,
+    license_number: form.licenseNumber,
+    status: getApiStatus(form.status),
+  };
+}
+
 export function toHorsePayload(form) {
   const payload = {
     name: form.name,
@@ -97,4 +106,81 @@ export function toHorsePayload(form) {
   }
 
   return payload;
+}
+
+function getName(value, fallback = "Unknown") {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  return value.full_name || value.name || value.email || fallback;
+}
+
+export function toOwnerJockey(apiJockey, index = 0) {
+  const user = apiJockey.user_id || apiJockey.user || {};
+  const races = apiJockey.total_races || apiJockey.races || 0;
+  const wins = apiJockey.total_wins || apiJockey.wins || 0;
+
+  return {
+    id: apiJockey._id || apiJockey.id || `J-${index + 1}`,
+    name: getName(user, apiJockey.name || `Jockey ${index + 1}`),
+    assignedHorse: "Unassigned",
+    races,
+    wins,
+    availability: apiJockey.status === "active" ? "Available" : getDisplayStatus(apiJockey.status),
+    status: apiJockey.status === "active" ? "Available" : getDisplayStatus(apiJockey.status),
+    licenseNumber: apiJockey.license_number || "No license",
+    raw: apiJockey,
+  };
+}
+
+export function toOwnerTournament(apiTournament, index = 0) {
+  return {
+    id: apiTournament._id || apiTournament.id || `T-${index + 1}`,
+    name: apiTournament.name || `Tournament ${index + 1}`,
+    location: apiTournament.location || "Location TBD",
+    status: getDisplayStatus(apiTournament.status || "active"),
+    date: apiTournament.start_date ? new Date(apiTournament.start_date).toISOString().slice(0, 10) : "TBD",
+    raw: apiTournament,
+  };
+}
+
+export function toHorseApprovalStatus(data) {
+  return {
+    readyToRace: Boolean(data?.ready_to_race),
+    registrations: data?.registrations || [],
+    checks: data?.checks || [],
+  };
+}
+
+function getRegistrationStatus(status) {
+  const normalized = (status || "").toLowerCase();
+
+  if (normalized === "approved") return "Approved";
+  if (normalized === "rejected") return "Rejected";
+  if (normalized === "cancelled" || normalized === "canceled") return "Cancelled";
+
+  return "Pending";
+}
+
+export function toOwnerRegistration(apiRegistration, index = 0) {
+  const horse = apiRegistration.horse_id || apiRegistration.horse || {};
+  const race = apiRegistration.race_id || apiRegistration.race || {};
+  const tournament = apiRegistration.tournament_id || apiRegistration.tournament || race.tournament_id || {};
+  const registeredAt = apiRegistration.registered_at || apiRegistration.created_at || apiRegistration.updated_at;
+  const date = registeredAt && !Number.isNaN(new Date(registeredAt).getTime())
+    ? new Date(registeredAt).toISOString().slice(0, 10)
+    : "Pending date";
+
+  return {
+    id: apiRegistration._id || apiRegistration.id || `REG-${index + 1}`,
+    horseId: horse._id || horse.id || apiRegistration.horse_id,
+    raceId: race._id || race.id || apiRegistration.race_id,
+    tournamentId: tournament._id || tournament.id || apiRegistration.tournament_id,
+    horse: horse.name || `Horse ${index + 1}`,
+    race: race.name || "Race pending",
+    tournament: tournament.name || "Tournament pending",
+    submitted: date,
+    note: apiRegistration.note || apiRegistration.admin_note || "No note recorded.",
+    status: getRegistrationStatus(apiRegistration.status),
+    raw: apiRegistration,
+  };
 }

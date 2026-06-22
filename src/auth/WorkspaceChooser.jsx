@@ -1,5 +1,6 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldAlert } from "lucide-react";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useAuth } from "./AuthContext";
 import { getDefaultRoute, getRoleLabel, getRoleRoute } from "./roleRoutes";
 
@@ -8,7 +9,7 @@ function WorkspaceChooser() {
   const navigate = useNavigate();
 
   if (auth.isLoading) {
-    return <div className="auth-loading">Restoring session...</div>;
+    return <LoadingSkeleton ariaLabel="Restoring session" variant="auth" />;
   }
 
   if (!auth.isAuthenticated) {

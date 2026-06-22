@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useAuth } from "./AuthContext";
 import { getDefaultRoute } from "./roleRoutes";
 
@@ -7,7 +8,7 @@ function ProtectedRoute({ role, children }) {
   const location = useLocation();
 
   if (auth.isLoading) {
-    return <div className="auth-loading">Restoring session...</div>;
+    return <LoadingSkeleton ariaLabel="Restoring session" variant="auth" />;
   }
 
   if (!auth.isAuthenticated) {

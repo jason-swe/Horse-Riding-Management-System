@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../api/adminApi";
-import { adaptAdminUsers, adaptRoleApplications } from "./adminApiAdapters";
+import {
+  adaptAdminUserDetail,
+  adaptAdminUsers,
+  adaptRaceRegistrationDetail,
+  adaptRaceRegistrations,
+} from "./adminApiAdapters";
 
 export function useAdminModuleApi(moduleName) {
   const [liveData, setLiveData] = useState(null);
@@ -27,8 +32,8 @@ export function useAdminModuleApi(moduleName) {
       }
 
       if (moduleName === "registrations") {
-        const data = await adminApi.listRoleApplications();
-        setLiveData(adaptRoleApplications(data));
+        const data = await adminApi.listRegistrations({ page: 1, limit: 100 });
+        setLiveData(adaptRaceRegistrations(data));
       }
     } catch (apiError) {
       setError(apiError.message || "Unable to load live admin data. Showing sample data.");
@@ -61,13 +66,13 @@ export function useAdminModuleApi(moduleName) {
 
     if (moduleName === "registrations") {
       if (actionLabel === "Approve") {
-        await adminApi.approveRoleApplication(id, note || "Documents verified");
+        await adminApi.approveRegistration(id, note || "Race registration approved");
         await load();
         return true;
       }
 
       if (actionLabel === "Reject") {
-        await adminApi.rejectRoleApplication(id, note || "Rejected by admin review");
+        await adminApi.rejectRegistration(id, note || "Race registration rejected");
         await load();
         return true;
       }
@@ -76,12 +81,39 @@ export function useAdminModuleApi(moduleName) {
     return false;
   }, [load, moduleName, supportsLiveData]);
 
+  const getRowDetail = useCallback(async (id) => {
+    if (moduleName === "users") {
+      return adaptAdminUserDetail(await adminApi.getUser(id));
+    }
+
+    if (moduleName === "registrations") {
+      return adaptRaceRegistrationDetail(await adminApi.getRegistration(id));
+    }
+
+    return null;
+  }, [moduleName]);
+
+  const assignRole = useCallback(async (id, roleName) => {
+    await adminApi.assignUserRole(id, roleName);
+    await load();
+    return getRowDetail(id);
+  }, [getRowDetail, load]);
+
+  const removeRole = useCallback(async (id, roleName) => {
+    await adminApi.removeUserRole(id, roleName);
+    await load();
+    return getRowDetail(id);
+  }, [getRowDetail, load]);
+
   return {
     liveData,
     isLoading,
     error,
     reload: load,
     applyRowAction,
+    getRowDetail,
+    assignRole,
+    removeRole,
     supportsLiveData,
   };
 }

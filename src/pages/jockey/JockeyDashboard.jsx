@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   Award,
   BadgeCheck,
@@ -35,11 +36,15 @@ function JockeyDashboard() {
   const nextRace = schedule[0];
   const latestResult = results[0];
 
+  if (isLoading) {
+    return <div className="jockey-dashboard"><LoadingSkeleton ariaLabel="Loading jockey dashboard" variant="page" /></div>;
+  }
+
   return (
     <div className="jockey-dashboard">
-      {(isLoading || error) && (
+      {error && (
         <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
-          {isLoading ? "Loading live jockey data..." : error}
+          {error}
         </div>
       )}
       <section className="jockey-hero">

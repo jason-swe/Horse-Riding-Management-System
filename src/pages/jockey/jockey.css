@@ -1073,6 +1073,91 @@
   overflow-wrap: anywhere;
 }
 
+.jockey-invitation-review {
+  display: grid;
+  gap: 10px;
+}
+
+.jockey-invitation-review div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(240, 161, 92, 0.24);
+  border-radius: 8px;
+  background: rgba(240, 161, 92, 0.08);
+}
+
+.jockey-invitation-review span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #f2d3ad;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.jockey-invitation-review a,
+.jockey-invitation-review strong {
+  min-width: 0;
+  color: var(--jockey-text-strong);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.jockey-invitation-review a:hover {
+  color: #ffd08a;
+}
+
+.jockey-invitation-stage {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px;
+  border-left: 3px solid #f0a15c;
+  color: var(--jockey-text-soft);
+  background: rgba(240, 161, 92, 0.08);
+  line-height: 1.5;
+}
+
+.jockey-invitation-stage svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #ffd08a;
+}
+
+.jockey-invitation-terms {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(118, 207, 143, 0.28);
+  border-radius: 8px;
+  background: rgba(76, 154, 98, 0.08);
+}
+
+.jockey-invitation-terms > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #b8f2c5;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.jockey-invitation-terms p,
+.jockey-invitation-terms small {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.jockey-invitation-terms small {
+  color: var(--jockey-text-muted);
+}
+
 .jockey-invitation-card__actions {
   display: flex;
   flex-wrap: wrap;
@@ -2283,6 +2368,139 @@
   grid-column: span 4;
 }
 
+.jockey-profile-edit,
+.jockey-profile-violations {
+  grid-column: 1 / -1;
+}
+
+.jockey-profile-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.jockey-profile-form label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--jockey-text-soft);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.jockey-profile-form input,
+.jockey-profile-form select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 8px;
+  color: var(--jockey-text-strong);
+  background: rgba(255, 255, 255, 0.07);
+  outline: 0;
+}
+
+.jockey-profile-form input:focus,
+.jockey-profile-form select:focus {
+  border-color: rgba(255, 208, 138, 0.68);
+  box-shadow: 0 0 0 3px rgba(255, 208, 138, 0.12);
+}
+
+.jockey-profile-form select option {
+  color: #17251c;
+}
+
+.jockey-profile-form__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.jockey-form-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  color: #a9efb6;
+  font-weight: 850;
+}
+
+.jockey-form-message--error {
+  color: #ffd0c5;
+}
+
+.jockey-violation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.jockey-violation-item {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.jockey-violation-item__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jockey-violation-item__header > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.jockey-violation-item__header strong {
+  color: var(--jockey-text-strong);
+  font-family: "Sora", sans-serif;
+}
+
+.jockey-violation-item__header small,
+.jockey-violation-item p,
+.jockey-violation-item__meta span {
+  color: var(--jockey-text-muted);
+  line-height: 1.45;
+}
+
+.jockey-violation-item p {
+  margin: 0;
+}
+
+.jockey-violation-item__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.jockey-violation-item__meta span {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+
+.jockey-violation-item__meta strong {
+  color: var(--jockey-text-soft);
+  overflow-wrap: anywhere;
+}
+
+.jockey-profile-empty {
+  padding: 20px;
+  border: 1px dashed rgba(238, 231, 212, 0.24);
+  border-radius: 8px;
+  color: var(--jockey-text-muted);
+  text-align: center;
+}
+
 .jockey-profile-detail-list,
 .jockey-profile-license__grid,
 .jockey-profile-result__metrics,
@@ -2491,7 +2709,9 @@
   .jockey-profile-license,
   .jockey-profile-next,
   .jockey-profile-result,
-  .jockey-profile-activity {
+  .jockey-profile-activity,
+  .jockey-profile-edit,
+  .jockey-profile-violations {
     grid-column: 1 / -1;
   }
 }
@@ -2529,6 +2749,21 @@
   .jockey-profile-next__body,
   .jockey-profile-result__metrics {
     grid-template-columns: 1fr;
+  }
+
+  .jockey-profile-form,
+  .jockey-violation-item__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .jockey-profile-form__actions,
+  .jockey-violation-item__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .jockey-profile-form__actions .jockey-button {
+    width: 100%;
   }
 
   .jockey-hero {

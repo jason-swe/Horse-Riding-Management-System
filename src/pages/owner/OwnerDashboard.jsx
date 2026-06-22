@@ -14,6 +14,7 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   ownerHorses,
   ownerJockeys,
@@ -22,33 +23,7 @@ import {
   ownerRegistrations,
   ownerSchedule,
 } from "./ownerData";
-
-const ownerStats = [
-  {
-    label: "Active Horses",
-    value: String(ownerHorses.length).padStart(2, "0"),
-    note: `${ownerHorses.filter((horse) => horse.status === "Ready").length} race-ready this season`,
-    icon: Activity,
-  },
-  {
-    label: "Pending Registrations",
-    value: String(ownerRegistrations.filter((item) => item.status !== "Approved").length).padStart(2, "0"),
-    note: "Awaiting admin review",
-    icon: ClipboardCheck,
-  },
-  {
-    label: "Assigned Jockeys",
-    value: String(ownerJockeys.filter((jockey) => jockey.status === "Assigned").length).padStart(2, "0"),
-    note: "2 invitations still open",
-    icon: UsersRound,
-  },
-  {
-    label: "Season Earnings",
-    value: "$42K",
-    note: "Prize tracking updated",
-    icon: CircleDollarSign,
-  },
-];
+import { useOwnerHorses, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
 
 const quickActions = [
   { label: "Add Horse", meta: "Create a new horse profile", to: "/owner/horses/new", icon: Plus },
@@ -69,10 +44,76 @@ const horseImages = [
   "https://i.pinimg.com/1200x/0b/9c/f0/0b9cf065f5a0823c9870113e206bfbd6.jpg",
 ];
 
+const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
+
+const compactRecordCode = (prefix, value) => {
+  if (!value) return prefix;
+  if (isMongoObjectId(value)) return `${prefix}-${String(value).slice(-6).toUpperCase()}`;
+  return value;
+};
+
 function OwnerDashboard() {
   const dashboardRef = useRef(null);
+  const {
+    horses: liveHorses,
+    isLoading: horsesLoading,
+    error: horsesError,
+  } = useOwnerHorses();
+  const {
+    jockeys: liveJockeys,
+    isLoading: jockeysLoading,
+    error: jockeysError,
+  } = useOwnerJockeys();
+  const {
+    profile: liveProfile,
+    isLoading: profileLoading,
+    error: profileError,
+  } = useOwnerProfile();
+  const {
+    registrations: liveRegistrations,
+    isLoading: registrationsLoading,
+    error: registrationsError,
+  } = useOwnerRegistrations();
+
+  const horses = liveHorses.length ? liveHorses : ownerHorses;
+  const jockeys = liveJockeys.length ? liveJockeys : ownerJockeys;
+  const profile = liveProfile || ownerProfile;
+  const registrations = liveRegistrations.length ? liveRegistrations : ownerRegistrations;
+  const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading;
+  const liveError = horsesError || jockeysError || profileError || registrationsError;
+  const raceReadyCount = horses.filter((horse) => horse.status === "Ready").length;
+  const assignedJockeyCount = jockeys.filter((jockey) => jockey.status === "Assigned").length;
+  const pendingRegistrationCount = registrations.filter((item) => item.status !== "Approved").length;
+  const ownerStats = [
+    {
+      label: "Active Horses",
+      value: String(horses.length).padStart(2, "0"),
+      note: `${raceReadyCount} race-ready this season`,
+      icon: Activity,
+    },
+    {
+      label: "Pending Registrations",
+      value: String(pendingRegistrationCount).padStart(2, "0"),
+      note: "Awaiting admin review",
+      icon: ClipboardCheck,
+    },
+    {
+      label: "Assigned Jockeys",
+      value: String(assignedJockeyCount).padStart(2, "0"),
+      note: `${Math.max(jockeys.length - assignedJockeyCount, 0)} jockey profiles available`,
+      icon: UsersRound,
+    },
+    {
+      label: "Season Earnings",
+      value: "$42K",
+      note: "Prize tracking updated",
+      icon: CircleDollarSign,
+    },
+  ];
 
   useEffect(() => {
+    if (isLoading) return undefined;
+
     const root = dashboardRef.current;
     if (!root) return undefined;
 
@@ -98,10 +139,24 @@ function OwnerDashboard() {
 
     revealItems.forEach((item) => observer.observe(item));
     return () => observer.disconnect();
-  }, []);
+  }, [isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="owner-dashboard" ref={dashboardRef}>
+        <LoadingSkeleton ariaLabel="Loading owner dashboard" rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="owner-dashboard" ref={dashboardRef}>
+      {liveError && (
+        <section className="admin-live-state admin-live-state--warning" aria-live="polite">
+          {liveError}
+        </section>
+      )}
+
       <section className="owner-hero owner-dashboard-hero owner-reveal">
         <div className="owner-hero__content">
           <p className="owner-eyebrow">Horse Owner Command Center</p>
@@ -125,8 +180,8 @@ function OwnerDashboard() {
           <img src={dashboardImages.stable} alt="Premium stable interior for horse care" />
           <div className="owner-hero-media__overlay">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <strong>{ownerProfile.stable}</strong>
-            <p>{ownerHorses.length} horses registered, {ownerJockeys.filter((jockey) => jockey.status === "Assigned").length} riders assigned.</p>
+            <strong>{profile.stable}</strong>
+            <p>{horses.length} horses registered, {assignedJockeyCount} riders assigned.</p>
           </div>
         </aside>
       </section>
@@ -144,20 +199,24 @@ function OwnerDashboard() {
         </div>
 
         <div className="owner-visual-strip">
-          {ownerHorses.slice(0, 4).map((horse, index) => (
-            <Link className="owner-visual-horse" to={`/owner/horses/${horse.id}`} key={horse.id}>
-              <img src={horseImages[index]} alt={`${horse.name} profile`} />
-              <div className="owner-visual-horse__content">
-                <strong>{horse.name}</strong>
-                <small>{horse.breed} / {horse.nextRace}</small>
-              </div>
-              <div className="owner-visual-horse__reveal">
-                <span>{horse.record}</span>
-                <span>Jockey: {horse.jockey}</span>
-                <b>Open profile <ArrowRight size={15} /></b>
-              </div>
-            </Link>
-          ))}
+          {horses.slice(0, 4).map((horse, index) => {
+            const horseDetailPath = isMongoObjectId(horse.id) ? `/owner/horses/${horse.id}` : "/owner/horses";
+
+            return (
+              <Link className="owner-visual-horse" to={horseDetailPath} key={horse.id || horse.name}>
+                <img src={horse.imageUrl || horseImages[index % horseImages.length]} alt={`${horse.name} profile`} />
+                <div className="owner-visual-horse__content">
+                  <strong>{horse.name}</strong>
+                  <small>{horse.breed} / {horse.nextRace || "No race assigned"}</small>
+                </div>
+                <div className="owner-visual-horse__reveal">
+                  <span>{horse.record || "No race record"}</span>
+                  <span>Jockey: {horse.jockey || "Unassigned"}</span>
+                  <b>Open profile <ArrowRight size={15} /></b>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -165,13 +224,13 @@ function OwnerDashboard() {
         <aside className="owner-hero__panel owner-season-panel">
           <div className="owner-hero__panel-header">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <span className="owner-meta">{ownerProfile.season}</span>
+            <span className="owner-meta">{profile.season}</span>
           </div>
-          <strong>{ownerProfile.stable}</strong>
-          <p>{ownerHorses.length} horses registered, {ownerJockeys.filter((jockey) => jockey.status === "Assigned").length} jockey relationships active, and {ownerRegistrations.filter((item) => item.status !== "Approved").length} tournament entries under review.</p>
+          <strong>{profile.stable}</strong>
+          <p>{horses.length} horses registered, {assignedJockeyCount} jockey relationships active, and {pendingRegistrationCount} tournament entries under review.</p>
           <div className="owner-hero__panel-grid">
             <div><span>Next Race</span><b>Jun 03</b></div>
-            <div><span>Win Rate</span><b>{ownerProfile.winRate}</b></div>
+            <div><span>Win Rate</span><b>{profile.winRate}</b></div>
           </div>
         </aside>
 
@@ -244,9 +303,9 @@ function OwnerDashboard() {
           </div>
 
           <div className="owner-registration-list">
-            {ownerRegistrations.slice(0, 3).map((item) => (
+            {registrations.slice(0, 3).map((item) => (
               <div className="owner-registration" key={item.id}>
-                <span>{item.id}</span>
+                <span>{compactRecordCode("REG", item.id)}</span>
                 <div className="owner-registration__body">
                   <strong>{item.horse}</strong>
                   <small>{item.tournament}</small>

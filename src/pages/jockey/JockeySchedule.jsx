@@ -8,6 +8,7 @@ import {
   MapPin,
   Trophy,
 } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   jockeyActionImages,
   jockeyTrackImages,
@@ -38,11 +39,15 @@ function JockeySchedule() {
   const rejectedCount = schedule.filter((race) => race.status === "Rejected").length;
   const nextRace = visibleRaces[0] ?? schedule[0];
 
+  if (isLoading) {
+    return <div className="jockey-schedule-page"><LoadingSkeleton ariaLabel="Loading race schedule" rows={5} variant="list" /></div>;
+  }
+
   return (
     <div className="jockey-schedule-page">
-      {(isLoading || error) && (
+      {error && (
         <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
-          {isLoading ? "Loading live schedule..." : error}
+          {error}
         </div>
       )}
       <section className="jockey-schedule-hero">

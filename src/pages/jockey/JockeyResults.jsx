@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Award, BadgeCheck, Clock3, Flag, Trophy } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   celebrationImages,
 } from "./jockeyData";
@@ -41,11 +42,15 @@ function JockeyResults() {
   const podiumCount = results.filter((result) => result.position <= 3).length;
   const winCount = results.filter((result) => result.position === 1).length;
 
+  if (isLoading) {
+    return <div className="jockey-results-page"><LoadingSkeleton ariaLabel="Loading jockey results" rows={5} variant="table" /></div>;
+  }
+
   return (
     <div className="jockey-results-page">
-      {(isLoading || error) && (
+      {error && (
         <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
-          {isLoading ? "Loading live results..." : error}
+          {error}
         </div>
       )}
       <section className="jockey-results-hero">

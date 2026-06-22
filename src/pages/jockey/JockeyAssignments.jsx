@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
   horseJockeyImages,
   jockeyTrackImages,
@@ -17,10 +18,16 @@ const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
-  if (["Rejected", "Expired"].includes(status)) {
+  if (["Rejected", "Expired", "Meeting rejected", "Contract rejected", "Cancelled"].includes(status)) {
     return "jockey-badge--muted";
   }
   return "jockey-badge--amber";
+};
+
+const getAssignmentGroup = (rawStatus) => {
+  if (rawStatus === "accepted") return "Accepted";
+  if (["meeting_rejected", "contract_rejected", "cancelled"].includes(rawStatus)) return "Closed";
+  return "In progress";
 };
 
 function JockeyAssignments() {
@@ -28,20 +35,24 @@ function JockeyAssignments() {
   const { assignments, error, isLoading, profile } = useJockeyApiData();
 
   const visibleAssignments = useMemo(
-    () => assignments.filter((assignment) => filter === "All" || assignment.status === filter),
+    () => assignments.filter((assignment) => filter === "All" || getAssignmentGroup(assignment.rawStatus) === filter),
     [assignments, filter]
   );
 
   const acceptedCount = assignments.filter((assignment) => assignment.status === "Accepted").length;
-  const pendingCount = assignments.filter((assignment) => assignment.status === "Pending").length;
-  const rejectedCount = assignments.filter((assignment) => assignment.status === "Rejected").length;
+  const pendingCount = assignments.filter((assignment) => getAssignmentGroup(assignment.rawStatus) === "In progress").length;
+  const rejectedCount = assignments.filter((assignment) => getAssignmentGroup(assignment.rawStatus) === "Closed").length;
   const featuredAssignment = visibleAssignments[0] ?? assignments[0];
+
+  if (isLoading) {
+    return <div className="jockey-assignments-page"><LoadingSkeleton ariaLabel="Loading horse assignments" rows={4} variant="cards" /></div>;
+  }
 
   return (
     <div className="jockey-assignments-page">
-      {(isLoading || error) && (
+      {error && (
         <div className={`jockey-sync-note ${error ? "jockey-sync-note--warning" : ""}`}>
-          {isLoading ? "Loading live assignments..." : error}
+          {error}
         </div>
       )}
       <section className="jockey-assignments-hero">
@@ -62,8 +73,8 @@ function JockeyAssignments() {
         {[
           { label: "All pairings", value: assignments.length, note: "Horse assignments", icon: Home },
           { label: "Accepted", value: acceptedCount, note: "Ready to ride", icon: BadgeCheck },
-          { label: "Pending", value: pendingCount, note: "Needs response", icon: ClipboardCheck },
-          { label: "Rejected", value: rejectedCount, note: "Declined invites", icon: ShieldCheck },
+          { label: "In progress", value: pendingCount, note: "Meeting or contract flow", icon: ClipboardCheck },
+          { label: "Closed", value: rejectedCount, note: "Rejected or cancelled", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -94,7 +105,7 @@ function JockeyAssignments() {
               <h2>{filter === "All" ? "All horse pairings" : `${filter} pairings`}</h2>
             </div>
             <div className="jockey-segmented">
-              {["All", "Accepted", "Pending", "Rejected", "Cancelled"].map((item) => (
+              {["All", "In progress", "Accepted", "Closed"].map((item) => (
                 <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                   {item}
                 </button>

@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "assertions": [
+    "Race betting route renders six market tabs, five runners, and no embedded race viewer",
+    "Win, Place, and Show resolve one-runner fixed prices",
+    "Quinella accepts two unique unordered runners and resolves combination odds",
+    "Exacta reorder changes the ordered combination and its fixed odds",
+    "Trifecta fills three unique ordered position slots",
+    "Confirmation creates an accepted receipt and updates wallet balance dynamically",
+    "Mobile odds board has no horizontal page overflow or clipped runner rows",
+    "stop_betting locks runner, stake, review, and confirmation controls immediately"
+  ],
+  "screenshots": [
+    "fixed-odds-trifecta-desktop-1440x1100.png",
+    "fixed-odds-mobile-390x844.png"
+  ],
+  "audits": {
+    "initial": {
+      "tabs": 6,
+      "runners": 5,
+      "overflow": 0,
+      "viewer": 0
+    },
+    "accepted": {
+      "receipt": 1,
+      "balance": "1,080 pts",
+      "message": "Bet accepted at 22.36x. Balance: 1,080 pts."
+    },
+    "mobile": {
+      "overflow": 0,
+      "boardWidth": 330,
+      "clippedRunners": 0
+    },
+    "locked": {
+      "runnerControlsLocked": true,
+      "stakeLocked": true,
+      "reviewLocked": true,
+      "modalClosed": true
+    }
+  }
+}

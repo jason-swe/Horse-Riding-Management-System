@@ -1,204 +1,35 @@
 import { Link, useParams } from "react-router-dom";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import RefereeLayout from "./RefereeLayout";
-import { assignedRaces, RACE_STATUSES, RESULT_STATUSES } from "./refereeData";
+import { formatStatus, RACE_PHASES } from "./refereeConstants";
+import { useRefereeData } from "./useRefereeData";
 
-function StatusBadge({ value }) {
-  const map = {
-    approved: "green", published: "green", confirmed: "green",
-    ready: "green", rejected: "red", disqualified: "red",
-    "in progress": "amber", "inspection pending": "amber",
-    upcoming: "blue", finished: "blue", draft: "gray",
-  };
-  const color = map[(value || "").toLowerCase()] || "gray";
-  return <span className={`referee-status-badge referee-status-badge--${color}`}>{value}</span>;
-}
+const phaseOrder = [RACE_PHASES.PRE_RACE, RACE_PHASES.DURING_RACE, RACE_PHASES.POST_RACE];
 
 function RefereeRaceDetail() {
   const { raceId } = useParams();
-  const race = assignedRaces.find((r) => r.id === raceId);
+  const { getRace, isLoading, error, isUnavailable, reload } = useRefereeData();
+  const race = getRace(raceId);
 
-  if (!race) {
-    return (
-      <RefereeLayout title="Race Not Found" eyebrow="Race detail" description="">
-        <article className="admin-panel">
-          <p style={{ color: "rgba(245,247,243,0.54)" }}>
-            No race found with ID <strong>{raceId}</strong>.
-          </p>
-          <Link className="admin-header__button admin-header__button--ghost" to="/referee/races" style={{ marginTop: 14, display: "inline-flex" }}>
-            ← Back to races
-          </Link>
-        </article>
-      </RefereeLayout>
-    );
-  }
+  if (isLoading) return <RefereeLayout title="Race Detail" eyebrow="Assigned race" description=""><LoadingSkeleton ariaLabel="Loading race detail" variant="detail" /></RefereeLayout>;
+  if (error) return <RefereeLayout title="Race Detail" eyebrow="Assigned race" description=""><section className="admin-live-state admin-live-state--warning" role="alert">{error} <button type="button" className="admin-header__button admin-header__button--ghost" onClick={reload}>Retry</button></section></RefereeLayout>;
+  if (!race) return <RefereeLayout title="Race Not Found" eyebrow="Assigned race" description=""><section className="admin-panel"><p>This race is not assigned to the current referee or no longer exists.</p><Link to="/referee/races">Back to races</Link></section></RefereeLayout>;
 
-  const allHorsesApproved = race.participants.every((p) => p.horseInspection?.status === "Approved");
-  const allJockeysApproved = race.participants.every((p) => p.jockeyInspection?.status === "Approved");
+  const preChecks = race.checks.filter((check) => check.phase === RACE_PHASES.PRE_RACE);
+  const postChecks = race.checks.filter((check) => check.phase === RACE_PHASES.POST_RACE);
+  const links = [
+    { phase: RACE_PHASES.PRE_RACE, title: "Pre-race inspections", text: "Horse identity, health, equipment, and eligibility.", to: `/referee/races/${raceId}/horse-inspection?phase=pre_race`, count: `${preChecks.length}/${race.participants.length}` },
+    { phase: RACE_PHASES.DURING_RACE, title: "Race monitoring", text: "Record incidents against backend race time markers.", to: `/referee/races/${raceId}/monitor`, count: `${race.checks.filter((check) => check.phase === RACE_PHASES.DURING_RACE).length} incidents` },
+    { phase: RACE_PHASES.POST_RACE, title: "Post-race checks", text: "Record recovery, injury, and veterinary follow-up.", to: `/referee/races/${raceId}/horse-inspection?phase=post_race`, count: `${postChecks.length}/${race.participants.length}` },
+  ];
 
-  return (
-    <RefereeLayout
-      title={race.name}
-      eyebrow={race.tournament}
-      description={`Track: ${race.track} · Date: ${race.date} at ${race.startTime} · Status: ${race.status}`}
-      actions={
-        <Link className="admin-header__button admin-header__button--ghost" to="/referee/races">
-          ← My Races
-        </Link>
-      }
-    >
-      {/* Race overview */}
-      <section className="admin-metrics admin-metrics--module" aria-label="Race overview">
-        <article className="admin-metric-card">
-          <p className="admin-metric-card__label">Race Status</p>
-          <div style={{ marginTop: 10 }}><StatusBadge value={race.status} /></div>
-          <p className="admin-metric-card__note">{race.tournament}</p>
-        </article>
-        <article className="admin-metric-card">
-          <p className="admin-metric-card__label">Participants</p>
-          <div className="admin-metric-card__value">{race.participants.length}</div>
-          <p className="admin-metric-card__note">Horse &amp; jockey pairs</p>
-        </article>
-        <article className="admin-metric-card">
-          <p className="admin-metric-card__label">Violations</p>
-          <div className="admin-metric-card__value" style={{ color: race.violations.length ? "#e87c3e" : undefined }}>
-            {race.violations.length}
-          </div>
-          <p className="admin-metric-card__note">Recorded so far</p>
-        </article>
-      </section>
-
-      {/* Action panel */}
-      <section className="admin-panel">
-        <div className="admin-panel__header">
-          <p className="admin-panel__eyebrow">Referee actions</p>
-          <h2>Race Operations</h2>
-        </div>
-        <div className="referee-action-grid">
-          <Link to={`/referee/races/${raceId}/horse-inspection`} className="referee-action-card">
-            <div>
-              <strong>Horse Inspection</strong>
-              <p>Verify each horse&apos;s eligibility before the race.</p>
-              <span className={`referee-insp-badge ${allHorsesApproved ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>
-                {race.participants.filter(p => p.horseInspection?.status === "Approved").length}/{race.participants.length} approved
-              </span>
-            </div>
-          </Link>
-          <Link to={`/referee/races/${raceId}/jockey-inspection`} className="referee-action-card">
-            <div>
-              <strong>Jockey Inspection</strong>
-              <p>Verify license, assignment, and suspension status.</p>
-              <span className={`referee-insp-badge ${allJockeysApproved ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>
-                {race.participants.filter(p => p.jockeyInspection?.status === "Approved").length}/{race.participants.length} approved
-              </span>
-            </div>
-          </Link>
-          <Link to={`/referee/races/${raceId}/monitor`} className="referee-action-card">
-            <div>
-              <strong>Monitor Race</strong>
-              <p>Live race control — start, pause, stop, record violations.</p>
-              <span className={`referee-insp-badge ${race.status === RACE_STATUSES.READY ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>
-                {race.status === RACE_STATUSES.READY ? "Ready to start" : race.status}
-              </span>
-            </div>
-          </Link>
-          <Link to={`/referee/races/${raceId}/violations`} className="referee-action-card">
-            <div>
-              <strong>Violations</strong>
-              <p>Create or review violation records and penalties.</p>
-              <span className="referee-insp-badge referee-insp-badge--pending">
-                {race.violations.length} recorded
-              </span>
-            </div>
-          </Link>
-          <Link to={`/referee/races/${raceId}/result`} className="referee-action-card">
-            <div>
-              <strong>Race Result</strong>
-              <p>Enter finish positions and confirm official result.</p>
-              <span className={`referee-insp-badge ${race.resultStatus === RESULT_STATUSES.PUBLISHED ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>
-                {race.resultStatus || "No result yet"}
-              </span>
-            </div>
-          </Link>
-          <Link to={`/referee/races/${raceId}/report`} className="referee-action-card">
-            <div>
-              <strong>Race Report</strong>
-              <p>Generate and export the official race report (PDF).</p>
-              <span className={`referee-insp-badge ${race.resultStatus === RESULT_STATUSES.PUBLISHED ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>
-                {race.resultStatus === RESULT_STATUSES.PUBLISHED ? "Available" : "Pending confirmation"}
-              </span>
-            </div>
-          </Link>
-        </div>
-      </section>
-
-      {/* Participants table */}
-      <section className="admin-panel">
-        <div className="admin-panel__header">
-          <p className="admin-panel__eyebrow">Participants</p>
-          <h2>Horse &amp; Jockey Pairs</h2>
-        </div>
-        <div className="admin-data-table__wrap">
-          <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th>Lane</th>
-                <th>Horse</th>
-                <th>Owner</th>
-                <th>Jockey</th>
-                <th>Horse Inspection</th>
-                <th>Jockey Inspection</th>
-              </tr>
-            </thead>
-            <tbody>
-              {race.participants.map((p) => (
-                <tr key={p.horseId}>
-                  <td>{p.lane}</td>
-                  <td><strong>{p.horseName}</strong></td>
-                  <td>{p.owner}</td>
-                  <td>{p.jockeyName}</td>
-                  <td>
-                    <StatusBadge value={p.horseInspection?.status || "Pending"} />
-                  </td>
-                  <td>
-                    <StatusBadge value={p.jockeyInspection?.status || "Pending"} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Violations */}
-      {race.violations.length > 0 && (
-        <section className="admin-panel">
-          <div className="admin-panel__header">
-            <p className="admin-panel__eyebrow">Violations</p>
-            <h2>Recorded Violations</h2>
-          </div>
-          <div className="admin-data-table__wrap">
-            <table className="admin-data-table">
-              <thead>
-                <tr><th>Type</th><th>Subject</th><th>Penalty</th><th>Time</th></tr>
-              </thead>
-              <tbody>
-                {race.violations.map((v) => (
-                  <tr key={v.id}>
-                    <td>{v.type}</td>
-                    <td>{v.subjectName}</td>
-                    <td><StatusBadge value={v.penalty} /></td>
-                    <td style={{ fontSize: "0.82rem", color: "rgba(245,247,243,0.56)" }}>
-                      {new Date(v.timestamp).toLocaleTimeString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-    </RefereeLayout>
-  );
+  return <RefereeLayout title={race.name} eyebrow={race.tournament} description={`${race.track} | ${race.date} at ${race.startTime} | ${formatStatus(race.status)}`} actions={<Link className="admin-header__button admin-header__button--ghost" to="/referee/races">My Races</Link>}>
+    {isUnavailable && <section className="admin-live-state">Participant data is unavailable. Participant-dependent actions remain disabled.</section>}
+    <section className="admin-metrics admin-metrics--module"><article className="admin-metric-card"><p className="admin-metric-card__label">Current phase</p><div className="admin-metric-card__value" style={{ fontSize: "1.35rem" }}>{race.phase ? formatStatus(race.phase) : "Read only"}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Participants</p><div className="admin-metric-card__value">{race.participants.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Violations</p><div className="admin-metric-card__value">{race.violations.length}</div></article></section>
+    <section className="admin-panel"><div className="admin-panel__header"><p className="admin-panel__eyebrow">Race lifecycle</p><h2>Operational phases</h2></div><div className="referee-action-grid">{links.map((item) => { const editable = race.phase === item.phase; const previous = race.phase && phaseOrder.indexOf(item.phase) < phaseOrder.indexOf(race.phase); return <Link key={item.phase} to={item.to} className="referee-action-card" aria-label={`${item.title}, ${editable ? "editable" : "read only"}`}><div><strong>{item.title}</strong><p>{item.text}</p><span className={`referee-insp-badge ${editable ? "referee-insp-badge--done" : "referee-insp-badge--pending"}`}>{item.count} | {editable ? "Editable" : previous ? "Read only" : "Not active"}</span></div></Link>; })}</div></section>
+    <section className="admin-panel"><div className="admin-panel__header"><p className="admin-panel__eyebrow">Handoff</p><h2>Results, violations, and report</h2></div><div className="referee-action-grid"><Link className="referee-action-card" to={`/referee/races/${raceId}/violations`}><div><strong>Violations</strong><p>Review and update incident decisions and penalties.</p></div></Link><Link className="referee-action-card" to={`/referee/races/${raceId}/result`}><div><strong>Draft results</strong><p>Referee drafts only. Admin confirms and publishes.</p></div></Link><Link className="referee-action-card" to={`/referee/races/${raceId}/report`}><div><strong>Referee report</strong><p>Save a draft, then submit it as read only.</p></div></Link><Link className="referee-action-card" to={`/referee/races/${raceId}/jockey-inspection`}><div><strong>Jockey eligibility</strong><p>Read assignment context. Dedicated persistence is unavailable.</p></div></Link></div></section>
+    <section className="admin-panel"><div className="admin-panel__header"><p className="admin-panel__eyebrow">Participants</p><h2>Approved race registrations</h2></div>{race.participants.length === 0 ? <p>No approved participants were returned by the API.</p> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Lane</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>Assignment</th><th>Pre-race</th></tr></thead><tbody>{race.participants.map((participant) => { const check = preChecks.find((item) => item.horseId === participant.horseId); return <tr key={participant.horseId}><td>{participant.lane ?? "Not assigned"}</td><td><strong>{participant.horseName}</strong></td><td>{participant.owner}</td><td>{participant.jockeyName}</td><td>{formatStatus(participant.assignmentStatus)}</td><td>{check ? formatStatus(check.status) : "Pending"}</td></tr>; })}</tbody></table></div>}</section>
+  </RefereeLayout>;
 }
 
 export default RefereeRaceDetail;

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, CircleDollarSign, Flag, Gauge, SearchX, Trophy, UsersRound } from "lucide-react";
 import SearchFilterBar from "../../components/SearchFilterBar.jsx";
-import { tournaments } from "./tournamentData.js";
+import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
+import { useSpectatorTournaments } from "./useSpectatorData.js";
 import "./spectator.css";
 
 const TournamentCard = ({ tournament }) => {
@@ -55,6 +56,7 @@ const TournamentCard = ({ tournament }) => {
 const TournamentList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const { tournaments, isLoading, error, usedFallback } = useSpectatorTournaments();
 
   const counts = tournaments.reduce(
     (acc, tournament) => {
@@ -81,8 +83,18 @@ const TournamentList = () => {
     return new Date(a.date) - new Date(b.date);
   });
 
+  if (isLoading) {
+    return <div className="spectator-page tournament-hub-page"><LoadingSkeleton ariaLabel="Loading tournament board" rows={6} variant="cards" /></div>;
+  }
+
   return (
     <div className="spectator-page tournament-hub-page">
+      {(error || usedFallback) && (
+        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
+          {error || "Showing sample tournament board until backend tournament data is available."}
+        </section>
+      )}
+
       <section className="tournament-board-header">
         <div>
           <p className="spectator-eyebrow">Tournament Board</p>

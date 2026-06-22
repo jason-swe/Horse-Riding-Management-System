@@ -1,4 +1,4 @@
-import { getAuthToken } from "../auth/authStorage";
+import { clearSession, getAuthToken } from "../auth/authStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -42,6 +42,11 @@ export async function apiRequest(path, options = {}) {
   const payload = await parseResponse(response);
 
   if (!response.ok || payload.success === false) {
+    if (response.status === 401 || response.status === 403) {
+      clearSession();
+      window.dispatchEvent(new CustomEvent("horse-racing-auth-invalid"));
+    }
+
     throw new ApiError(payload.message || "API request failed", payload.details || [], response.status);
   }
 

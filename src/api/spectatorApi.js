@@ -1,0 +1,32 @@
+import { apiRequest } from "./client";
+
+function withQuery(path, params = {}) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return `${path}${suffix}`;
+}
+
+export const spectatorApi = {
+  listTournaments(params = {}) {
+    return apiRequest(withQuery("/tournaments", params));
+  },
+
+  getTournament(id) {
+    return apiRequest(`/tournaments/${id}`);
+  },
+
+  listRaces(params = {}) {
+    return apiRequest(withQuery("/races", params));
+  },
+
+  listRaceResults(params = {}) {
+    return apiRequest(withQuery("/race-results", params));
+  },
+};

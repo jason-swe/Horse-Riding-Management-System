@@ -14,9 +14,10 @@ export const tournaments = [
 ];
 
 export const tournamentRaces = [
-  { time: "14:00", name: "Opening Sprint", distance: "1,200m", status: "Prediction Open" },
-  { time: "15:30", name: "Derby Trial", distance: "1,600m", status: "Scheduled" },
-  { time: "17:00", name: "Championship Final", distance: "2,000m", status: "Featured" },
+  { id: "race-opening-sprint", time: "14:00", raceDate: "2026-06-15T14:00:00.000Z", name: "Opening Sprint", roundName: "Opening round", distance: "1,200m", location: "Grandstand Track", runnerCount: 5, maxParticipants: 8, raceStatus: "scheduled", bettingStatus: "open", bettingClosesAt: "2026-06-15T13:59:30.000Z" },
+  { id: "race-derby-trial", time: "15:30", raceDate: "2026-06-15T15:30:00.000Z", name: "Derby Trial", roundName: "Qualifying round", distance: "1,600m", location: "Grandstand Track", runnerCount: 5, maxParticipants: 8, raceStatus: "running", bettingStatus: "closed" },
+  { id: "race-championship-final", time: "17:00", raceDate: "2026-06-15T17:00:00.000Z", name: "Championship Final", roundName: "Final round", distance: "2,000m", location: "Main Circuit", runnerCount: 5, maxParticipants: 8, raceStatus: "scheduled", bettingStatus: "scheduled" },
+  { id: "race-morning-classic", time: "10:30", raceDate: "2026-06-15T10:30:00.000Z", name: "Morning Classic", roundName: "Opening round", distance: "1,400m", location: "Main Circuit", runnerCount: 5, maxParticipants: 8, raceStatus: "completed", bettingStatus: "settled", resultStatus: "published" },
 ];
 
 export const tournamentContenders = [

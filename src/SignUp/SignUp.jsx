@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { saveRoleApplicationIntent } from "../auth/authStorage";
 import "../index.css";
@@ -14,6 +14,7 @@ const fallbackRoleOptions = [
 ];
 
 function SignUp() {
+  const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState("");
   const [isRoleOpen, setIsRoleOpen] = useState(false);
   const [roleOptions, setRoleOptions] = useState(fallbackRoleOptions);
@@ -24,7 +25,6 @@ function SignUp() {
     confirmPassword: "",
     terms: false,
   });
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const rolePickerRef = useRef(null);
@@ -70,7 +70,6 @@ function SignUp() {
   const chooseRole = (role) => {
     setSelectedRole(role.value);
     setError("");
-    setMessage("");
     setIsRoleOpen(false);
   };
 
@@ -78,7 +77,6 @@ function SignUp() {
 
   const updateField = (field, value) => {
     setError("");
-    setMessage("");
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -103,31 +101,22 @@ function SignUp() {
 
     setIsSubmitting(true);
     setError("");
-    setMessage("");
 
     try {
-      const data = await authApi.register({
+      await authApi.register({
         full_name: form.fullName,
         email: form.email,
         password: form.password,
       });
-      const verificationOtp = data.verification?.otp;
       saveRoleApplicationIntent(selectedRole, form.email);
-
-      if (verificationOtp) {
-        await authApi.verifyAccount(verificationOtp);
-        setMessage(
-          selectedRole === "spectator"
-            ? "Account created and verified. You can login now."
-            : "Account created and verified. Login next to submit your role application."
-        );
-      } else {
-        setMessage(
-          selectedRole === "spectator"
-            ? "Account created. Please verify your account before login."
-            : "Account created. After verification, login to submit your role application."
-        );
-      }
+      const email = form.email.trim().toLowerCase();
+      navigate(`/verify-account?email=${encodeURIComponent(email)}`, {
+        replace: true,
+        state: {
+          email,
+          requested: true,
+        },
+      });
     } catch (apiError) {
       setError(apiError.message || "Unable to create account. Please try again.");
     } finally {
@@ -147,12 +136,10 @@ function SignUp() {
             </span>
           </Link>
 
-          <p className="signup-page__eyebrow">REGISTER FOR THE TOURNAMENT</p>
-          <h1 className="signup-page__title">
-            Create your <span>race</span> account
-          </h1>
+          <p className="signup-page__eyebrow">GET STARTED</p>
+          <h1 className="signup-page__title">Create your account</h1>
           <p className="signup-page__description">
-            Register once to manage race registrations, horse details, schedules, results, and predictions.
+            Choose a role and enter your account details.
           </p>
 
           <form className="signup-page__form" onSubmit={handleSubmit}>
@@ -268,83 +255,41 @@ function SignUp() {
             </label>
 
             {error && <p className="auth-message auth-message--error">{error}</p>}
-            {message && <p className="auth-message auth-message--success">{message}</p>}
-
             <button className="signup-page__submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating account..." : "Sign Up"}
             </button>
 
-            <div className="signup-page__divider">
-              <span>or continue with</span>
-            </div>
-
-            <div className="signup-page__socials">
-              <button className="signup-page__social" type="button">
-                Google
-              </button>
-              <button className="signup-page__social" type="button">
-                Facebook
-              </button>
-            </div>
-
             <p className="signup-page__note">
-              Already have an account? <Link className="signup-page__link" to="/login">Login</Link>
+              Already have an account? <Link className="signup-page__link" to="/login">Sign in</Link>
             </p>
           </form>
         </div>
 
         <aside className="signup-page__panel signup-page__panel--intro signup-page__intro">
-          <p className="signup-page__eyebrow">START YOUR JOURNEY</p>
-          <h2 className="signup-page__title">
-            Build your racing profile and compete with <span>confidence</span>
-          </h2>
-          <p className="signup-page__description">
-            Your account unlocks race schedules, horse registration, jockey invitations, referee access, and spectator features.
-          </p>
+          <p className="signup-page__eyebrow">JOIN THE PADDOCK</p>
+          <h2 className="signup-page__title">Three steps to the <span>track</span></h2>
+          <p className="signup-page__description">Create, verify, and enter your workspace.</p>
 
           <div className="signup-page__intro-card">
             <ul className="signup-page__intro-list">
               <li>
                 <span className="signup-page__intro-badge">01</span>
-                <div>
-                  <h4>Role selection</h4>
-                  <p>Choose your role in the tournament system so the right tools and permissions are ready.</p>
-                </div>
+                <div><h4>Choose a role</h4><p>Select how you want to take part in race day.</p></div>
               </li>
               <li>
                 <span className="signup-page__intro-badge">02</span>
-                <div>
-                  <h4>Participation management</h4>
-                  <p>Once signed up, you can manage horses, jockey assignments, schedules, and results from one hub.</p>
-                </div>
+                <div><h4>Verify email</h4><p>Use the six-digit code sent to secure your account.</p></div>
               </li>
               <li>
                 <span className="signup-page__intro-badge">03</span>
-                <div>
-                  <h4>Tournament updates</h4>
-                  <p>Stay connected with announcements, rankings, prizes, and prediction results without leaving the system.</p>
-                </div>
+                <div><h4>Enter workspace</h4><p>Sign in and continue to spectator access or your role application.</p></div>
               </li>
             </ul>
-
-            <div className="signup-page__quote">
-              "A good sign up screen should feel like an invitation to the tournament, not a barrier."
-            </div>
           </div>
 
-          <div className="signup-page__stats" aria-label="Sign up page highlights">
-            <article className="signup-page__stat">
-              <strong>1 min</strong>
-              <span>setup time</span>
-            </article>
-            <article className="signup-page__stat">
-              <strong>3 steps</strong>
-              <span>to get started</span>
-            </article>
-            <article className="signup-page__stat">
-              <strong>100%</strong>
-              <span>matching style</span>
-            </article>
+          <div className="signup-page__intro-note">
+            <h3>What happens next</h3>
+            <p>Professional roles are reviewed after verification. You can still follow races as a spectator while waiting.</p>
           </div>
         </aside>
       </section>

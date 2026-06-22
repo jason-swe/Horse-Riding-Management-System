@@ -63,4 +63,26 @@ export const adminApi = {
       body: { admin_note: adminNote },
     });
   },
+
+  listRegistrations(params = {}) {
+    return apiRequest(withQuery("/registrations", params));
+  },
+
+  getRegistration(id) {
+    return apiRequest(`/registrations/${id}`);
+  },
+
+  approveRegistration(id, adminNote = "Approved") {
+    return apiRequest(`/registrations/${id}/approve`, {
+      method: "POST",
+      body: { admin_note: adminNote },
+    });
+  },
+
+  rejectRegistration(id, adminNote = "Rejected by admin review") {
+    return apiRequest(`/registrations/${id}/reject`, {
+      method: "POST",
+      body: { admin_note: adminNote },
+    });
+  },
 };

@@ -47,6 +47,34 @@ export const jockeyApi = {
     });
   },
 
+  acceptMeeting(id, responseMessage = "Accepted") {
+    return apiRequest(`/jockey-assignments/${id}/accept-meeting`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
+  rejectMeeting(id, responseMessage = "Rejected") {
+    return apiRequest(`/jockey-assignments/${id}/reject-meeting`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
+  confirmContract(id, responseMessage = "Contract confirmed") {
+    return apiRequest(`/jockey-assignments/${id}/confirm-contract`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
+  rejectContract(id, responseMessage = "Contract rejected") {
+    return apiRequest(`/jockey-assignments/${id}/reject-contract`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
   getSchedule(params = {}) {
     return apiRequest(withQuery("/jockeys/me/schedule", params));
   },
