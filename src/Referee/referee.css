@@ -1,0 +1,1145 @@
+.referee-page {
+  --referee-ink: #fff8ea;
+  --referee-copy: #e6ddc8;
+  --referee-muted: #c8bba4;
+  --referee-line: rgba(238, 231, 212, 0.18);
+  --referee-surface: rgba(238, 231, 212, 0.065);
+  --referee-orange: #ff7b2b;
+  background:
+    radial-gradient(circle at 78% 4%, rgba(255, 123, 43, 0.11), transparent 24rem),
+    linear-gradient(135deg, rgba(238, 231, 212, 0.025) 25%, transparent 25%) 0 0 / 2.4rem 2.4rem,
+    #14241b;
+  color: var(--referee-ink);
+  min-height: 100dvh;
+  padding: 0;
+}
+
+.referee-page .sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.referee-skip-link {
+  background: #eee7d4;
+  border-radius: 0 0 6px 0;
+  color: #14241b;
+  font-weight: 800;
+  left: 0;
+  padding: 0.7rem 1rem;
+  position: fixed;
+  top: 0;
+  transform: translateY(-120%);
+  transition: transform 160ms ease;
+  z-index: 20;
+}
+
+.referee-skip-link:focus {
+  transform: translateY(0);
+}
+
+.referee-page::before {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+  content: "";
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+.referee-page .referee-shell {
+  gap: 0;
+  grid-template-columns: 16.5rem minmax(0, 1fr);
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
+
+.referee-page .referee-sidebar,
+.referee-page .referee-content {
+  backdrop-filter: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.referee-page .referee-sidebar {
+  background: rgba(7, 20, 13, 0.58);
+  border-right: 1px solid var(--referee-line);
+  gap: 1.55rem;
+  padding: 1.5rem 1.25rem;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.referee-brand-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.referee-brand-row .brand-text {
+  display: none;
+}
+
+.referee-console-tag {
+  color: var(--referee-muted);
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.referee-duty-state {
+  align-items: center;
+  border-bottom: 1px solid var(--referee-line);
+  border-top: 1px solid var(--referee-line);
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.9rem 0;
+}
+
+.referee-duty-state__signal,
+.referee-focus-card__pulse {
+  background: var(--referee-orange);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.3rem rgba(255, 123, 43, 0.12);
+  flex: 0 0 auto;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.referee-duty-state div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.referee-duty-state strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.referee-duty-state span:last-child {
+  color: var(--referee-muted);
+  font-size: 0.68rem;
+}
+
+.referee-page .referee-nav {
+  gap: 0.35rem;
+}
+
+.referee-page .referee-nav a {
+  align-items: center;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  color: var(--referee-muted);
+  display: flex;
+  gap: 0.75rem;
+  min-height: 2.8rem;
+  padding: 0 0.85rem;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.referee-page .referee-nav a:hover {
+  background: rgba(238, 231, 212, 0.06);
+  color: var(--referee-ink);
+  transform: translateX(2px);
+}
+
+.referee-page .referee-nav a.active {
+  background: rgba(255, 123, 43, 0.1);
+  border-color: var(--referee-orange);
+  color: #ffd2b7;
+}
+
+.referee-authority {
+  border: 1px solid var(--referee-line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding: 1rem;
+}
+
+.referee-authority__heading,
+.referee-boundary {
+  align-items: center;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.referee-authority__heading {
+  color: #ffd2b7;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.referee-authority p {
+  color: var(--referee-copy);
+  font-size: 0.77rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.referee-boundary {
+  border-top: 1px solid var(--referee-line);
+  color: var(--referee-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  padding-top: 0.7rem;
+}
+
+.referee-page .referee-user-row {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.referee-page .referee-avatar {
+  background: #ff7b2b;
+  border-radius: 6px;
+  color: #17261d;
+  font-weight: 900;
+}
+
+.referee-page .referee-content {
+  gap: 0;
+  max-width: 100%;
+  overflow: visible;
+  padding: 0;
+}
+
+.referee-page .referee-header {
+  align-items: end;
+  border-bottom: 1px solid var(--referee-line);
+  min-height: 12.5rem;
+  padding: 2.4rem clamp(1.5rem, 4vw, 4.5rem) 2rem;
+  position: relative;
+}
+
+.referee-page .referee-header::after {
+  bottom: -1px;
+  content: "";
+  height: 2px;
+  left: clamp(1.5rem, 4vw, 4.5rem);
+  position: absolute;
+  width: 5.5rem;
+  background: var(--referee-orange);
+}
+
+.referee-header__copy {
+  max-width: 56rem;
+}
+
+.referee-page .admin-header__eyebrow,
+.referee-page .admin-panel__eyebrow {
+  color: #ff9b5e;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+}
+
+.referee-page .referee-header h1 {
+  color: var(--referee-ink);
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+  margin-top: 0.9rem;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+
+.referee-page .admin-header__description {
+  color: var(--referee-copy);
+  font-size: 0.94rem;
+  line-height: 1.65;
+  max-width: 66ch;
+  text-wrap: pretty;
+}
+
+.referee-page .referee-content__body {
+  display: grid;
+  gap: 1rem;
+  padding: 1.6rem clamp(1.5rem, 4vw, 4.5rem) 4rem;
+}
+
+.referee-page .admin-header__button {
+  background: var(--referee-orange);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 0.75rem 2rem rgba(5, 16, 10, 0.25);
+  color: #17261d;
+  gap: 0.5rem;
+  min-height: 2.65rem;
+  padding-inline: 1rem;
+}
+
+.referee-page .admin-header__button--ghost {
+  background: transparent;
+  border-color: rgba(238, 231, 212, 0.3);
+  box-shadow: none;
+  color: var(--referee-ink);
+}
+
+.referee-page .admin-header__button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+.referee-page .admin-header__button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.referee-page :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #ff9b5e;
+  outline-offset: 3px;
+}
+
+.referee-page .admin-panel,
+.referee-page .admin-metric-card {
+  background: var(--referee-surface);
+  border: 1px solid var(--referee-line);
+  border-radius: 8px;
+  padding: 1.2rem;
+}
+
+.referee-page .admin-panel p,
+.referee-page .admin-header__description,
+.referee-page .admin-list li,
+.referee-page .admin-metric-card__note {
+  color: var(--referee-copy);
+}
+
+.referee-command-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(13rem, 0.75fr) minmax(11rem, 0.55fr) minmax(21rem, 1.4fr);
+}
+
+.referee-command-card--primary {
+  background: #eee7d4;
+  border-radius: 8px;
+  color: #17261d;
+  display: flex;
+  flex-direction: column;
+  min-height: 18rem;
+  padding: 1.25rem;
+}
+
+.referee-command-card__top,
+.referee-command-card__foot {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.referee-command-card__top {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.referee-command-card--primary > strong {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(5rem, 9vw, 8rem);
+  letter-spacing: -0.08em;
+  line-height: 0.8;
+  margin-top: auto;
+}
+
+.referee-command-card--primary > p {
+  color: #3b4d42;
+  font-size: 0.86rem;
+  margin: 0.7rem 0 1.25rem;
+}
+
+.referee-command-card__foot {
+  border-top: 1px solid rgba(23, 38, 29, 0.2);
+  font-size: 0.75rem;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  padding-top: 0.8rem;
+}
+
+.referee-command-stack {
+  display: grid;
+  gap: 1rem;
+  grid-template-rows: 1fr 1fr;
+}
+
+.referee-command-stack article {
+  align-items: end;
+  background: rgba(238, 231, 212, 0.07);
+  border: 1px solid var(--referee-line);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.referee-command-stack article > svg {
+  color: #ff9b5e;
+  align-self: start;
+}
+
+.referee-command-stack div {
+  display: grid;
+  justify-items: end;
+}
+
+.referee-command-stack strong {
+  font-family: "Sora", sans-serif;
+  font-size: 2.5rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.referee-command-stack span {
+  color: var(--referee-muted);
+  font-size: 0.7rem;
+}
+
+.referee-focus-card {
+  background: rgba(7, 20, 13, 0.55);
+  border: 1px solid rgba(255, 123, 43, 0.35);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 18rem;
+  padding: 1.25rem;
+}
+
+.referee-focus-card__label {
+  align-items: center;
+  color: #ffb181;
+  display: flex;
+  font-size: 0.67rem;
+  font-weight: 800;
+  gap: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.referee-focus-card h2 {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  margin: 0.3rem 0 0;
+}
+
+.referee-focus-card p {
+  color: var(--referee-muted);
+  font-size: 0.73rem;
+  margin: 0;
+}
+
+.referee-focus-card dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: auto 0 0;
+}
+
+.referee-focus-card dl div {
+  align-items: center;
+  border-bottom: 1px solid var(--referee-line);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.55rem;
+}
+
+.referee-focus-card dt {
+  color: var(--referee-muted);
+  font-size: 0.68rem;
+}
+
+.referee-focus-card dd {
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.referee-focus-card > a,
+.referee-section-heading > a,
+.referee-race-card__footer a {
+  align-items: center;
+  color: #ffb181;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  width: fit-content;
+}
+
+.referee-phase-rail {
+  border-bottom: 1px solid var(--referee-line);
+  border-top: 1px solid var(--referee-line);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.referee-phase-rail article {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto auto 1fr;
+  padding: 1rem 1.25rem;
+}
+
+.referee-phase-rail article + article {
+  border-left: 1px solid var(--referee-line);
+}
+
+.referee-phase-rail__index {
+  color: #ff9b5e;
+  font-family: "Sora", sans-serif;
+  font-size: 0.66rem;
+}
+
+.referee-phase-rail svg {
+  color: var(--referee-muted);
+}
+
+.referee-phase-rail article > div:last-child {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.referee-phase-rail strong {
+  font-size: 0.8rem;
+}
+
+.referee-phase-rail span {
+  color: var(--referee-muted);
+  font-size: 0.68rem;
+}
+
+.referee-page .referee-section-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.referee-page .referee-section-heading h2 {
+  margin-top: 0.25rem;
+}
+
+.referee-page .admin-data-table__wrap {
+  border-radius: 4px;
+}
+
+.referee-page .admin-data-table {
+  color: var(--referee-copy);
+}
+
+.referee-page .admin-data-table th {
+  color: var(--referee-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.referee-page .admin-data-table :is(th, td) {
+  border-bottom-color: var(--referee-line);
+  padding-block: 0.85rem;
+}
+
+.referee-page .admin-data-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.referee-page .admin-data-table tbody tr:hover {
+  background: rgba(238, 231, 212, 0.055);
+}
+
+.referee-page .referee-table-link {
+  align-items: center;
+  color: var(--referee-ink);
+  display: inline-flex;
+  gap: 0.45rem;
+  text-decoration: none;
+}
+
+.referee-table-subline {
+  color: var(--referee-muted);
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+.referee-filter-bar {
+  align-items: center;
+  border-bottom: 1px solid var(--referee-line);
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(15rem, 1fr) minmax(10rem, auto);
+  padding: 0.25rem 0 1.25rem;
+}
+
+.referee-filter-bar__count,
+.referee-search-field,
+.referee-select-field {
+  align-items: center;
+  display: flex;
+}
+
+.referee-filter-bar__count {
+  color: var(--referee-muted);
+  font-size: 0.72rem;
+  gap: 0.45rem;
+  padding-right: 0.5rem;
+}
+
+.referee-search-field,
+.referee-select-field {
+  background: rgba(238, 231, 212, 0.06);
+  border: 1px solid var(--referee-line);
+  border-radius: 6px;
+  min-height: 2.8rem;
+}
+
+.referee-search-field {
+  gap: 0.65rem;
+  padding: 0 0.85rem;
+}
+
+.referee-search-field svg {
+  color: var(--referee-muted);
+  flex: 0 0 auto;
+}
+
+.referee-filter-bar input,
+.referee-filter-bar select {
+  background: transparent;
+  border: 0;
+  color: var(--referee-ink);
+  min-height: 2.7rem;
+  outline: 0;
+  width: 100%;
+}
+
+.referee-filter-bar input::placeholder {
+  color: var(--referee-muted);
+}
+
+.referee-select-field {
+  padding-inline: 0.65rem;
+}
+
+.referee-select-field option {
+  background: #14241b;
+}
+
+.referee-search-field:focus-within,
+.referee-select-field:focus-within {
+  border-color: #ff9b5e;
+  box-shadow: 0 0 0 3px rgba(255, 123, 43, 0.14);
+}
+
+.referee-page .referee-race-grid {
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.referee-page .referee-race-card {
+  display: grid;
+  gap: 0;
+  grid-template-columns: 4rem 1fr;
+  overflow: hidden;
+  padding: 0;
+}
+
+.referee-race-card__rail {
+  align-items: center;
+  background: rgba(238, 231, 212, 0.055);
+  border-right: 1px solid var(--referee-line);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 0.7rem;
+}
+
+.referee-race-card__rail span {
+  color: var(--referee-muted);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+}
+
+.referee-race-card__rail strong {
+  color: #ff9b5e;
+  font-family: "Sora", sans-serif;
+  font-size: 1.6rem;
+}
+
+.referee-race-card__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.15rem;
+}
+
+.referee-page .referee-race-card__header {
+  margin-bottom: 1rem;
+}
+
+.referee-page .referee-race-card__header h2 {
+  color: var(--referee-ink);
+  font-size: 1.35rem;
+  text-wrap: balance;
+}
+
+.referee-page .referee-race-card__meta {
+  gap: 0.7rem 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.referee-page .referee-race-card__meta > div {
+  align-items: center;
+  color: var(--referee-copy);
+  display: flex;
+  font-size: 0.75rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.referee-page .referee-race-card__meta svg {
+  color: #ff9b5e;
+  flex: 0 0 auto;
+}
+
+.referee-race-card__footer {
+  align-items: center;
+  border-top: 1px solid var(--referee-line);
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.8rem;
+}
+
+.referee-race-card__footer > span {
+  color: var(--referee-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.referee-empty-state {
+  align-items: center;
+  display: flex !important;
+  gap: 1rem;
+  min-height: 8rem;
+}
+
+.referee-empty-state svg {
+  color: #ff9b5e;
+}
+
+.referee-empty-state h2,
+.referee-empty-state p {
+  margin: 0;
+}
+
+.referee-violation-summary {
+  border-bottom: 1px solid var(--referee-line);
+  border-top: 1px solid var(--referee-line);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.referee-violation-summary article {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+}
+
+.referee-violation-summary article + article {
+  border-left: 1px solid var(--referee-line);
+}
+
+.referee-violation-summary span {
+  color: var(--referee-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.referee-violation-summary strong {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.referee-row-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.referee-row-actions button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--referee-line);
+  border-radius: 4px;
+  color: var(--referee-copy);
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  width: 2rem;
+}
+
+.referee-row-actions button:hover {
+  background: rgba(255, 123, 43, 0.1);
+  border-color: rgba(255, 123, 43, 0.45);
+  color: #ffb181;
+}
+
+.referee-page .referee-violation-modal {
+  border-radius: 8px;
+  width: min(48rem, 100%);
+}
+
+.referee-violation-form-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.referee-policy-preview {
+  background: rgba(238, 231, 212, 0.055);
+  border-left: 2px solid #ff9b5e;
+  border-radius: 0 6px 6px 0;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+}
+
+.referee-policy-preview--review {
+  background: rgba(240, 166, 44, 0.08);
+}
+
+.referee-policy-preview > div {
+  align-items: center;
+  color: #ffb181;
+  display: flex;
+  font-size: 0.68rem;
+  font-weight: 800;
+  gap: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.referee-policy-preview strong {
+  color: var(--referee-ink);
+  font-size: 0.9rem;
+}
+
+.referee-policy-preview p,
+.referee-policy-preview small {
+  color: var(--referee-copy);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.referee-policy-preview small {
+  color: var(--referee-muted);
+}
+
+.referee-decision-copy {
+  border-bottom: 1px solid var(--referee-line);
+  border-top: 1px solid var(--referee-line);
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem 0;
+}
+
+.referee-decision-copy p,
+.referee-decision-copy blockquote {
+  color: var(--referee-copy);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.referee-evidence-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.referee-evidence-links a {
+  border-bottom: 1px solid rgba(255, 123, 43, 0.55);
+  color: #ffb181;
+  font-size: 0.76rem;
+  padding-bottom: 0.12rem;
+}
+
+.referee-decision-copy blockquote {
+  border-left: 2px solid var(--referee-line);
+  color: var(--referee-muted);
+  font-size: 0.82rem;
+  padding-left: 0.8rem;
+}
+
+.referee-admin-review-note {
+  align-items: center;
+  color: #f6c659;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 0.45rem;
+}
+
+.referee-page .referee-action-grid {
+  gap: 0.7rem;
+}
+
+.referee-page .referee-action-card {
+  border-color: var(--referee-line);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.referee-page .referee-action-card p {
+  color: var(--referee-copy);
+  font-size: 0.82rem;
+}
+
+.referee-page .admin-field :is(input, select, textarea) {
+  border-color: var(--referee-line);
+  border-radius: 6px;
+}
+
+.referee-page .admin-field span {
+  color: var(--referee-copy);
+}
+
+.referee-page .admin-live-state {
+  border-radius: 6px;
+}
+
+.referee-page .referee-status-badge {
+  border-radius: 4px;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.5rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .referee-page .referee-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-page .referee-sidebar {
+    align-items: center;
+    border-bottom: 1px solid var(--referee-line);
+    border-right: 0;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    height: auto;
+    padding: 0.8rem 1.25rem;
+    position: static;
+  }
+
+  .referee-duty-state,
+  .referee-authority {
+    display: none;
+  }
+
+  .referee-page .referee-nav {
+    display: flex;
+    justify-content: center;
+  }
+
+  .referee-page .referee-user-row {
+    justify-self: end;
+  }
+
+  .referee-page .referee-header {
+    min-height: 10.5rem;
+  }
+
+  .referee-command-grid {
+    grid-template-columns: minmax(12rem, 0.7fr) minmax(10rem, 0.5fr) minmax(19rem, 1.2fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .referee-command-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .referee-focus-card {
+    grid-column: 1 / -1;
+  }
+
+  .referee-page .referee-race-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .referee-page .referee-sidebar {
+    align-items: stretch;
+    grid-template-columns: 1fr auto;
+  }
+
+  .referee-page .referee-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: stretch;
+  }
+
+  .referee-page .referee-nav a {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .referee-page .referee-user-row .admin-user-info {
+    display: none;
+  }
+
+  .referee-page .referee-header {
+    align-items: flex-start;
+    min-height: auto;
+    padding-block: 2rem 1.5rem;
+  }
+
+  .referee-page .referee-header h1 {
+    font-size: clamp(2.4rem, 12vw, 3.8rem);
+  }
+
+  .referee-page .admin-header__actions,
+  .referee-page .admin-header__actions > * {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .referee-page .referee-content__body {
+    padding-bottom: 2.5rem;
+  }
+
+  .referee-command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-command-card--primary {
+    min-height: 14rem;
+  }
+
+  .referee-command-stack {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: none;
+  }
+
+  .referee-focus-card {
+    grid-column: auto;
+  }
+
+  .referee-phase-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-phase-rail article + article {
+    border-left: 0;
+    border-top: 1px solid var(--referee-line);
+  }
+
+  .referee-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-violation-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .referee-violation-summary article:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--referee-line);
+  }
+
+  .referee-violation-summary article:nth-child(4) {
+    border-top: 1px solid var(--referee-line);
+  }
+
+  .referee-filter-bar__count {
+    padding: 0;
+  }
+
+  .referee-page .referee-section-heading {
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .referee-console-tag {
+    display: none;
+  }
+
+  .referee-page .referee-sidebar {
+    padding-inline: 0.85rem;
+  }
+
+  .referee-page .referee-nav a {
+    font-size: 0.76rem;
+    padding-inline: 0.55rem;
+  }
+
+  .referee-page .referee-header,
+  .referee-page .referee-content__body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .referee-page .referee-header::after {
+    left: 1rem;
+  }
+
+  .referee-command-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-violation-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-page .referee-race-card {
+    grid-template-columns: 3rem 1fr;
+  }
+
+  .referee-page .referee-race-card__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .referee-page .referee-race-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-race-card__footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .referee-page *,
+  .referee-page *::before,
+  .referee-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

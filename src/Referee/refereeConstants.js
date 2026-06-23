@@ -17,16 +17,6 @@ export const RESULT_STATUSES = {
   PUBLISHED: "published",
 };
 
-export const VIOLATION_TYPES = [
-  "dangerous_riding",
-  "lane_interference",
-  "equipment_violation",
-  "unsportsmanlike_conduct",
-  "other",
-];
-
-export const PENALTY_TYPES = ["warning", "time_penalty", "disqualification", "pending_review"];
-
 export function getRacePhase(status) {
   const value = String(status || "").toLowerCase();
   if (["running", "started", "ongoing", "in_progress"].includes(value)) return RACE_PHASES.DURING_RACE;

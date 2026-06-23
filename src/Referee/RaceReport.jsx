@@ -261,7 +261,7 @@ function RaceReport() {
                     <td>{violation.id}</td>
                     <td>{violation.type}</td>
                     <td>{violation.subjectName}</td>
-                    <td>{violation.penalty}</td>
+                    <td>{formatStatus(violation.penaltyType)}</td>
                     <td>{violation.description || "-"}</td>
                   </tr>
                 ))}

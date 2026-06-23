@@ -74,7 +74,7 @@ function RaceRow({ race, tournament }) {
         <div className="race-hub-row__meta">
           <span><Flag size={14} /> {race.distance}</span>
           <span><MapPin size={14} /> {race.location || tournament.location}</span>
-          <span><UsersRound size={14} /> {race.runnerCount || 0}/{race.maxParticipants || "-"} runners</span>
+          <span><UsersRound size={14} /> {race.runnerCount === null ? "Participant count unavailable" : `${race.runnerCount}/${race.maxParticipants || "-"} runners`}</span>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ function RaceRow({ race, tournament }) {
 
 function TournamentDetail() {
   const { tournamentId } = useParams();
-  const { error, isLoading, races, tournament, usedFallback } = useSpectatorTournamentDetail(tournamentId);
+  const { error, isLoading, races, tournament } = useSpectatorTournamentDetail(tournamentId);
   const [activeFilter, setActiveFilter] = useState("all");
 
   const sortedRaces = useMemo(() => [...races].sort((a, b) => {
@@ -130,9 +130,9 @@ function TournamentDetail() {
         <ArrowLeft size={16} /> Back to tournaments
       </Link>
 
-      {(error || usedFallback) && (
-        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {error ? "Live race data could not be refreshed. Showing the saved race schedule." : "Showing the saved race schedule until live tournament race data is available."}
+      {error && (
+        <section className="admin-live-state admin-live-state--warning" aria-live="polite">
+          {error} No sample schedule is being substituted.
         </section>
       )}
 
@@ -150,8 +150,8 @@ function TournamentDetail() {
           <dl className="race-hub-header__facts">
             <div><dt><MapPin size={15} /> Venue</dt><dd>{tournament.location}</dd></div>
             <div><dt><CalendarDays size={15} /> Race day</dt><dd>{tournament.date}</dd></div>
-            <div><dt><Flag size={15} /> Surface</dt><dd>{tournament.track}</dd></div>
-            <div><dt><Trophy size={15} /> Prize pool</dt><dd>{tournament.prize}</dd></div>
+            <div><dt><Flag size={15} /> Surface</dt><dd>{tournament.track || "Not published"}</dd></div>
+            <div><dt><Trophy size={15} /> Prize pool</dt><dd>{tournament.prize || "Not published"}</dd></div>
           </dl>
         </div>
       </header>
@@ -194,9 +194,9 @@ function TournamentDetail() {
           )) : (
             <div className="race-hub-empty" role="status">
               <Flag size={22} />
-              <strong>No races match this filter</strong>
-              <span>Choose another status to review the full tournament schedule.</span>
-              <button type="button" onClick={() => setActiveFilter("all")}>Show all races</button>
+              <strong>{races.length ? "No races match this filter" : "No races published"}</strong>
+              <span>{races.length ? "Choose another status to review the full tournament schedule." : "The live API has no race schedule for this tournament yet."}</span>
+              {races.length > 0 && <button type="button" onClick={() => setActiveFilter("all")}>Show all races</button>}
             </div>
           )}
         </div>

@@ -39,7 +39,7 @@ The frontend is a Vite + React single page application using `react-router-dom` 
 - `/admin`: Admin control center dashboard.
 - `/admin/:module`: Dynamic admin module page.
 
-Supported admin modules are configured in `src/Admin/adminModules.js`:
+Supported admin modules are routed by `src/Admin/AdminModulePage.jsx`:
 - `users`: user and role management.
 - `tournament`: tournament setup.
 - `schedule`: race calendar and race slots.
@@ -128,7 +128,8 @@ All referee routes are protected by the `race_referee` role.
   - Custom animated role dropdown with scrollable option list.
   - Primary submit and login link only; verification continues in the dedicated OTP screen.
 - Admin pages:
-  - Metric cards, panels, module summaries, filters, tables, modal forms, action rows, badges.
+  - Race-control shell, grouped navigation, priority dashboard, compact ledgers, 20-row pagination, focused detail panels, forms, action rows, and status badges.
+  - Jockey and referee directories use role-filtered account/profile data. Unsupported Admin modules are omitted from customer navigation.
 - Horse owner pages:
   - Owner dashboard shell with top navigation, hero summary, metrics, readiness progress, upcoming schedule, registration queue, quick actions, and notification cards.
   - Owner notification bell opens a floating Facebook-style notification list with outside click/Escape close.
@@ -154,6 +155,7 @@ All referee routes are protected by the `race_referee` role.
   - Each race uses one shared context for participants, checks, incidents, violations, result drafts, and reports.
   - Referee pages must clearly distinguish editable drafts from admin-confirmed or published states.
   - Missing APIs use explicit unavailable states; production UI never renders sample operational records.
+  - The Referee workspace uses a scoped race-control-desk shell in `src/Referee/referee.css`: compact official navigation, asymmetric command metrics, a three-phase rail, scan-first race files, square operational surfaces, orange action signals, and deliberate tablet/mobile collapse behavior.
 
 ## 4. Design System
 
@@ -161,6 +163,8 @@ All referee routes are protected by the `race_referee` role.
 - Sporty, premium, race-day dashboard feel.
 - Landing, auth, and spectator pages use a dark green + beige + orange identity.
 - Admin pages use a dense operations dashboard style with dark panels and compact tables.
+- Admin redesign is organized in `docs/ADMIN_REDESIGN_ROADMAP.md`. Segment 1 establishes the scoped race-control shell, grouped navigation, compact square surfaces, priority-lane dashboard, and workspace ledger. Later segments must extend this system instead of adding another Admin theme layer.
+- Admin copy is customer-facing only: remove implementation explanations and internal terms such as API, backend, mock, sample, preview, source record, or developer notes. Keep operational descriptions short. Admin lists use 20 rows per page and reset to page 1 when filters change.
 - Owner and jockey pages use a premium racing dashboard style with image-led heroes, compact operational cards, and athlete/stable context.
 
 ### Color Palette
@@ -307,7 +311,7 @@ The frontend uses an API-first model. Prototype mock data may remain in explicit
 - Jockey profile reads, assignments, invitations, schedule, results, and stats are API-backed; the target invitation flow with approved-registration gating, Meet link, and contract review still needs frontend follow-up.
 - Spectator tournament, race schedule, published results, and horse leaderboard reads are API-backed. A dedicated spectator published-result endpoint now exists; participants, predictions, and jockey aggregate rankings still lack the complete spectator contract required by their screens.
 - Race Referee dashboard/race reads, horse checks, violations, result drafts, and reports are partially API-backed. Backend lifecycle, readiness, finalize, penalty, violation-policy, and race-level confirm/publish contracts are available but still require frontend integration.
-- Admin users, status actions, role application queue, and approve/reject actions are API-backed. Most remaining admin operational modules still use module data.
+- Admin users, registrations, results, tournaments, rounds, races, jockey directory, and referee directory are connected. Horse registry and prediction management are not exposed in the Admin workspace.
 - `refereeData.js` is legacy production fallback and must be removed or moved to test-only fixtures. Other mock sources are tracked by their role-specific integration plans.
 
 Current integration flow:
@@ -336,7 +340,7 @@ Current integration flow:
 - Keep spectator pages scoped to `spectator.css`.
 - Keep owner pages scoped to the owner page/style files.
 - Keep jockey pages scoped to `src/pages/jockey/jockey.css` and reuse existing jockey shared classes before adding new ones.
-- Keep admin module behavior data-driven through `adminModules.js`.
+- Keep Admin route selection centralized in `AdminModulePage.jsx` and workflow behavior inside the dedicated command, competition, and registry components.
 - Reuse `DataTable` for tabular spectator/admin views unless a module needs a specialized layout.
 - Use `lucide-react` imports for all new icons.
 - Do not introduce new inline SVGs or generated icon assets.

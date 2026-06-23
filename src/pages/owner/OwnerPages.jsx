@@ -30,19 +30,9 @@ import {
   UsersRound,
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
-import {
-  availableTournaments,
-  ownerHorses,
-  ownerJockeys,
-  ownerNotifications,
-  ownerProfile,
-  ownerRegistrations,
-  ownerResults,
-  ownerSchedule,
-} from "./ownerData";
 import { ownerApi } from "../../api/ownerApi";
 import { readFileAsDataUri } from "../../utils/fileData";
-import { toHorsePayload, toOwnerJockey, toOwnerProfilePayload } from "./ownerAdapters";
+import { toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
 
 const statusClass = (status) => {
@@ -61,6 +51,11 @@ const compactRecordCode = (prefix, value) => {
   if (!value) return prefix;
   if (isMongoObjectId(value)) return `${prefix}-${String(value).slice(-6).toUpperCase()}`;
   return value;
+};
+
+const imageIndexForId = (value, length) => {
+  const hash = Array.from(String(value || "horse")).reduce((total, character) => total + character.charCodeAt(0), 0);
+  return hash % length;
 };
 
 const assignmentStatusLabel = (status) => ({
@@ -279,7 +274,7 @@ function OwnerHorseForm({ mode = "new" }) {
   const isEdit = mode === "edit";
   const navigate = useNavigate();
   const { horse: existingHorse, isLoading, error: loadError } = useOwnerHorse(isEdit ? horseId : null);
-  const horseIndex = ownerHorses.findIndex((horse) => horse.id === existingHorse?.id);
+  const horseIndex = imageIndexForId(existingHorse?.id || horseId, horseRosterImages.length);
   const horseImage = horseRosterImages[Math.max(horseIndex, 0) % horseRosterImages.length];
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -473,12 +468,9 @@ function OwnerHorseDetail() {
     return <div className="owner-empty owner-empty--error">{error || "Horse not found."}</div>;
   }
 
-  const horseIndex = ownerHorses.findIndex((item) => item.id === horse.id);
-  const horseImage = horseRosterImages[Math.max(horseIndex, 0) % horseRosterImages.length];
-  const registrations = ownerRegistrations.filter((item) => item.horseId === horse.id);
-  const schedule = ownerSchedule.filter((item) => item.horse === horse.name);
-  const results = ownerResults.filter((item) => item.horse === horse.name);
-  const latestResult = results[0];
+  const horseImage = horseRosterImages[imageIndexForId(horse.id, horseRosterImages.length)];
+  const registrations = approvalStatus?.registrations || [];
+  const schedule = registrations.map(toOwnerScheduleEntry);
 
   const handleDeactivate = async () => {
     if (!window.confirm(`Deactivate ${horse.name}?`)) return;
@@ -529,7 +521,7 @@ function OwnerHorseDetail() {
           { label: "Age", value: horse.age === "Not set" ? horse.age : `${horse.age} yrs`, icon: HeartPulse },
           { label: "Height", value: horse.height, icon: Flag },
           { label: "Weight", value: horse.weight, icon: Award },
-          { label: "Next race", value: horse.nextRace, icon: CalendarDays },
+          { label: "Next race", value: schedule[0]?.date || "Unavailable", icon: CalendarDays },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -564,8 +556,8 @@ function OwnerHorseDetail() {
             </div>
             <div>
               <span>Latest finish</span>
-              <strong>{latestResult ? `#${latestResult.position}` : "No result"}</strong>
-              <small>{latestResult ? `${latestResult.race} / ${latestResult.prize}` : "Results will appear after publication."}</small>
+              <strong>Unavailable</strong>
+              <small>The result API does not allow Horse Owner access.</small>
             </div>
           </div>
         </article>
@@ -658,19 +650,8 @@ function OwnerHorseDetail() {
             </div>
             <Trophy size={20} />
           </div>
-          <div className="owner-detail-result-list">
-            {results.map((result) => (
-              <div className="owner-detail-result" key={result.id}>
-                <span>{result.date}</span>
-                <div>
-                  <strong>{result.race}</strong>
-                  <small>{result.time}</small>
-                </div>
-                <strong>#{result.position}</strong>
-                <span>{result.prize}</span>
-              </div>
-            ))}
-            {results.length === 0 && <div className="owner-empty owner-empty--compact">No published results yet.</div>}
+          <div className="owner-empty owner-empty--compact" role="status">
+            Published results are unavailable for the Horse Owner role in the current backend contract.
           </div>
         </article>
       </section>
@@ -687,9 +668,9 @@ function OwnerRegistrations() {
     error: registrationsError,
     reload: reloadRegistrations,
   } = useOwnerRegistrations();
-  const horses = liveHorses.length ? liveHorses : ownerHorses;
-  const tournaments = liveTournaments.length ? liveTournaments : availableTournaments.map((name, index) => ({ id: `sample-${index}`, name }));
-  const registrations = liveRegistrations.length ? liveRegistrations : ownerRegistrations;
+  const horses = liveHorses;
+  const tournaments = liveTournaments;
+  const registrations = liveRegistrations;
   const pendingCount = registrations.filter((item) => item.status === "Pending" || item.status === "Review").length;
   const approvedCount = registrations.filter((item) => item.status === "Approved").length;
   const [races, setRaces] = useState([]);
@@ -721,7 +702,7 @@ function OwnerRegistrations() {
     let cancelled = false;
 
     async function loadRaces() {
-      if (!selectedTournament?.id || String(selectedTournament.id).startsWith("sample-")) {
+      if (!selectedTournament?.id) {
         setRaces([]);
         return;
       }
@@ -822,9 +803,17 @@ function OwnerRegistrations() {
 
   return (
     <div className="owner-registration-page">
-      {(horsesError || tournamentsError || registrationsError || !liveHorses.length || !liveTournaments.length || !liveRegistrations.length) && (
-        <section className={`admin-live-state ${horsesError || tournamentsError || registrationsError ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {horsesError || tournamentsError || registrationsError || "Showing sample registration data until backend owner registrations/tournaments/horses are available."}
+      {(horsesError || tournamentsError || registrationsError) && (
+        <section className="admin-live-state admin-live-state--warning" aria-live="polite">
+          {horsesError || tournamentsError || registrationsError}
+        </section>
+      )}
+
+      {!horsesError && !tournamentsError && !registrationsError && (!horses.length || !tournaments.length) && (
+        <section className="admin-live-state" aria-live="polite">
+          {!horses.length
+            ? "Add an active horse profile before submitting a race registration."
+            : "No tournaments are currently available for registration."}
         </section>
       )}
 
@@ -853,8 +842,8 @@ function OwnerRegistrations() {
           </div>
 
           <div className="owner-form-grid owner-form-grid--single">
-            <FormSelect label="Horse" value={entry.horse} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
-            <FormSelect label="Tournament" value={entry.tournament} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
+            <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
+            <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
             <FormSelect label="Race" value={entry.race || "No race available"} options={races.length ? races.map((race) => race.name) : ["No race available"]} onChange={(value) => updateEntry("race", value)} />
             <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
@@ -866,9 +855,9 @@ function OwnerRegistrations() {
           </div>
 
           <div className="owner-form-actions">
-            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Registration submitted to API.</span>}
+            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Registration submitted.</span>}
             {error && <span className="owner-success owner-success--error">{error}</span>}
-            <button className="owner-button owner-button--primary" disabled={isSubmitting} type="submit">
+            <button className="owner-button owner-button--primary" disabled={isSubmitting || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
               {isSubmitting ? "Submitting..." : "Submit Entry"}
             </button>
           </div>
@@ -920,7 +909,7 @@ function OwnerRegistrations() {
                 {item.status !== "Cancelled" && item.status !== "Rejected" && (
                   <button
                     className="owner-button"
-                    disabled={cancellingId === item.id || !liveRegistrations.length}
+                    disabled={cancellingId === item.id}
                     onClick={() => handleCancelRegistration(item)}
                     type="button"
                   >
@@ -930,6 +919,11 @@ function OwnerRegistrations() {
               </div>
             </div>
           ))}
+          {registrations.length === 0 && (
+            <div className="owner-empty owner-empty--compact" role="status">
+              No race registrations have been submitted yet.
+            </div>
+          )}
         </div>
       </article>
     </div>
@@ -965,11 +959,11 @@ function OwnerJockeys() {
     meetingUrl: "",
     meetingTime: "",
   });
-  const jockeys = (liveJockeys.length ? liveJockeys : ownerJockeys).map((jockey) => ({
+  const jockeys = liveJockeys.map((jockey) => ({
     ...jockey,
     status: localStatuses[jockey.id] || jockey.status,
   }));
-  const horses = liveHorses.length ? liveHorses : ownerHorses;
+  const horses = liveHorses;
   const updateStatus = (id, status) => setLocalStatuses((current) => ({ ...current, [id]: status }));
   const selectedJockey = jockeys.find((jockey) => jockey.id === selectedJockeyId) ?? jockeys[0];
 
@@ -1231,9 +1225,19 @@ function OwnerJockeys() {
 
   return (
     <div className="owner-jockey-page">
-      {(error || horsesError || registrationsError || !liveJockeys.length || !liveHorses.length || !liveRegistrations.length) && (
-        <section className={`admin-live-state ${error || horsesError || registrationsError ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {error || horsesError || registrationsError || "Showing sample jockey board until backend jockey, horse, and registration data is available."}
+      {(error || horsesError || registrationsError) && (
+        <section className="admin-live-state admin-live-state--warning" aria-live="polite">
+          {error || horsesError || registrationsError}
+        </section>
+      )}
+
+      {!error && !horsesError && !registrationsError && (!jockeys.length || !horses.length || !liveRegistrations.length) && (
+        <section className="admin-live-state" aria-live="polite">
+          {!jockeys.length
+            ? "No active jockey profiles are currently available."
+            : !horses.length
+              ? "Add an active horse profile before creating a jockey invitation."
+              : "No race registrations are available. Submit an entry and wait for approval before inviting a jockey."}
         </section>
       )}
 
@@ -1596,6 +1600,11 @@ function OwnerJockeys() {
             </article>
           );
         })}
+        {jockeys.length === 0 && (
+          <div className="owner-empty" role="status">
+            No active jockey profiles are available for invitation.
+          </div>
+        )}
       </section>
     </div>
   );
@@ -1603,11 +1612,17 @@ function OwnerJockeys() {
 
 function OwnerSchedule() {
   const [filter, setFilter] = useState("All");
+  const { registrations, isLoading, error } = useOwnerRegistrations();
+  const ownerSchedule = registrations.map(toOwnerScheduleEntry);
   const visibleRaces = ownerSchedule.filter((race) => filter === "All" || race.status === filter);
   const confirmedCount = ownerSchedule.filter((race) => race.status === "Confirmed").length;
   const pendingCount = ownerSchedule.filter((race) => race.status === "Pending").length;
-  const reviewCount = ownerSchedule.filter((race) => race.status === "Review").length;
+  const closedCount = ownerSchedule.filter((race) => race.status === "Closed").length;
   const featuredRace = visibleRaces[0] ?? ownerSchedule[0];
+
+  if (isLoading) {
+    return <div className="owner-schedule-page"><LoadingSkeleton ariaLabel="Loading owner schedule" rows={5} variant="cards" /></div>;
+  }
 
   return (
     <div className="owner-schedule-page">
@@ -1619,9 +1634,19 @@ function OwnerSchedule() {
           <p>Review date, venue, round, horse, jockey, and confirmation status in one race-day board.</p>
         </div>
         <aside className="owner-schedule-hero__panel">
-          <span className={`owner-badge ${statusClass(featuredRace.status)}`}>{featuredRace.status}</span>
-          <strong>{featuredRace.race}</strong>
-          <p>{featuredRace.time} / {featuredRace.venue}</p>
+          {featuredRace ? (
+            <>
+              <span className={`owner-badge ${statusClass(featuredRace.status)}`}>{featuredRace.status}</span>
+              <strong>{featuredRace.race}</strong>
+              <p>{featuredRace.time} / {featuredRace.venue}</p>
+            </>
+          ) : (
+            <>
+              <span className="owner-badge">No entries</span>
+              <strong>Schedule unavailable</strong>
+              <p>Submit a race registration to create an owner schedule entry.</p>
+            </>
+          )}
         </aside>
       </section>
 
@@ -1630,7 +1655,7 @@ function OwnerSchedule() {
           { label: "All slots", value: ownerSchedule.length, note: "Race windows", icon: CalendarDays },
           { label: "Confirmed", value: confirmedCount, note: "Ready for race day", icon: BadgeCheck },
           { label: "Pending", value: pendingCount, note: "Waiting on admin", icon: ClipboardCheck },
-          { label: "Review", value: reviewCount, note: "Needs follow-up", icon: Flag },
+          { label: "Closed", value: closedCount, note: "Rejected or cancelled", icon: Flag },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -1651,7 +1676,7 @@ function OwnerSchedule() {
             <h2>{filter === "All" ? "All race slots" : `${filter} race slots`}</h2>
           </div>
           <div className="owner-segmented owner-segmented--schedule">
-            {["All", "Confirmed", "Pending", "Review"].map((item) => (
+            {["All", "Confirmed", "Pending", "Closed"].map((item) => (
               <button className={filter === item ? "owner-segmented__active" : ""} key={item} type="button" onClick={() => setFilter(item)}>{item}</button>
             ))}
           </div>
@@ -1659,12 +1684,11 @@ function OwnerSchedule() {
 
         <div className="owner-schedule-list">
           {visibleRaces.map((race) => {
-            const [date, time] = race.time.split(", ");
             return (
               <div className="owner-schedule-slot" key={race.id}>
                 <div className="owner-schedule-slot__time">
-                  <span>{date}</span>
-                  <strong>{time}</strong>
+                  <span>{race.date}</span>
+                  <strong>{race.clock}</strong>
                 </div>
                 <div className="owner-schedule-slot__race">
                   <span className="owner-kicker">{race.id} / {race.round}</span>
@@ -1682,7 +1706,8 @@ function OwnerSchedule() {
               </div>
             );
           })}
-          {visibleRaces.length === 0 && <div className="owner-empty owner-empty--compact">No race slots match this filter.</div>}
+          {error && <div className="owner-empty owner-empty--compact owner-empty--error">{error}</div>}
+          {!error && visibleRaces.length === 0 && <div className="owner-empty owner-empty--compact">No race slots match this filter.</div>}
         </div>
       </article>
     </div>
@@ -1690,33 +1715,28 @@ function OwnerSchedule() {
 }
 
 function OwnerResults() {
-  const totalPrize = "$34,200";
-  const bestResult = ownerResults.reduce((best, result) => (result.position < best.position ? result : best), ownerResults[0]);
-  const prizeTotal = ownerResults.reduce((sum, result) => sum + Number(result.prize.replace(/[$,]/g, "")), 0);
-  const podiumCount = ownerResults.filter((result) => result.position <= 3).length;
-
   return (
     <div className="owner-results-page">
       <section className="owner-results-hero">
         <img src={resultsHeroImage} alt="Race trophy display for owner results and prizes" />
         <div className="owner-results-hero__copy">
           <p className="owner-eyebrow">Results and prizes</p>
-          <h1>Review finishes and season earnings.</h1>
-          <p>Prize tracking is grouped with official race outcomes so every owner decision has recent performance context.</p>
+          <h1>Owner results need a backend contract.</h1>
+          <p>The current result endpoint does not permit Horse Owner access, so this page does not display sample outcomes.</p>
         </div>
         <aside className="owner-results-hero__panel">
-          <span className="owner-badge owner-badge--green"><Trophy size={14} /> Best finish</span>
-          <strong>#{bestResult.position}</strong>
-          <p>{bestResult.horse} / {bestResult.race}</p>
+          <span className="owner-badge"><Trophy size={14} /> Results unavailable</span>
+          <strong>No owner feed</strong>
+          <p>Published finishes and prize totals cannot be read by this role yet.</p>
         </aside>
       </section>
 
       <section className="owner-results-stats" aria-label="Results summary">
         {[
-          { label: "Season earnings", value: ownerProfile.earnings, note: "All settled prizes", icon: Trophy },
-          { label: "Recent prizes", value: `$${prizeTotal.toLocaleString()}`, note: "Listed results total", icon: Award },
-          { label: "Published", value: ownerResults.length, note: "Official outcomes", icon: Flag },
-          { label: "Podiums", value: podiumCount, note: "Top-three finishes", icon: BadgeCheck },
+          { label: "Season earnings", value: "Unavailable", note: "No owner prize aggregate", icon: Trophy },
+          { label: "Recent prizes", value: "Unavailable", note: "No prize field is exposed", icon: Award },
+          { label: "Published", value: "Unavailable", note: "Result access is role restricted", icon: Flag },
+          { label: "Podiums", value: "Unavailable", note: "Cannot derive owner finishes", icon: BadgeCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -1733,14 +1753,14 @@ function OwnerResults() {
       <section className="owner-results-layout">
         <article className="owner-results-feature">
           <div>
-            <span className="owner-kicker">Prize focus</span>
-            <h2>{totalPrize} recently settled</h2>
-            <p>Use the latest published finishes to decide where to register, which jockeys to keep paired, and how to pace the season.</p>
+            <span className="owner-kicker">Contract status</span>
+            <h2>Sample prize values have been removed.</h2>
+            <p>A future owner-scoped published-results endpoint must provide horse results and settled prizes before these summaries can be calculated.</p>
           </div>
           <div className="owner-results-feature__facts">
-            <div><span>Top horse</span><strong>{bestResult.horse}</strong></div>
-            <div><span>Top race</span><strong>{bestResult.race}</strong></div>
-            <div><span>Winning time</span><strong>{bestResult.time}</strong></div>
+            <div><span>Top horse</span><strong>Unavailable</strong></div>
+            <div><span>Top race</span><strong>Unavailable</strong></div>
+            <div><span>Winning time</span><strong>Unavailable</strong></div>
           </div>
         </article>
 
@@ -1753,22 +1773,9 @@ function OwnerResults() {
             <Trophy size={20} />
           </div>
           <div className="owner-results-list">
-            {ownerResults.map((result) => (
-              <div className="owner-results-row" key={result.id}>
-                <time className="owner-results-row__date">{result.date}</time>
-                <div className="owner-results-row__main">
-                  <span className="owner-kicker">{result.id}</span>
-                  <h3>{result.race}</h3>
-                  <small>{result.horse}</small>
-                </div>
-                <div className="owner-results-row__metrics">
-                  <div><span>Position</span><strong>#{result.position}</strong></div>
-                  <div><span>Time</span><strong>{result.time}</strong></div>
-                  <div><span>Prize</span><strong>{result.prize}</strong></div>
-                </div>
-                <span className={`owner-badge ${statusClass(result.status)}`}>{result.status}</span>
-              </div>
-            ))}
+            <div className="owner-empty" role="status">
+              Published race results are unavailable for Horse Owner accounts in the current backend contract.
+            </div>
           </div>
         </article>
       </section>
@@ -1862,9 +1869,9 @@ function OwnerProfile() {
 
       <section className="owner-profile-stats" aria-label="Owner account summary">
         {[
-          { label: "Season", value: profile.season, note: "Current profile cycle", icon: CalendarDays },
-          { label: "Win rate", value: profile.winRate, note: "Stable performance", icon: Trophy },
-          { label: "Earnings", value: profile.earnings, note: "Settled prizes", icon: Award },
+          { label: "Season", value: profile.season, note: "No season aggregate", icon: CalendarDays },
+          { label: "Win rate", value: profile.winRate, note: "No owner result access", icon: Trophy },
+          { label: "Earnings", value: profile.earnings, note: "No owner prize aggregate", icon: Award },
           { label: "Status", value: profile.status, note: "Account access", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
@@ -1909,7 +1916,7 @@ function OwnerProfile() {
           <div className="owner-profile-verify__body">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
             <strong>{profile.season}</strong>
-            <p>Account can submit horse registrations, manage jockey assignments, and track prize outcomes.</p>
+            <p>Account can submit horse registrations and manage jockey assignments. Prize outcomes require a future owner API.</p>
           </div>
         </aside>
       </section>
@@ -1968,9 +1975,9 @@ function OwnerProfile() {
             </div>
             <BadgeCheck size={20} />
           </div>
-          <ul>
-            {ownerNotifications.map((item) => <li key={item}><Trophy size={16} /><span>{item}</span></li>)}
-          </ul>
+          <div className="owner-empty owner-empty--compact" role="status">
+            Owner notifications are unavailable because the backend does not expose a notification feed yet.
+          </div>
         </article>
 
         <article className="owner-profile-preferences">
@@ -1981,10 +1988,10 @@ function OwnerProfile() {
             </div>
             <UsersRound size={20} />
           </div>
-          <div className="owner-profile-preference-list">
-            <label><input type="checkbox" defaultChecked /><span>Race schedule updates</span></label>
-            <label><input type="checkbox" defaultChecked /><span>Jockey invitation responses</span></label>
-            <label><input type="checkbox" defaultChecked /><span>Registration approval alerts</span></label>
+          <div className="owner-profile-preference-list" aria-disabled="true">
+            <label><input disabled type="checkbox" /><span>Race schedule updates</span></label>
+            <label><input disabled type="checkbox" /><span>Jockey invitation responses</span></label>
+            <label><input disabled type="checkbox" /><span>Registration approval alerts</span></label>
           </div>
         </article>
       </section>

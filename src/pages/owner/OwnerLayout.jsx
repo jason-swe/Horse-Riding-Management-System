@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Bell, CheckCircle2, Trophy, UserRound } from "lucide-react";
+import { Bell, UserRound } from "lucide-react";
 import LogoutButton from "../../auth/LogoutButton";
-import { ownerNotifications } from "./ownerData";
 import "./owner.css";
 
 const navItems = [
@@ -73,7 +72,7 @@ function OwnerLayout() {
               type="button"
             >
               <Bell size={18} />
-              <span>{ownerNotifications.length}</span>
+              <span>0</span>
             </button>
 
             <aside className={`owner-notification-popover ${notificationsOpen ? "is-open" : ""}`} aria-label="Owner notification list">
@@ -82,23 +81,17 @@ function OwnerLayout() {
                   <span className="owner-kicker">Notifications</span>
                   <h2>Stable alerts</h2>
                 </div>
-                <span className="owner-badge owner-badge--amber">{ownerNotifications.length} new</span>
+                <span className="owner-badge">Unavailable</span>
               </div>
 
               <div className="owner-notification-popover__list">
-                {ownerNotifications.map((item, index) => (
-                  <Link className="owner-notification-item" key={item} onClick={() => setNotificationsOpen(false)} to="/owner/profile">
-                    <span className="owner-notification-item__icon">{index === 0 ? <CheckCircle2 size={16} /> : <Trophy size={16} />}</span>
-                    <span>
-                      <strong>{item}</strong>
-                      <small>{index === 0 ? "Just now" : index === 1 ? "12 min ago" : "Today"}</small>
-                    </span>
-                  </Link>
-                ))}
+                <div className="owner-empty owner-empty--compact" role="status">
+                  The backend does not expose an owner notification feed yet.
+                </div>
               </div>
 
               <Link className="owner-notification-popover__footer" onClick={() => setNotificationsOpen(false)} to="/owner/profile">
-                View profile notifications
+                View profile status
               </Link>
             </aside>
           </div>

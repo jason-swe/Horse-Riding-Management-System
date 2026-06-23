@@ -706,6 +706,119 @@
   color: #ffd56a;
 }
 
+.spectator-api-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.spectator-api-state button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgba(240, 161, 92, 0.42);
+  border-radius: 6px;
+  color: var(--spectator-text-strong);
+  background: rgba(240, 161, 92, 0.12);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.spectator-api-state button:hover {
+  background: rgba(240, 161, 92, 0.2);
+}
+
+.spectator-api-state button:focus-visible {
+  outline: 2px solid var(--spectator-accent);
+  outline-offset: 2px;
+}
+
+.results-unavailable-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.results-unavailable-state strong {
+  color: var(--spectator-text-strong);
+}
+
+.lb-tab__note {
+  color: var(--spectator-text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.lb-unavailable {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.08);
+}
+
+.lb-unavailable > svg {
+  color: var(--spectator-accent);
+}
+
+.lb-unavailable h1,
+.lb-unavailable p {
+  margin: 0;
+}
+
+.lb-unavailable h1 {
+  max-width: 22ch;
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  line-height: 1.08;
+}
+
+.lb-unavailable > p:last-of-type {
+  max-width: 68ch;
+  color: var(--spectator-text-soft);
+  line-height: 1.7;
+}
+
+.lb-unavailable button {
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid rgba(240, 161, 92, 0.44);
+  border-radius: 6px;
+  color: #1d3024;
+  background: var(--spectator-accent);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lb-unavailable button:hover {
+  background: #f4b174;
+}
+
+.lb-unavailable button:focus-visible {
+  outline: 2px solid var(--spectator-text-strong);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .spectator-api-state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .spectator-api-state button {
+    min-height: 44px;
+  }
+}
+
 /* Results page redesign */
 .results-page {
   display: grid;

@@ -1,30 +1,25 @@
 import { useState } from "react";
-import { Award, CircleDollarSign, Clock3, Flag, History, Medal, Timer, Trophy } from "lucide-react";
+import { Award, Clock3, Flag, History, Medal, Timer, Trophy } from "lucide-react";
 import DataTable from "../../components/DataTable.jsx";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { useSpectatorRaceResults } from "./useSpectatorData.js";
 import "./spectator.css";
 
-const history = [
-  { race: "Kentucky Derby Classic", pick: "Thunderbolt", result: "Won", amount: "200 pts", odds: "2.10x", reward: "420 pts", settled: "12 May, 19:42" },
-  { race: "Royal Ascot Qualifier", pick: "Storm Chaser", result: "Lost", amount: "120 pts", odds: "3.40x", reward: "0 pts", settled: "09 May, 21:18" },
-  { race: "Dubai Sprint Heat", pick: "Silver Flash", result: "Won", amount: "150 pts", odds: "2.40x", reward: "360 pts", settled: "04 May, 20:05" },
-];
-
-const summaryStats = [
-  { label: "Published races", value: "24", detail: "+3 this week", icon: Flag },
-  { label: "Fastest time", value: "1:10.42", detail: "Thunderbolt", icon: Timer },
-  { label: "Rewards paid", value: "960 pts", detail: "Settled wallet", icon: CircleDollarSign },
-  { label: "Hit rate", value: "47.2%", detail: "Last 30 picks", icon: Award },
-];
-
 const Results = () => {
   const [view, setView] = useState("results");
-  const { error, isLoading, results: liveResults, usedFallback } = useSpectatorRaceResults();
+  const { error, isLoading, results: liveResults } = useSpectatorRaceResults();
   const displayResults = liveResults;
-  const latestWinner = displayResults[0];
-  const winningBets = history.filter((item) => item.result === "Won").length;
-  const visibleRows = view === "results" ? displayResults : history;
+  const latestWinner = displayResults.find((result) => Number(result.position) === 1) || null;
+  const publishedRaceCount = new Set(displayResults.map((result) => result.raceId || result.race)).size;
+  const scoredResults = displayResults.filter((result) => Number.isFinite(Number(result.score)));
+  const timedResults = displayResults.filter((result) => Number.isFinite(Number(result.time)));
+  const fastestResult = timedResults.reduce((fastest, result) => !fastest || Number(result.time) < Number(fastest.time) ? result : fastest, null);
+  const summaryStats = [
+    { label: "Published races", value: publishedRaceCount, detail: `${displayResults.length} official finishes`, icon: Flag },
+    { label: "Fastest time", value: fastestResult?.time ?? "-", detail: fastestResult?.horse || "No timed result", icon: Timer },
+    { label: "Result entries", value: displayResults.length, detail: "Published by Admin", icon: Medal },
+    { label: "Scored entries", value: scoredResults.length, detail: "Backend final score", icon: Award },
+  ];
 
   const resultColumns = [
     { header: "Pos", field: "position", render: (row) => (
@@ -44,23 +39,7 @@ const Results = () => {
         {row.status}
       </span>
     ) },
-    { header: "Reward", field: "reward", render: (row) => <span className="results-reward">{row.reward}</span> },
-  ];
-
-  const historyColumns = [
-    { header: "Race", field: "race" },
-    { header: "Pick", field: "pick", render: (row) => (
-      <span className="results-competitor">
-        <strong>{row.pick}</strong>
-        <small>Odds {row.odds}</small>
-      </span>
-    ) },
-    { header: "Result", field: "result", render: (row) => (
-      <span className={`results-status ${row.result === "Won" ? "results-status--won" : "results-status--lost"}`}>{row.result}</span>
-    ) },
-    { header: "Amount", field: "amount" },
-    { header: "Reward", field: "reward", render: (row) => <span className="results-reward">{row.reward}</span> },
-    { header: "Settled", field: "settled" },
+    { header: "Score", field: "score", render: (row) => <span className="results-reward">{row.score}</span> },
   ];
 
   if (isLoading) {
@@ -69,23 +48,23 @@ const Results = () => {
 
   return (
     <section className="spectator-page results-page">
-      {(error || usedFallback) && (
-        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {error || "Showing sample race results until published backend results are available."}
+      {error && (
+        <section className="admin-live-state admin-live-state--warning" aria-live="polite">
+          {error} No sample results are being substituted.
         </section>
       )}
 
       <div className="results-hero">
         <div className="results-hero__copy">
           <p className="spectator-eyebrow">Official results</p>
-          <h1 className="results-title">Race standings with the reward trail attached.</h1>
+          <h1 className="results-title">Official race standings from the published ledger.</h1>
           <p className="results-copy">
-            Track final standings, confirmed times, and your reward history after each published race.
+            Track final positions, confirmed times, and backend scores after each result is published.
           </p>
           <div className="results-hero__meta" aria-label="Latest result summary">
-            <span><Clock3 size={15} /> Published 18 minutes ago</span>
+            <span><Clock3 size={15} /> {latestWinner?.publishedAt ? `Published ${new Date(latestWinner.publishedAt).toLocaleDateString()}` : "Awaiting published result"}</span>
             <span><Trophy size={15} /> {latestWinner?.horse || "No winner yet"}</span>
-            <span><Medal size={15} /> {winningBets} winning slips</span>
+            <span><Medal size={15} /> {displayResults.length} official finishes</span>
           </div>
         </div>
         {latestWinner ? (
@@ -95,7 +74,7 @@ const Results = () => {
             <p>{latestWinner.race} / lane {latestWinner.lane} / official time {latestWinner.time}</p>
             <div className="results-winner-card__footer">
               <span className="results-status results-status--official">Published</span>
-              <span>{latestWinner.reward}</span>
+              <span>{latestWinner.score === "-" ? "Score unavailable" : `${latestWinner.score} pts`}</span>
             </div>
           </aside>
         ) : (
@@ -137,16 +116,20 @@ const Results = () => {
             <button className={`results-tab ${view === "history" ? "results-tab--active" : ""}`} type="button" onClick={() => setView("history")}>
               <History size={16} />
               Betting history
-              <span>{history.length}</span>
+              <span>Unavailable</span>
             </button>
           </div>
         </div>
 
-        <DataTable
-          columns={view === "results" ? resultColumns : historyColumns}
-          data={visibleRows}
-          emptyMessage="No results available."
-        />
+        {view === "results" ? (
+          <DataTable columns={resultColumns} data={displayResults} emptyMessage="No published race results are available." />
+        ) : (
+          <div className="spectator-empty-state results-unavailable-state" role="status">
+            <History size={22} />
+            <strong>Betting history is unavailable</strong>
+            <span>The backend does not expose bet submission, settlement, wallet, or history routes yet.</span>
+          </div>
+        )}
       </div>
     </section>
   );

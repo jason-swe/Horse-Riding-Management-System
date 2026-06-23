@@ -26,6 +26,14 @@ export const refereeApi = {
     return apiRequest(`/races/${id}/participants`);
   },
 
+  startRace(id) {
+    return apiRequest(`/races/${id}/start`, { method: "POST" });
+  },
+
+  completeRace(id) {
+    return apiRequest(`/races/${id}/complete`, { method: "POST" });
+  },
+
   listRaceResults(params = {}) {
     return apiRequest(withQuery("/race-results", params));
   },
@@ -44,6 +52,22 @@ export const refereeApi = {
     });
   },
 
+  getRaceResultParticipants(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/participants`);
+  },
+
+  getRaceResultReadiness(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/readiness`);
+  },
+
+  finalizeRaceResults(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/finalize`, { method: "POST" });
+  },
+
+  applyRaceResultPenalties(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/apply-penalties`, { method: "POST" });
+  },
+
   listViolations(params = {}) {
     return apiRequest(withQuery("/violations", params));
   },
@@ -60,6 +84,26 @@ export const refereeApi = {
       method: "PATCH",
       body: payload,
     });
+  },
+
+  getViolationOptions() {
+    return apiRequest("/violations/options");
+  },
+
+  previewViolationPenalty(payload) {
+    return apiRequest("/violations/penalty-preview", { method: "POST", body: payload });
+  },
+
+  getViolation(id) {
+    return apiRequest(`/violations/${id}`);
+  },
+
+  confirmViolation(id, decision) {
+    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body: { decision } });
+  },
+
+  dismissViolation(id, decision) {
+    return apiRequest(`/violations/${id}/dismiss`, { method: "POST", body: { decision } });
   },
 
   listHorseChecks(params = {}) {

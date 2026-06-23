@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../api/adminApi";
 import {
   adaptAdminUserDetail,
+  adaptAdminRaceResultDetail,
+  adaptAdminRaceResults,
   adaptAdminUsers,
   adaptRaceRegistrationDetail,
   adaptRaceRegistrations,
@@ -12,7 +14,7 @@ export function useAdminModuleApi(moduleName) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const supportsLiveData = moduleName === "users" || moduleName === "registrations";
+  const supportsLiveData = ["users", "registrations", "results"].includes(moduleName);
 
   const load = useCallback(async () => {
     if (!supportsLiveData) {
@@ -35,8 +37,12 @@ export function useAdminModuleApi(moduleName) {
         const data = await adminApi.listRegistrations({ page: 1, limit: 100 });
         setLiveData(adaptRaceRegistrations(data));
       }
+
+      if (moduleName === "results") {
+        setLiveData(adaptAdminRaceResults(await adminApi.listRaceResults()));
+      }
     } catch (apiError) {
-      setError(apiError.message || "Unable to load live admin data. Showing sample data.");
+      setError(apiError.message || (moduleName === "results" ? "Unable to load authoritative race results." : "Unable to load live admin data."));
       setLiveData(null);
     } finally {
       setIsLoading(false);
@@ -78,6 +84,19 @@ export function useAdminModuleApi(moduleName) {
       }
     }
 
+    if (moduleName === "results") {
+      if (actionLabel === "Confirm") {
+        await adminApi.confirmRaceResults(id);
+        await load();
+        return true;
+      }
+      if (actionLabel === "Publish") {
+        await adminApi.publishRaceResults(id);
+        await load();
+        return true;
+      }
+    }
+
     return false;
   }, [load, moduleName, supportsLiveData]);
 
@@ -88,6 +107,10 @@ export function useAdminModuleApi(moduleName) {
 
     if (moduleName === "registrations") {
       return adaptRaceRegistrationDetail(await adminApi.getRegistration(id));
+    }
+
+    if (moduleName === "results") {
+      return adaptAdminRaceResultDetail(await adminApi.listRaceResults({ race_id: id }));
     }
 
     return null;

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { spectatorApi } from "../../api/spectatorApi";
 import { adaptRaceResults, adaptTournamentDetail, adaptTournamentList, toHorseLeaderboard } from "./spectatorAdapters";
-import { tournaments as mockTournaments, tournamentContenders, tournamentRaces } from "./tournamentData";
 
 function isAuthError(apiError) {
   return apiError?.status === 401 || apiError?.status === 403;
@@ -11,7 +10,6 @@ export function useSpectatorTournaments() {
   const [tournaments, setTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [usedFallback, setUsedFallback] = useState(false);
 
   const loadTournaments = useCallback(async () => {
     setIsLoading(true);
@@ -21,18 +19,9 @@ export function useSpectatorTournaments() {
       const data = await spectatorApi.listTournaments();
       const adapted = adaptTournamentList(data);
       setTournaments(adapted.tournaments);
-      setUsedFallback(adapted.usedFallback);
     } catch (apiError) {
-      if (isAuthError(apiError)) {
-        setError(apiError.message || "Your session expired. Please sign in again.");
-        setTournaments([]);
-        setUsedFallback(false);
-        return;
-      }
-
-      setError(apiError.message || "Unable to load live tournaments. Showing sample tournament board.");
-      setTournaments(mockTournaments);
-      setUsedFallback(true);
+      setError(apiError.message || (isAuthError(apiError) ? "Your session expired. Please sign in again." : "Unable to load tournaments."));
+      setTournaments([]);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +35,6 @@ export function useSpectatorTournaments() {
     tournaments,
     isLoading,
     error,
-    usedFallback,
     reload: loadTournaments,
   };
 }
@@ -55,8 +43,6 @@ export function useSpectatorTournamentDetail(tournamentId) {
   const [state, setState] = useState({
     tournament: null,
     races: [],
-    contenders: [],
-    usedFallback: false,
   });
   const [isLoading, setIsLoading] = useState(Boolean(tournamentId));
   const [error, setError] = useState("");
@@ -74,12 +60,23 @@ export function useSpectatorTournamentDetail(tournamentId) {
       setError("");
 
       try {
-        const tournamentPayload = await spectatorApi.getTournament(tournamentId);
-        const racesPayload = await spectatorApi.listRaces({ tournament_id: tournamentId });
-        const adapted = adaptTournamentDetail({ tournamentPayload, racesPayload });
+        const [tournamentResult, racesResult] = await Promise.allSettled([
+          spectatorApi.getTournament(tournamentId),
+          spectatorApi.listRaces({ tournament_id: tournamentId }),
+        ]);
+
+        if (tournamentResult.status === "rejected") throw tournamentResult.reason;
+
+        const adapted = adaptTournamentDetail({
+          tournamentPayload: tournamentResult.value,
+          racesPayload: racesResult.status === "fulfilled" ? racesResult.value : { races: [] },
+        });
 
         if (!cancelled) {
           setState(adapted);
+          if (racesResult.status === "rejected") {
+            setError(racesResult.reason?.message || "Unable to load the live race schedule.");
+          }
         }
       } catch (apiError) {
         if (isAuthError(apiError)) {
@@ -88,22 +85,16 @@ export function useSpectatorTournamentDetail(tournamentId) {
             setState({
               tournament: null,
               races: [],
-              contenders: [],
-              usedFallback: false,
             });
           }
           return;
         }
 
-        const fallback = mockTournaments.find((item) => String(item.id) === String(tournamentId));
-
         if (!cancelled) {
-          setError(apiError.message || "Unable to load live tournament detail. Showing sample tournament data.");
+          setError(apiError.message || "Unable to load tournament detail.");
           setState({
-            tournament: fallback || null,
-            races: tournamentRaces,
-            contenders: tournamentContenders,
-            usedFallback: true,
+            tournament: null,
+            races: [],
           });
         }
       } finally {
@@ -131,7 +122,6 @@ export function useSpectatorRaceResults() {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [usedFallback, setUsedFallback] = useState(false);
 
   const loadResults = useCallback(async () => {
     setIsLoading(true);
@@ -141,11 +131,9 @@ export function useSpectatorRaceResults() {
       const data = await spectatorApi.listRaceResults({ status: "published" });
       const adapted = adaptRaceResults(data);
       setResults(adapted.results);
-      setUsedFallback(adapted.usedFallback);
     } catch (apiError) {
       setError(apiError.message || "Unable to load live race results.");
       setResults([]);
-      setUsedFallback(true);
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +148,6 @@ export function useSpectatorRaceResults() {
     horseLeaderboard: toHorseLeaderboard(results),
     isLoading,
     error,
-    usedFallback,
     reload: loadResults,
   };
 }
