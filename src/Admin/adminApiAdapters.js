@@ -14,6 +14,9 @@ const statusLabels = {
   pending: "Pending",
   approved: "Approved",
   rejected: "Rejected",
+  draft: "Draft",
+  confirmed: "Confirmed",
+  published: "Published",
 };
 
 function asArray(value, key) {
@@ -279,6 +282,85 @@ export function adaptRaceRegistrations(data) {
         columns: ["Reg ID", "Participant", "Role", "Target", "Submitted", "Status"],
         rows,
       },
+    ],
+  };
+}
+
+function getRaceResultRows(data) {
+  return asArray(data, "results");
+}
+
+function getRaceResultRace(result) {
+  return getNamedEntity(result.race || result.race_id, {});
+}
+
+function groupRaceResults(data) {
+  return getRaceResultRows(data).reduce((groups, result) => {
+    const race = getRaceResultRace(result);
+    const raceId = getEntityId(race);
+    if (!groups.has(raceId)) groups.set(raceId, { race, results: [] });
+    groups.get(raceId).results.push(result);
+    return groups;
+  }, new Map());
+}
+
+function getGroupStatus(results) {
+  const statuses = [...new Set(results.map((result) => String(result.status || "draft").toLowerCase()))];
+  return statuses.length === 1 ? getStatusLabel(statuses[0]) : "Mixed";
+}
+
+function getLeadingResult(results) {
+  return results.find((result) => (result.final_position ?? result.position) === 1) || null;
+}
+
+export function adaptAdminRaceResults(data) {
+  const groups = [...groupRaceResults(data).entries()];
+  const rows = groups.map(([raceId, group]) => {
+    const race = group.race;
+    const leader = getLeadingResult(group.results);
+    return [
+      raceId,
+      getEntityName(race, "Unnamed race"),
+      getEntityName(race.tournament_id || race.tournament, "-"),
+      getEntityName(leader?.horse_id, "Not ranked"),
+      String(group.results.length),
+      getGroupStatus(group.results),
+    ];
+  });
+
+  return {
+    summary: [
+      { label: "Draft races", value: String(rows.filter((row) => row[5] === "Draft").length) },
+      { label: "Confirmed races", value: String(rows.filter((row) => row[5] === "Confirmed").length) },
+      { label: "Published races", value: String(rows.filter((row) => row[5] === "Published").length) },
+    ],
+    tables: [{
+      title: "Authoritative race results",
+      columns: ["Race ID", "Race", "Tournament", "Leader", "Runners", "Status"],
+      rows,
+    }],
+  };
+}
+
+export function adaptAdminRaceResultDetail(data) {
+  const results = getRaceResultRows(data);
+  const race = getRaceResultRace(results[0] || {});
+  const leader = getLeadingResult(results);
+  const appliedViolations = results.reduce((total, result) => total + asArray(result.applied_violation_ids).length, 0);
+  return {
+    type: "raceResults",
+    id: getEntityId(race),
+    title: getEntityName(race, "Race results"),
+    fields: [
+      ["Tournament", getEntityName(race.tournament_id || race.tournament, "-")],
+      ["Round", getEntityName(race.round_id || race.round, "-")],
+      ["Result status", getGroupStatus(results)],
+      ["Result rows", String(results.length)],
+      ["Current leader", getEntityName(leader?.horse_id, "Not ranked")],
+      ["Leader finish time", leader ? `${leader.final_finish_time ?? leader.finish_time ?? "-"}s` : "-"],
+      ["Applied violations", String(appliedViolations)],
+      ["Confirmed at", formatDate(results[0]?.confirmed_at)],
+      ["Published at", formatDate(results[0]?.published_at)],
     ],
   };
 }

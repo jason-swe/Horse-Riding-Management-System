@@ -1,7 +1,5 @@
-import { tournaments as mockTournaments, tournamentContenders, tournamentRaces } from "./tournamentData";
+import tournamentImage from "../../img/img_horse03.png";
 import { normalizeBettingMarketStatus, normalizeRaceLifecycle } from "./race/raceStatus";
-
-const fallbackImages = mockTournaments.map((tournament) => tournament.image);
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -20,9 +18,12 @@ function formatDate(value) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatPrize(value, index) {
-  if (value) return value;
-  return mockTournaments[index % mockTournaments.length]?.prize || "$0";
+function formatPrize(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "number") {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+  }
+  return String(value);
 }
 
 function normalizeTournamentStatus(status) {
@@ -41,49 +42,48 @@ function extractCollection(payload, keys) {
   return [];
 }
 
-export function toSpectatorTournament(apiTournament, index = 0) {
-  const fallback = mockTournaments[index % mockTournaments.length] || mockTournaments[0];
+export function toSpectatorTournament(apiTournament) {
   const status = normalizeTournamentStatus(apiTournament.status);
 
   return {
     id: getId(apiTournament),
-    name: apiTournament.name || fallback.name,
+    name: apiTournament.name || "Unnamed tournament",
     description: apiTournament.description || "",
-    location: apiTournament.location || fallback.location,
+    location: apiTournament.location || "Venue not published",
     status,
-    prize: formatPrize(apiTournament.prize_pool || apiTournament.prize, index),
+    prize: formatPrize(apiTournament.prize_pool || apiTournament.prize),
     date: formatDate(apiTournament.start_date || apiTournament.date),
     endDate: formatDate(apiTournament.end_date),
-    image: apiTournament.image_url || fallbackImages[index % fallbackImages.length],
-    distance: apiTournament.distance ? `${apiTournament.distance}m` : fallback.distance,
-    track: apiTournament.track || "Race track",
-    entries: apiTournament.entries || apiTournament.max_participants || fallback.entries,
+    image: apiTournament.image_url || tournamentImage,
+    distance: apiTournament.distance ? `${apiTournament.distance}m` : null,
+    track: apiTournament.track || null,
+    entries: apiTournament.entries ?? apiTournament.max_participants ?? null,
   };
 }
 
-export function toSpectatorRace(apiRace, index = 0) {
+export function toSpectatorRace(apiRace) {
   const raceDate = apiRace.race_date || apiRace.date;
   const date = new Date(raceDate);
-  const fallback = tournamentRaces[index % tournamentRaces.length] || tournamentRaces[0];
+  const hasValidDate = !Number.isNaN(date.getTime());
   const marketStatus = apiRace.betting_status
     || apiRace.market_status
     || apiRace.betting_market?.status
     || apiRace.market?.status;
 
   return {
-    id: getId(apiRace) || fallback.id,
+    id: getId(apiRace),
     tournamentId: getId(apiRace.tournament_id),
     roundId: getId(apiRace.round_id),
-    roundName: apiRace.round_id?.name || apiRace.round_name || fallback.roundName,
-    raceDate: Number.isNaN(date.getTime()) ? fallback.raceDate : date.toISOString(),
-    time: Number.isNaN(date.getTime())
-      ? fallback.time
-      : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    name: apiRace.name || fallback.name,
-    distance: apiRace.distance ? `${apiRace.distance}m` : fallback.distance,
-    location: apiRace.location || fallback.location || "Race track",
-    runnerCount: apiRace.runner_count || apiRace.participant_count || apiRace.entries || 0,
-    maxParticipants: apiRace.max_participants || fallback.maxParticipants || 0,
+    roundName: apiRace.round_id?.name || apiRace.round?.name || apiRace.round_name || "Round not published",
+    raceDate: hasValidDate ? date.toISOString() : null,
+    time: hasValidDate
+      ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "TBD",
+    name: apiRace.name || "Unnamed race",
+    distance: apiRace.distance ? `${apiRace.distance}m` : "Distance not published",
+    location: apiRace.location || apiRace.tournament_id?.location || "Venue not published",
+    runnerCount: apiRace.runner_count ?? apiRace.participant_count ?? apiRace.entries ?? null,
+    maxParticipants: apiRace.max_participants ?? null,
     rawRaceStatus: apiRace.status || "",
     raceStatus: normalizeRaceLifecycle(apiRace.status),
     bettingStatus: normalizeBettingMarketStatus(marketStatus),
@@ -95,16 +95,8 @@ export function toSpectatorRace(apiRace, index = 0) {
 export function adaptTournamentList(payload) {
   const rows = extractCollection(payload, ["tournaments", "data"]);
 
-  if (!rows.length) {
-    return {
-      tournaments: mockTournaments,
-      usedFallback: true,
-    };
-  }
-
   return {
     tournaments: rows.map(toSpectatorTournament),
-    usedFallback: false,
   };
 }
 
@@ -115,17 +107,13 @@ export function adaptTournamentDetail({ tournamentPayload, racesPayload }) {
   if (!tournamentRow?.name) {
     return {
       tournament: null,
-      races: tournamentRaces,
-      contenders: tournamentContenders,
-      usedFallback: true,
+      races: [],
     };
   }
 
   return {
     tournament: toSpectatorTournament(tournamentRow, 0),
-    races: races.length ? races.map(toSpectatorRace) : tournamentRaces,
-    contenders: tournamentContenders,
-    usedFallback: !races.length,
+    races: races.map(toSpectatorRace),
   };
 }
 
@@ -136,15 +124,18 @@ export function toSpectatorRaceResult(apiResult, index = 0) {
 
   return {
     id: getId(apiResult) || `${getId(race)}-${getId(horse)}-${index}`,
-    position: apiResult.position || index + 1,
+    raceId: getId(race),
+    horseId: getId(horse),
+    position: apiResult.final_position ?? apiResult.position ?? index + 1,
     horse: typeof horse === "string" ? horse : horse.name || apiResult.horse_name || "Unknown Horse",
     jockey: typeof jockey === "string" ? jockey : jockey.user_id?.full_name || jockey.full_name || apiResult.jockey_name || "Unknown Jockey",
     race: typeof race === "string" ? race : race.name || apiResult.race_name || "Race",
     lane: apiResult.lane || "-",
-    time: apiResult.finish_time ? String(apiResult.finish_time) : "-",
-    margin: apiResult.position === 1 ? "Winner" : "-",
+    time: apiResult.final_finish_time ?? apiResult.finish_time ?? "-",
+    margin: (apiResult.final_position ?? apiResult.position) === 1 ? "Winner" : "-",
     status: apiResult.status === "published" ? "Official" : "Review",
-    reward: apiResult.score ? `+${apiResult.score} pts` : "-",
+    score: apiResult.final_score ?? apiResult.score ?? "-",
+    publishedAt: apiResult.published_at || null,
   };
 }
 
@@ -154,13 +145,11 @@ export function adaptRaceResults(payload) {
   if (!rows.length) {
     return {
       results: [],
-      usedFallback: true,
     };
   }
 
   return {
     results: rows.map(toSpectatorRaceResult),
-    usedFallback: false,
   };
 }
 
@@ -168,35 +157,32 @@ export function toHorseLeaderboard(results = []) {
   const byHorse = new Map();
 
   results.forEach((result) => {
-    const existing = byHorse.get(result.horse) || {
+    const key = result.horseId || result.horse;
+    const existing = byHorse.get(key) || {
       name: result.horse,
-      owner: "Live result feed",
       jockey: result.jockey,
       wins: 0,
       starts: 0,
-      score: 0,
+      totalScore: 0,
     };
 
     existing.starts += 1;
     existing.wins += Number(result.position) === 1 ? 1 : 0;
-    existing.score += Number(String(result.reward).replace(/[^0-9]/g, "")) || 0;
-    existing.jockey = result.jockey || existing.jockey;
-    byHorse.set(result.horse, existing);
+    existing.totalScore += Number(result.score) || 0;
+    if (!existing.jockey) existing.jockey = result.jockey;
+    byHorse.set(key, existing);
   });
 
   return Array.from(byHorse.values())
-    .sort((a, b) => b.wins - a.wins || b.score - a.score || a.name.localeCompare(b.name))
+    .sort((a, b) => b.wins - a.wins || b.totalScore - a.totalScore || a.name.localeCompare(b.name))
     .map((horse, index) => ({
       rank: index + 1,
       name: horse.name,
-      owner: horse.owner,
       jockey: horse.jockey,
       wins: horse.wins,
       starts: horse.starts,
-      prizeMoney: `${horse.score} pts`,
-      rating: horse.wins > 2 ? "S" : horse.wins > 0 ? "A" : "B",
-      form: `${Math.round((horse.wins / Math.max(horse.starts, 1)) * 100)}%`,
-      signal: `${horse.wins > 0 ? "+" : ""}${horse.wins}`,
-      image: fallbackImages[index % fallbackImages.length],
+      totalScore: horse.totalScore,
+      winRate: `${Math.round((horse.wins / Math.max(horse.starts, 1)) * 100)}%`,
+      image: tournamentImage,
     }));
 }

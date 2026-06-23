@@ -42,7 +42,7 @@ export async function apiRequest(path, options = {}) {
   const payload = await parseResponse(response);
 
   if (!response.ok || payload.success === false) {
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
       clearSession();
       window.dispatchEvent(new CustomEvent("horse-racing-auth-invalid"));
     }

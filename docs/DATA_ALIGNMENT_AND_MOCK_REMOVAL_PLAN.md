@@ -72,7 +72,6 @@ Password123
 - `src/pages/jockey/jockeyData.js`
 - `src/pages/spectator/tournamentData.js`
 - `src/Referee/refereeData.js`
-- `src/Admin/adminModules.js`
 
 ### Realtime/prototype mock modules
 
@@ -215,7 +214,9 @@ Route map created in `BACKEND_DATA_ROUTE_MAP.md`.
 
 - `src/Admin/AdminDashboard.jsx`
 - `src/Admin/AdminModulePage.jsx`
-- `src/Admin/adminModules.js`
+- `src/Admin/AdminCommandModule.jsx`
+- `src/Admin/AdminCompetitionModule.jsx`
+- `src/Admin/AdminRegistryModule.jsx`
 - `src/Admin/useAdminModuleApi.js`
 
 ### Work

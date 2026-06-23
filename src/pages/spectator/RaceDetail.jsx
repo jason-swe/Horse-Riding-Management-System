@@ -5,15 +5,15 @@ import { useSpectatorTournamentDetail } from "./useSpectatorData.js";
 import { mockContenders } from "./live-race/mockRaceFixtures.js";
 import RaceViewer2D from "./live-race/RaceViewer2D.jsx";
 import { useRaceViewerSession } from "./live-race/useRaceViewerSession.js";
-import { BETTING_STATUS, RACE_STATUS, bettingStatusMeta, raceStatusMeta } from "./race/raceStatus.js";
+import { BETTING_STATUS, bettingStatusMeta, raceStatusMeta } from "./race/raceStatus.js";
 import "./spectator.css";
 
-function ApprovedParticipants({ contenders }) {
+function ParticipantPreview({ contenders }) {
   return (
-    <section className="race-detail-field" aria-label="Approved race participants">
+    <section className="race-detail-field" aria-label="Prototype race participants">
       <div className="live-race-section-heading">
-        <div><span className="live-race-kicker"><UsersRound size={14} /> Approved field</span><h2>Runners and riders</h2></div>
-        <small>{contenders.length} cleared</small>
+        <div><span className="live-race-kicker"><UsersRound size={14} /> Prototype field</span><h2>Sample runners and riders</h2></div>
+        <small>{contenders.length} fixtures</small>
       </div>
       <div className="race-detail-field__list">
         {contenders.map((horse) => (
@@ -22,7 +22,7 @@ function ApprovedParticipants({ contenders }) {
             <img src={horse.image} alt="" />
             <div className="race-detail-field__identity"><strong>{horse.horse}</strong><small>{horse.jockey} / {horse.owner}</small></div>
             <div className="race-detail-field__form"><span>{horse.weight}</span><small>Form {horse.form}</small></div>
-            <span className="race-detail-field__approved"><CheckCircle2 size={14} /> Approved</span>
+            <span className="race-detail-field__approved"><CheckCircle2 size={14} /> Preview</span>
           </article>
         ))}
       </div>
@@ -32,7 +32,7 @@ function ApprovedParticipants({ contenders }) {
 
 export default function RaceDetail() {
   const { raceId, tournamentId } = useParams();
-  const { error, isLoading, races, tournament, usedFallback } = useSpectatorTournamentDetail(tournamentId);
+  const { isLoading, races, tournament } = useSpectatorTournamentDetail(tournamentId);
   const race = races.find((item) => String(item.id) === String(raceId));
   const viewer = useRaceViewerSession(race);
 
@@ -44,11 +44,10 @@ export default function RaceDetail() {
 
   const raceMeta = raceStatusMeta[race.raceStatus];
   const marketMeta = bettingStatusMeta[race.bettingStatus];
-  const isScheduled = [RACE_STATUS.SCHEDULED, RACE_STATUS.READY].includes(race.raceStatus);
-  const viewerEyebrow = race.raceStatus === RACE_STATUS.RUNNING ? "Live 2D track" : race.raceStatus === RACE_STATUS.COMPLETED ? "Official race replay" : "Track and starting field";
-  const rankingEyebrow = race.raceStatus === RACE_STATUS.RUNNING ? "Live order" : race.raceStatus === RACE_STATUS.COMPLETED ? "Official order" : "Starting order";
-  const rankingTitle = race.raceStatus === RACE_STATUS.COMPLETED ? "Final positions" : isScheduled ? "Lane assignment" : "Track positions";
-  const statusLabel = isScheduled ? "Starting field confirmed" : undefined;
+  const viewerEyebrow = "Prototype 2D track";
+  const rankingEyebrow = "Sample order";
+  const rankingTitle = "Fixture positions";
+  const statusLabel = "Simulation only";
 
   return (
     <section className="spectator-page race-overview-page">
@@ -73,10 +72,10 @@ export default function RaceDetail() {
         <span><CalendarDays size={15} /> {race.time}</span>
         <span><Flag size={15} /> {race.distance}</span>
         <span><MapPin size={15} /> {race.location}</span>
-        <span><UsersRound size={15} /> {race.runnerCount || 0}/{race.maxParticipants || "-"} runners</span>
+        <span><UsersRound size={15} /> {race.runnerCount === null ? "Participant count unavailable" : `${race.runnerCount}/${race.maxParticipants || "-"} runners`}</span>
       </div>
 
-      {(error || usedFallback) && <div className="race-detail-data-note" role="status"><ShieldCheck size={16} /><span><strong>Preview data active.</strong> The spectator participant endpoint is not available yet, so this screen uses the approved five-runner fixture.</span></div>}
+      <div className="race-detail-data-note" role="status"><ShieldCheck size={16} /><span><strong>Participant preview.</strong> The backend has no spectator-safe participant endpoint, so the runner field and 2D viewer remain an explicitly labelled prototype.</span></div>
 
       <div className="race-detail-viewer-shell">
         <RaceViewer2D
@@ -91,13 +90,13 @@ export default function RaceDetail() {
           rankingTitle={rankingTitle}
           statusLabel={statusLabel}
         >
-          <ApprovedParticipants contenders={mockContenders} />
+          <ParticipantPreview contenders={mockContenders} />
         </RaceViewer2D>
       </div>
 
       <footer className="race-detail-boundary-note">
-        <span><ShieldCheck size={15} /> Race information and official viewer only</span>
-        <strong>No betting controls are available on this page.</strong>
+        <span><ShieldCheck size={15} /> Race information is live; viewer data is a prototype</span>
+        <strong>No participant or realtime race API is connected.</strong>
       </footer>
     </section>
   );

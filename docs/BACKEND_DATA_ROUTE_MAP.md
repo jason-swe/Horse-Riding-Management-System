@@ -60,12 +60,12 @@ Notifications: 18
 
 | Route | Screen | Current mock/fallback | API/source to use | Seed records |
 |---|---|---|---|---|
-| `/admin` | Admin dashboard | hardcoded metrics | users, registrations, tournaments/races, results, applications | 11 users, 2 pending registrations, 5 tournaments, 15 races |
+| `/admin` | Admin dashboard | no operational records | workspace navigation | 11 users, 2 pending registrations, 5 tournaments, 15 races |
 | `/admin/users` | Users | connected live data | `GET /admin/users` | 11 short demo accounts |
 | `/admin/registrations` | Race registration approvals | connected live data | `GET /registrations`, approve/reject endpoints | Night Arrow and Dawn Velvet pending |
-| `/admin/results` | Results | mostly mock | `GET /race-results`, race-level `/race-results/races/:raceId/confirm` and `/publish` | 4 published, 1 confirmed |
-| `/admin/predictions` | Predictions/bets | mock | needs bet/admin endpoint or read endpoint | 6 bets seeded |
-| other admin modules | Operations | `adminModules.js` sample rows | connect per module | seed supports races, violations, reports, checks |
+| `/admin/results` | Results | connected live data | `GET /race-results`, race-level `/race-results/races/:raceId/confirm` and `/publish` | 4 published, 1 confirmed |
+| `/admin/tournament`, `/admin/schedule` | Competition planning | connected live data | tournament, round, and race CRUD | seed supports tournaments, rounds, races |
+| `/admin/jockeys`, `/admin/referees` | Profile directories | connected live data | role-filtered admin users | seeded role profiles |
 
 ## Spectator Routes
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Calendar, CircleDollarSign, Flag, Gauge, SearchX, Trophy, UsersRound } from "lucide-react";
+import { ArrowRight, Calendar, CircleDollarSign, Flag, Gauge, RefreshCw, SearchX, Trophy, UsersRound } from "lucide-react";
 import SearchFilterBar from "../../components/SearchFilterBar.jsx";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { useSpectatorTournaments } from "./useSpectatorData.js";
@@ -33,18 +33,18 @@ const TournamentCard = ({ tournament }) => {
           <Calendar size={14} /> <span>{tournament.date}</span>
         </div>
         <div>
-          <Flag size={14} /> <span>{tournament.track} - {tournament.distance}</span>
+          <Flag size={14} /> <span>{tournament.track && tournament.distance ? `${tournament.track} - ${tournament.distance}` : "Race details not published"}</span>
         </div>
         <div>
-          <UsersRound size={14} /> <span>{tournament.entries} entries</span>
+          <UsersRound size={14} /> <span>{tournament.entries === null ? "Entry count unavailable" : `${tournament.entries} entries`}</span>
         </div>
         <div>
-          <Gauge size={14} /> <span>{tournament.entries > 14 ? "High liquidity" : "Focused field"}</span>
+          <Gauge size={14} /> <span>Open schedule for race data</span>
         </div>
       </div>
 
       <div className="tournament-card__footer">
-        <span><Trophy size={15} /> {tournament.prize}</span>
+        <span><Trophy size={15} /> {tournament.prize || "Prize not published"}</span>
         <Link className="tournament-card__link" to={`/spectator/tournaments/${tournament.id}`} aria-label={`View ${tournament.name}`}>
           <ArrowRight size={18} />
         </Link>
@@ -56,7 +56,7 @@ const TournamentCard = ({ tournament }) => {
 const TournamentList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
-  const { tournaments, isLoading, error, usedFallback } = useSpectatorTournaments();
+  const { tournaments, isLoading, error, reload } = useSpectatorTournaments();
 
   const counts = tournaments.reduce(
     (acc, tournament) => {
@@ -68,7 +68,7 @@ const TournamentList = () => {
 
   const activePrizePool = tournaments
     .filter((tournament) => tournament.status === "Active")
-    .reduce((sum, tournament) => sum + Number(tournament.prize.replace(/[$,]/g, "")), 0);
+    .reduce((sum, tournament) => sum + Number(String(tournament.prize || "").replace(/[^0-9.]/g, "")), 0);
 
   const statusOrder = { Active: 0, Upcoming: 1, Completed: 2 };
 
@@ -89,9 +89,10 @@ const TournamentList = () => {
 
   return (
     <div className="spectator-page tournament-hub-page">
-      {(error || usedFallback) && (
-        <section className={`admin-live-state ${error ? "admin-live-state--warning" : ""}`} aria-live="polite">
-          {error || "Showing sample tournament board until backend tournament data is available."}
+      {error && (
+        <section className="admin-live-state admin-live-state--warning spectator-api-state" aria-live="polite">
+          <span>{error}</span>
+          <button type="button" onClick={reload}><RefreshCw size={15} /> Retry</button>
         </section>
       )}
 
@@ -117,12 +118,12 @@ const TournamentList = () => {
           </article>
           <article className="tournament-metric tournament-metric--pool">
             <CircleDollarSign size={18} />
-            <strong>${(activePrizePool / 1000000).toFixed(1)}M</strong>
+            <strong>{activePrizePool ? `$${(activePrizePool / 1000000).toFixed(1)}M` : "-"}</strong>
             <span>Pools</span>
           </article>
           <article className="tournament-metric tournament-metric--entries">
             <UsersRound size={18} />
-            <strong>{tournaments.reduce((sum, tournament) => sum + tournament.entries, 0)}</strong>
+            <strong>{tournaments.reduce((sum, tournament) => sum + (Number(tournament.entries) || 0), 0) || "-"}</strong>
             <span>Entries</span>
           </article>
         </div>
@@ -148,7 +149,7 @@ const TournamentList = () => {
         ) : (
           <div className="spectator-empty-state">
             <SearchX size={22} />
-            <span>No tournaments found matching your search.</span>
+            <span>{error ? "Tournament data is unavailable right now." : tournaments.length ? "No tournaments found matching your search." : "No tournaments have been published yet."}</span>
           </div>
         )}
       </div>

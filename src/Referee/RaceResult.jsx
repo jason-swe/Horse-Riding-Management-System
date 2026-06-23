@@ -1,330 +1,135 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { refereeApi } from "../api/refereeApi";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import RefereeLayout from "./RefereeLayout";
-import { RESULT_STATUSES } from "./refereeConstants";
+import { formatStatus, RESULT_STATUSES } from "./refereeConstants";
+import { getId } from "./refereeAdapters";
 import { useRefereeData } from "./useRefereeData";
 
-function parseFinishTime(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
+const blockerLabels = {
+  accepted_jockey_assignment_required: "Accepted jockey assignment required",
+  jockey_suspension_active: "Jockey suspension is active",
+  passed_pre_race_check_required: "Passed pre-race check required",
+};
 
-  if (raw.includes(":")) {
-    const [minutes, seconds] = raw.split(":").map(Number);
-    if (Number.isFinite(minutes) && Number.isFinite(seconds)) {
-      return minutes * 60 + seconds;
-    }
-  }
-
-  const numeric = Number(raw);
-  return Number.isFinite(numeric) ? numeric : null;
+function userName(profile, fallback) {
+  return profile?.user_id?.full_name || profile?.full_name || profile?.name || fallback;
 }
 
-function formatFinishTime(value) {
-  if (value === undefined || value === null || value === "") return "";
-  if (typeof value === "string") return value;
-  return String(value);
+function adaptWorkflowParticipant(value) {
+  const horse = value.horse || {};
+  const jockey = value.jockey || {};
+  return {
+    horseId: getId(horse),
+    horseName: horse.name || "Unknown horse",
+    jockeyName: userName(jockey, getId(jockey) ? "Assigned jockey" : "Not assigned"),
+    eligible: value.eligible === true,
+    blockers: Array.isArray(value.blockers) ? value.blockers : [],
+    preCheckStatus: value.pre_race_check?.status || "missing",
+    postCheckStatus: value.post_race_check?.status || "missing",
+  };
 }
 
-function buildRows(race) {
-  const resultsByHorseId = new Map((race?.result || []).map((result) => [result.horseId, result]));
-  const passedHorseIds = new Set((race?.checks || []).filter((check) => check.phase === "pre_race" && check.status === "passed").map((check) => check.horseId));
-  const source = race?.participants?.length
-    ? race.participants.filter((participant) => passedHorseIds.has(participant.horseId))
-    : (race?.result || []);
-
-  return source.map((item, index) => {
-    const existing = resultsByHorseId.get(item.horseId) || item;
-
-    return {
-      resultId: existing.id || null,
-      horseId: item.horseId,
-      horseName: item.horseName,
-      jockeyId: item.jockeyId || existing.jockeyId,
-      jockeyName: item.jockeyName || existing.jockeyName,
-      position: existing.position ?? index + 1,
-      finishTime: formatFinishTime(existing.finishTime),
-      penaltyApplied: existing.penaltyApplied ?? false,
-    };
-  });
+function formatNumber(value, suffix = "") {
+  return value === undefined || value === null ? "—" : `${value}${suffix}`;
 }
 
 function RaceResult() {
   const { raceId } = useParams();
-  const { error, getRace, isLoading, isUnavailable, reload } = useRefereeData();
+  const { error, getRace, isLoading, reload } = useRefereeData();
   const race = getRace(raceId);
-  const [rows, setRows] = useState([]);
-  const [resultNotes, setResultNotes] = useState("");
-  const [resultStatus, setResultStatus] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const [readiness, setReadiness] = useState(null);
+  const [workflowError, setWorkflowError] = useState("");
+  const [message, setMessage] = useState("");
+  const [isWorkflowLoading, setIsWorkflowLoading] = useState(true);
+  const [activeAction, setActiveAction] = useState("");
 
-  useEffect(() => {
-    setRows(buildRows(race));
-    setResultStatus(race?.resultStatus || null);
-  }, [race]);
-
-  if (isLoading) {
-    return (
-      <RefereeLayout title="Race Result" eyebrow="" description="">
-        <LoadingSkeleton ariaLabel="Loading race results" rows={5} variant="table" />
-      </RefereeLayout>
-    );
-  }
-
-  if (!race) {
-    return (
-      <RefereeLayout title="Not Found" eyebrow="" description="">
-        <p>Race not found.</p>
-      </RefereeLayout>
-    );
-  }
-
-  const addMsg = (message) => setMessages((prev) => [message, ...prev].slice(0, 4));
-
-  const updateRow = (index, field, value) => {
-    setRows((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, [field]: value } : row)));
-  };
-
-  const validate = () => {
-    const positions = rows.map((row) => Number(row.position));
-    const hasMissing = rows.some((row) => !String(row.finishTime).trim());
-    const hasDupe = new Set(positions).size !== positions.length;
-
-    if (!rows.length) {
-      addMsg("No participants are available for result entry.");
-      return false;
-    }
-
-    if (hasMissing) {
-      addMsg("All finish times are required (BR-RESULT-02).");
-      return false;
-    }
-
-    if (hasDupe) {
-      addMsg("Each horse must have a unique position (BR-RESULT-01).");
-      return false;
-    }
-
-    return true;
-  };
-
-  const saveDraftRows = async () => {
-    if (!validate()) return false;
-
-    const sorted = [...rows].sort((a, b) => Number(a.position) - Number(b.position));
-
+  const loadWorkflow = useCallback(async () => {
+    setIsWorkflowLoading(true);
+    setWorkflowError("");
     try {
-      setIsSaving(true);
-
-      await Promise.all(sorted.map((row) => {
-          const payload = {
-            race_id: race.id,
-            horse_id: row.horseId,
-            jockey_id: row.jockeyId,
-            position: Number(row.position),
-            finish_time: parseFinishTime(row.finishTime),
-            score: Math.max(0, 100 - (Number(row.position) - 1) * 5),
-            note: resultNotes,
-          };
-
-          if (row.resultId) {
-            return refereeApi.updateRaceResult(row.resultId, payload);
-          }
-
-          return refereeApi.createRaceResult(payload);
-      }));
-
-      await reload();
-
-      setRows(sorted);
-      setResultStatus(RESULT_STATUSES.DRAFT);
-      addMsg("Result draft saved.");
-      return true;
+      const [participantData, readinessData] = await Promise.all([
+        refereeApi.getRaceResultParticipants(raceId),
+        refereeApi.getRaceResultReadiness(raceId),
+      ]);
+      setParticipants((participantData?.participants || []).map(adaptWorkflowParticipant));
+      setReadiness(readinessData || null);
     } catch (apiError) {
-      addMsg(apiError.message || "Unable to save result draft.");
-      return false;
+      setParticipants([]);
+      setReadiness(null);
+      setWorkflowError(apiError.status === 403
+        ? "Only the referee assigned to this race can access its result workflow."
+        : apiError.message || "Unable to load result readiness.");
     } finally {
-      setIsSaving(false);
+      setIsWorkflowLoading(false);
+    }
+  }, [raceId]);
+
+  useEffect(() => { loadWorkflow(); }, [loadWorkflow]);
+
+  const runAction = async (action) => {
+    try {
+      setActiveAction(action);
+      setMessage("");
+      if (action === "finalize") await refereeApi.finalizeRaceResults(raceId);
+      else await refereeApi.applyRaceResultPenalties(raceId);
+      await Promise.all([reload(), loadWorkflow()]);
+      setMessage(action === "finalize"
+        ? "Draft results were generated by the authoritative race engine."
+        : "Confirmed violation penalties were applied to the draft results.");
+    } catch (apiError) {
+      setMessage(apiError.status === 403
+        ? "You are not authorized to manage results for this race."
+        : apiError.message || `Unable to ${action === "finalize" ? "finalize results" : "apply penalties"}.`);
+    } finally {
+      setActiveAction("");
     }
   };
 
-  const handleSaveDraft = () => {
-    saveDraftRows();
-  };
+  if (isLoading) return <RefereeLayout title="Race Result" eyebrow="" description=""><LoadingSkeleton ariaLabel="Loading race results" rows={5} variant="table" /></RefereeLayout>;
+  if (!race) return <RefereeLayout title="Not Found" eyebrow="" description=""><section className="admin-live-state admin-live-state--warning">{error || "Race not found."}</section></RefereeLayout>;
 
-  const handleConfirm = async () => {
-    const saved = await saveDraftRows();
-    if (!saved) return;
-    setShowConfirmModal(true);
-  };
+  const hasResults = race.result.length > 0;
+  const lockedResults = [RESULT_STATUSES.CONFIRMED, RESULT_STATUSES.PUBLISHED].includes(race.resultStatus);
+  const readinessChecks = readiness ? [
+    ["Race date passed", readiness.race_date_passed],
+    ["Registration locked", readiness.registration_locked],
+    ["Race completed", ["completed", "finished"].includes(String(readiness.race_status).toLowerCase())],
+    ["Eligible participants", readiness.eligible_participant_count > 0],
+    ["Referee report submitted", !readiness.missing_report],
+    ["Post-race checks complete", readiness.missing_post_check_horse_ids?.length === 0],
+    ["No horse under investigation", readiness.under_investigation_horse_ids?.length === 0],
+    ["No unresolved violations", readiness.unresolved_violation_ids?.length === 0],
+  ] : [];
+  const sortedResults = [...race.result].sort((a, b) => (a.finalPosition ?? Number.MAX_SAFE_INTEGER) - (b.finalPosition ?? Number.MAX_SAFE_INTEGER));
 
-  const doConfirm = () => {
-    addMsg("Draft saved. Admin must confirm and publish official race results.");
-    setShowConfirmModal(false);
-  };
+  return <RefereeLayout title="Race Result" eyebrow={`Authoritative workflow | ${race.name}`} description="Review eligibility and readiness, generate engine-owned draft results, then apply confirmed violation penalties. Admin confirmation and publication remain separate." actions={<Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>Back to Race Detail</Link>}>
+    {(error || workflowError) && <section className="admin-live-state admin-live-state--warning" role="alert">{error || workflowError} <button type="button" className="admin-header__button admin-header__button--ghost" onClick={loadWorkflow}>Retry</button></section>}
+    {message && <section className="admin-live-state" aria-live="polite">{message}</section>}
+    {isWorkflowLoading && <LoadingSkeleton ariaLabel="Loading result readiness" rows={3} variant="cards" />}
 
-  const isConfirmed = [RESULT_STATUSES.CONFIRMED, RESULT_STATUSES.PUBLISHED].includes(resultStatus);
-  const statusColor = { Draft: "gray", Confirmed: "blue", Published: "green" };
-
-  return (
-    <RefereeLayout
-      title="Race Result"
-      eyebrow={`Official result - ${race.name}`}
-      description="Enter finishing positions and times. Race referees can save draft results; admin confirms and publishes official results."
-      actions={
-        <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>
-          Back to Race Detail
-        </Link>
-      }
-    >
-      {error && <section className="admin-live-state admin-live-state--warning" role="alert">{error}</section>}
-      {isUnavailable && <section className="admin-live-state">Participant data is unavailable. Result editing is disabled.</section>}
-
-      {!!messages.length && (
-        <section className="admin-toast-stack" aria-live="polite">
-          {messages.map((message, index) => <div key={index} className="admin-toast">{message}</div>)}
-        </section>
-      )}
-
-      {resultStatus && (
-        <section className="admin-panel referee-result-status-banner">
-          <span>Result status: </span>
-          <span className={`referee-status-badge referee-status-badge--${statusColor[resultStatus] || "gray"}`}>
-            {resultStatus}
-          </span>
-          <span style={{ color: "rgba(245,247,243,0.64)", fontSize: "0.88rem", marginLeft: 12 }}>Referee results remain draft until admin confirmation.</span>
-        </section>
-      )}
-
+    {!isWorkflowLoading && !workflowError && <>
       <section className="admin-panel">
-        <div className="admin-panel__header">
-          <p className="admin-panel__eyebrow">Leaderboard</p>
-          <h2>Race Rankings</h2>
+        <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Finalization gate</p><h2>{readiness?.ready ? "Ready to finalize" : "Readiness requirements"}</h2></div><span className={`referee-status-badge referee-status-badge--${readiness?.ready ? "green" : "amber"}`}>{readiness?.ready ? "Ready" : "Blocked"}</span></div>
+        <div className="referee-checklist">{readinessChecks.map(([label, passed]) => <div className="referee-check-item" key={label}><span className={`referee-insp-badge referee-insp-badge--${passed ? "done" : "pending"}`}>{passed ? "Ready" : "Required"}</span><span>{label}</span></div>)}</div>
+        <div className="admin-tool-card__footer">
+          <button className="admin-header__button" type="button" disabled={!readiness?.ready || hasResults || Boolean(activeAction)} onClick={() => runAction("finalize")}>{activeAction === "finalize" ? "Finalizing..." : hasResults ? "Draft Already Generated" : "Finalize and Generate Draft"}</button>
+          <button className="admin-header__button admin-header__button--ghost" type="button" disabled={!hasResults || lockedResults || Boolean(activeAction)} onClick={() => runAction("penalties")}>{activeAction === "penalties" ? "Applying..." : "Apply Confirmed Penalties"}</button>
         </div>
-
-        {rows.length === 0 ? (
-          <p style={{ color: "rgba(245,247,243,0.48)", textAlign: "center", padding: "24px 0" }}>
-            No participants are available for result entry.
-          </p>
-        ) : (
-          <div className="admin-data-table__wrap">
-            <table className="admin-data-table">
-              <thead>
-                <tr>
-                  <th>Position</th>
-                  <th>Horse</th>
-                  <th>Jockey</th>
-                  <th>Finish Time</th>
-                  <th>Penalty Applied</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, index) => (
-                  <tr key={row.horseId}>
-                    <td>
-                      {isConfirmed ? (
-                        <span className="referee-position-badge">#{row.position}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          min="1"
-                          max={rows.length}
-                          value={row.position}
-                          onChange={(event) => updateRow(index, "position", event.target.value)}
-                          className="referee-pos-input"
-                        />
-                      )}
-                    </td>
-                    <td><strong>{row.horseName}</strong></td>
-                    <td>{row.jockeyName}</td>
-                    <td>
-                      {isConfirmed ? row.finishTime : (
-                        <input
-                          type="text"
-                          placeholder="101.28 or 1:41.28"
-                          value={row.finishTime}
-                          onChange={(event) => updateRow(index, "finishTime", event.target.value)}
-                          className="referee-time-input"
-                        />
-                      )}
-                    </td>
-                    <td>
-                      {isConfirmed ? (
-                        row.penaltyApplied ? <span className="referee-status-badge referee-status-badge--amber">Yes</span> : "No"
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={row.penaltyApplied}
-                          onChange={(event) => updateRow(index, "penaltyApplied", event.target.checked)}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!isConfirmed && (
-          <label className="admin-field" style={{ marginTop: 14 }}>
-            <span>Additional Notes</span>
-            <textarea
-              value={resultNotes}
-              onChange={(event) => setResultNotes(event.target.value)}
-              placeholder="Optional notes about the race outcome..."
-            />
-          </label>
-        )}
-
-        {!isConfirmed && (
-          <div className="admin-tool-card__footer" style={{ marginTop: 14 }}>
-            <button className="admin-header__button admin-header__button--ghost" disabled={isSaving || isUnavailable} type="button" onClick={handleSaveDraft}>
-              {isSaving ? "Saving..." : "Save Draft"}
-            </button>
-            <button className="admin-header__button referee-btn--confirm" disabled={isSaving || isUnavailable} type="button" onClick={handleConfirm}>
-              Save and Review Draft
-            </button>
-          </div>
-        )}
-
-        {isConfirmed && (
-          <div style={{ marginTop: 14 }}>
-            <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}/report`}>
-              View Official Report
-            </Link>
-          </div>
-        )}
+        {lockedResults && <p>These results are {formatStatus(race.resultStatus)} and can no longer be changed by a Referee.</p>}
       </section>
 
-      {showConfirmModal && (
-        <div className="admin-modal" role="dialog" aria-modal="true"
-          onClick={(event) => event.target === event.currentTarget && setShowConfirmModal(false)}>
-          <div className="admin-modal__card referee-confirm-modal">
-            <div className="admin-panel__header" style={{ marginBottom: 12 }}>
-              <p className="admin-panel__eyebrow">Final authority</p>
-              <h2>Draft Result Saved</h2>
-            </div>
-            <div className="referee-confirm-modal__body">
-              <p>The draft result for <strong>{race.name}</strong> has been saved. Admin confirmation and publication are required.</p>
-            </div>
-            <div className="admin-tool-card__footer" style={{ marginTop: 18 }}>
-              <button className="admin-header__button referee-btn--confirm" type="button" onClick={doConfirm}>
-                OK
-              </button>
-              <button className="admin-header__button admin-header__button--ghost" type="button"
-                onClick={() => setShowConfirmModal(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </RefereeLayout>
-  );
+      <section className="admin-panel"><div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Participant gate</p><h2>Eligibility returned by result workflow</h2></div><span>{participants.filter((item) => item.eligible).length}/{participants.length} eligible</span></div>
+        {participants.length === 0 ? <p>No approved participants were returned.</p> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Horse</th><th>Jockey</th><th>Pre-race</th><th>Post-race</th><th>Eligibility</th><th>Blockers</th></tr></thead><tbody>{participants.map((participant) => <tr key={participant.horseId}><td><strong>{participant.horseName}</strong></td><td>{participant.jockeyName}</td><td>{formatStatus(participant.preCheckStatus)}</td><td>{formatStatus(participant.postCheckStatus)}</td><td><span className={`referee-status-badge referee-status-badge--${participant.eligible ? "green" : "amber"}`}>{participant.eligible ? "Eligible" : "Blocked"}</span></td><td>{participant.blockers.length ? participant.blockers.map((item) => blockerLabels[item] || formatStatus(item)).join(", ") : "None"}</td></tr>)}</tbody></table></div>}
+      </section>
+    </>}
+
+    <section className="admin-panel"><div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Engine result</p><h2>Raw and penalty-adjusted rankings</h2></div>{race.resultStatus && <span className={`referee-status-badge referee-status-badge--${race.resultStatus === RESULT_STATUSES.PUBLISHED ? "green" : race.resultStatus === RESULT_STATUSES.CONFIRMED ? "blue" : "gray"}`}>{formatStatus(race.resultStatus)}</span>}</div>
+      {!hasResults ? <p>No authoritative draft exists yet.</p> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Final</th><th>Horse / Jockey</th><th>Raw position</th><th>Raw time</th><th>Final time</th><th>Final score</th><th>Applied violations</th></tr></thead><tbody>{sortedResults.map((result) => <tr key={result.id}><td><span className="referee-position-badge">{result.finalPosition ? `#${result.finalPosition}` : "DQ"}</span></td><td><strong>{result.horseName}</strong><br />{result.jockeyName}</td><td>{formatNumber(result.rawPosition, result.finalPosition !== result.rawPosition ? ` → ${result.finalPosition ?? "DQ"}` : "")}</td><td>{formatNumber(result.rawFinishTime, "s")}</td><td>{formatNumber(result.finalFinishTime, "s")}</td><td>{formatNumber(result.finalScore)}</td><td>{result.appliedViolationIds.length}</td></tr>)}</tbody></table></div>}
+    </section>
+  </RefereeLayout>;
 }
 
 export default RaceResult;

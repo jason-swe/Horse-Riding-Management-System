@@ -11,18 +11,10 @@ import {
   MapPin,
   Plus,
   ShieldCheck,
-  Trophy,
   UsersRound,
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
-import {
-  ownerHorses,
-  ownerJockeys,
-  ownerNotifications,
-  ownerProfile,
-  ownerRegistrations,
-  ownerSchedule,
-} from "./ownerData";
+import { toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorses, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
 
 const quickActions = [
@@ -75,14 +67,15 @@ function OwnerDashboard() {
     error: registrationsError,
   } = useOwnerRegistrations();
 
-  const horses = liveHorses.length ? liveHorses : ownerHorses;
-  const jockeys = liveJockeys.length ? liveJockeys : ownerJockeys;
-  const profile = liveProfile || ownerProfile;
-  const registrations = liveRegistrations.length ? liveRegistrations : ownerRegistrations;
+  const horses = liveHorses;
+  const jockeys = liveJockeys;
+  const profile = liveProfile;
+  const registrations = liveRegistrations;
+  const schedule = registrations.map(toOwnerScheduleEntry);
+  const nextRace = schedule.find((race) => race.date !== "Date unavailable");
   const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading;
   const liveError = horsesError || jockeysError || profileError || registrationsError;
   const raceReadyCount = horses.filter((horse) => horse.status === "Ready").length;
-  const assignedJockeyCount = jockeys.filter((jockey) => jockey.status === "Assigned").length;
   const pendingRegistrationCount = registrations.filter((item) => item.status !== "Approved").length;
   const ownerStats = [
     {
@@ -98,15 +91,15 @@ function OwnerDashboard() {
       icon: ClipboardCheck,
     },
     {
-      label: "Assigned Jockeys",
-      value: String(assignedJockeyCount).padStart(2, "0"),
-      note: `${Math.max(jockeys.length - assignedJockeyCount, 0)} jockey profiles available`,
+      label: "Available Jockeys",
+      value: String(jockeys.length).padStart(2, "0"),
+      note: "Active profiles open for invitation",
       icon: UsersRound,
     },
     {
       label: "Season Earnings",
-      value: "$42K",
-      note: "Prize tracking updated",
+      value: "Unavailable",
+      note: "Owner prize aggregate is not exposed",
       icon: CircleDollarSign,
     },
   ];
@@ -180,8 +173,8 @@ function OwnerDashboard() {
           <img src={dashboardImages.stable} alt="Premium stable interior for horse care" />
           <div className="owner-hero-media__overlay">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <strong>{profile.stable}</strong>
-            <p>{horses.length} horses registered, {assignedJockeyCount} riders assigned.</p>
+            <strong>{profile?.stable || "Stable unavailable"}</strong>
+            <p>{horses.length} horses registered, {jockeys.length} riders available.</p>
           </div>
         </aside>
       </section>
@@ -217,6 +210,9 @@ function OwnerDashboard() {
               </Link>
             );
           })}
+          {horses.length === 0 && (
+            <div className="owner-empty" role="status">No horse profiles are available.</div>
+          )}
         </div>
       </section>
 
@@ -224,13 +220,13 @@ function OwnerDashboard() {
         <aside className="owner-hero__panel owner-season-panel">
           <div className="owner-hero__panel-header">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <span className="owner-meta">{profile.season}</span>
+            <span className="owner-meta">{profile?.season || "Unavailable"}</span>
           </div>
-          <strong>{profile.stable}</strong>
-          <p>{horses.length} horses registered, {assignedJockeyCount} jockey relationships active, and {pendingRegistrationCount} tournament entries under review.</p>
+          <strong>{profile?.stable || "Stable unavailable"}</strong>
+          <p>{horses.length} horses registered, {jockeys.length} jockey profiles available, and {pendingRegistrationCount} tournament entries under review.</p>
           <div className="owner-hero__panel-grid">
-            <div><span>Next Race</span><b>Jun 03</b></div>
-            <div><span>Win Rate</span><b>{profile.winRate}</b></div>
+            <div><span>Next Race</span><b>{nextRace?.date || "Unavailable"}</b></div>
+            <div><span>Win Rate</span><b>{profile?.winRate || "Unavailable"}</b></div>
           </div>
         </aside>
 
@@ -238,7 +234,7 @@ function OwnerDashboard() {
           <img src={dashboardImages.track} alt="Race track before an upcoming horse race" />
           <div>
             <span className="owner-eyebrow">Track window</span>
-            <h2>Four race slots need owner confirmation this week.</h2>
+            <h2>{schedule.length ? `${schedule.length} registered race slots are on your schedule.` : "No registered race slots are available."}</h2>
             <Link className="owner-badge" to="/owner/schedule">Review schedule</Link>
           </div>
         </article>
@@ -269,7 +265,7 @@ function OwnerDashboard() {
           </div>
 
           <div className="owner-timeline">
-            {ownerSchedule.slice(0, 3).map((race) => (
+            {schedule.slice(0, 3).map((race) => (
               <div className="owner-timeline__item" key={race.id}>
                 <div className="owner-timeline__time">
                   <CalendarDays size={16} />
@@ -288,6 +284,11 @@ function OwnerDashboard() {
                 </span>
               </div>
             ))}
+            {schedule.length === 0 && (
+              <div className="owner-empty owner-empty--compact" role="status">
+                Approved and pending race registrations will appear here.
+              </div>
+            )}
           </div>
         </article>
       </section>
@@ -315,6 +316,11 @@ function OwnerDashboard() {
                 </span>
               </div>
             ))}
+            {registrations.length === 0 && (
+              <div className="owner-empty owner-empty--compact" role="status">
+                No registrations have been submitted yet.
+              </div>
+            )}
           </div>
         </article>
 
@@ -350,14 +356,9 @@ function OwnerDashboard() {
             <Bell size={20} />
           </div>
 
-          <ul className="owner-notifications">
-            {ownerNotifications.map((notification) => (
-              <li key={notification}>
-                <Trophy size={16} />
-                <span>{notification}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="owner-empty owner-empty--compact" role="status">
+            Owner notifications are unavailable because the backend does not expose a notification feed yet.
+          </div>
         </article>
       </section>
     </div>

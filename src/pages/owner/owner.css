@@ -2991,6 +2991,11 @@
   gap: 18px;
 }
 
+.owner-jockey-board > .owner-empty {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
 .owner-jockey-card {
   overflow: hidden;
   display: grid;

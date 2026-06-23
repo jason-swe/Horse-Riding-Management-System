@@ -73,10 +73,10 @@ export function toOwnerProfile(apiProfile, user) {
     phone: user?.phone_number || "No phone",
     location: apiProfile?.address || "No address",
     status: getDisplayStatus(apiProfile?.status || "active"),
-    season: "Season 2026",
-    joined: "Joined account",
-    winRate: "Not tracked",
-    earnings: "Not tracked",
+    season: "Unavailable",
+    joined: "Join date unavailable",
+    winRate: "Unavailable",
+    earnings: "Unavailable",
     licenseNumber: apiProfile?.license_number || "No license",
     raw: apiProfile,
   };
@@ -146,7 +146,7 @@ export function toOwnerTournament(apiTournament, index = 0) {
 export function toHorseApprovalStatus(data) {
   return {
     readyToRace: Boolean(data?.ready_to_race),
-    registrations: data?.registrations || [],
+    registrations: (data?.registrations || []).map(toOwnerRegistration),
     checks: data?.checks || [],
   };
 }
@@ -181,6 +181,43 @@ export function toOwnerRegistration(apiRegistration, index = 0) {
     submitted: date,
     note: apiRegistration.note || apiRegistration.admin_note || "No note recorded.",
     status: getRegistrationStatus(apiRegistration.status),
+    raceDate: race.race_date || null,
+    venue: race.location || "Venue unavailable",
+    round: getName(race.round_id || race.round, "Round unavailable"),
+    raceStatus: getDisplayStatus(race.status || "scheduled"),
     raw: apiRegistration,
+  };
+}
+
+export function toOwnerScheduleEntry(registration) {
+  const raceDate = registration.raceDate ? new Date(registration.raceDate) : null;
+  const hasRaceDate = raceDate && !Number.isNaN(raceDate.getTime());
+  const status = registration.status === "Approved"
+    ? "Confirmed"
+    : registration.status === "Pending"
+      ? "Pending"
+      : "Closed";
+
+  return {
+    id: registration.id,
+    raceId: registration.raceId,
+    horseId: registration.horseId,
+    race: registration.race,
+    tournament: registration.tournament,
+    horse: registration.horse,
+    jockey: "Assignment unavailable",
+    venue: registration.venue,
+    round: registration.round,
+    status,
+    raceStatus: registration.raceStatus,
+    date: hasRaceDate
+      ? raceDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+      : "Date unavailable",
+    clock: hasRaceDate
+      ? raceDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+      : "Time unavailable",
+    time: hasRaceDate
+      ? `${raceDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}, ${raceDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
+      : "Date unavailable",
   };
 }
