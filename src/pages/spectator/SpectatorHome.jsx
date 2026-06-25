@@ -159,7 +159,6 @@ const SpectatorHome = () => {
               <p className="spectator-eyebrow">Public Picks</p>
               <h2>Market favorites</h2>
             </div>
-            <Link className="spectator-badge" to="/spectator/leaderboard">Ranking</Link>
           </div>
           <ul className="spectator-list">
             {topPicks.map((pick) => (

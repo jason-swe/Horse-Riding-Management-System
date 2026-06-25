@@ -32,7 +32,12 @@ function adaptWorkflowParticipant(value) {
 }
 
 function formatNumber(value, suffix = "") {
-  return value === undefined || value === null ? "—" : `${value}${suffix}`;
+  if (value === undefined || value === null) return "—";
+  const num = Number(value);
+  if (!Number.isNaN(num) && suffix === "s") {
+    return `${num.toFixed(2)}${suffix}`;
+  }
+  return `${value}${suffix}`;
 }
 
 function RaceResult() {

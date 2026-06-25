@@ -5287,3 +5287,446 @@ button.admin-logout-btn {
     padding: 0 10px;
   }
 }
+
+/* Landing hero v2: sport poster composition with a stronger visual stage. */
+.landing-page {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(239, 118, 47, 0.18), transparent 28%),
+    radial-gradient(circle at 14% 24%, rgba(238, 231, 212, 0.08), transparent 32%),
+    linear-gradient(135deg, #17281f 0%, #365744 54%, #22382d 100%);
+}
+
+.landing-page .hero-layout {
+  min-height: 100dvh;
+  padding: 22px clamp(20px, 4vw, 72px) 0;
+  background:
+    linear-gradient(90deg, rgba(16, 30, 23, 0.68) 0%, rgba(16, 30, 23, 0.12) 46%, rgba(16, 30, 23, 0.28) 100%),
+    radial-gradient(circle at 62% 52%, rgba(255, 248, 234, 0.13), transparent 21%),
+    radial-gradient(circle at 80% 12%, rgba(239, 118, 47, 0.2), transparent 26%),
+    linear-gradient(135deg, #17291f 0%, #3e5b49 58%, #20372c 100%);
+  overflow: hidden;
+}
+
+.landing-page .hero-layout::before {
+  content: "";
+  position: absolute;
+  inset: 90px 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(238, 231, 212, 0.24), transparent);
+  pointer-events: none;
+}
+
+.landing-page .hero-layout::after {
+  content: "";
+  position: absolute;
+  right: min(8vw, 130px);
+  bottom: -120px;
+  width: min(56vw, 840px);
+  height: 270px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(10, 25, 18, 0.56), rgba(10, 25, 18, 0.08) 58%, transparent 72%),
+    repeating-linear-gradient(90deg, rgba(238, 231, 212, 0.1) 0 1px, transparent 1px 26px);
+  filter: blur(1px);
+  opacity: 0.78;
+  transform: rotate(-6deg);
+  pointer-events: none;
+}
+
+.landing-page .topbar--minimal {
+  min-height: 66px;
+  padding: 0;
+}
+
+.landing-page .brand-mark {
+  font-size: 2.18rem;
+  color: #ff8f43;
+}
+
+.landing-page .brand-text strong,
+.landing-page .brand-text span {
+  color: rgba(255, 248, 234, 0.9);
+  font-size: 0.84rem;
+}
+
+.landing-page .topbar--minimal .landing-nav {
+  gap: clamp(18px, 2.2vw, 34px);
+}
+
+.landing-page .topbar--minimal .landing-nav a {
+  min-width: auto;
+  min-height: 38px;
+  display: inline-flex;
+  padding: 0 0 7px;
+  border-bottom: 1px solid rgba(238, 231, 212, 0.15);
+}
+
+.landing-page .landing-nav__index {
+  display: none;
+}
+
+.landing-page .landing-nav__label {
+  color: rgba(238, 231, 212, 0.68);
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.landing-page .topbar--minimal .landing-nav a:hover,
+.landing-page .topbar--minimal .landing-nav a.active {
+  border-color: rgba(255, 143, 67, 0.9);
+  transform: translateY(-1px);
+}
+
+.landing-page .topbar--minimal .landing-nav a.active::after {
+  display: none;
+}
+
+.landing-page .topbar--minimal .signup-btn {
+  color: rgba(255, 248, 234, 0.8);
+}
+
+.landing-page .topbar--minimal .contact-btn {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 14px;
+  color: #16291f;
+  background: #f3ebd7;
+  box-shadow: 0 18px 42px rgba(9, 25, 17, 0.26);
+}
+
+.landing-page .hero-grid {
+  width: min(100%, 1480px);
+  grid-template-columns: minmax(500px, 1.08fr) minmax(430px, 1fr) minmax(210px, 0.42fr);
+  align-items: center;
+  gap: clamp(18px, 2.4vw, 42px);
+  min-height: calc(100dvh - 88px);
+  padding-top: 0;
+  padding-bottom: clamp(28px, 4vh, 48px);
+}
+
+.landing-page .hero-copy {
+  align-self: center;
+  max-width: 720px;
+  transform: translateY(-0.5vh);
+}
+
+.landing-page .eyebrow {
+  margin-bottom: 18px;
+  color: #ff8f43;
+  font-size: 0.76rem;
+  letter-spacing: 0.38em;
+}
+
+.landing-page .hero-copy h1 {
+  max-width: 650px;
+  color: #fff8ea;
+  font-size: clamp(3.85rem, 4.85vw, 5.9rem);
+  line-height: 0.94;
+  letter-spacing: -0.072em;
+}
+
+.landing-page .hero-copy h1 .hero-title-accent {
+  display: block;
+  width: max-content;
+  color: #ff8f43;
+  white-space: nowrap;
+}
+
+.landing-page .hero-description {
+  max-width: 45ch;
+  margin-top: 24px;
+  color: rgba(238, 231, 212, 0.74);
+  font-size: clamp(1rem, 1.08vw, 1.15rem);
+  line-height: 1.62;
+}
+
+.landing-page .primary-btn {
+  min-height: 54px;
+  padding: 0 24px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ff9b4f, #df7432);
+  box-shadow: 0 18px 38px rgba(239, 118, 47, 0.28);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.landing-page .primary-btn:hover {
+  background: linear-gradient(180deg, #ffad69, #e57a36);
+  box-shadow: 0 24px 46px rgba(239, 118, 47, 0.36);
+  transform: translateY(-2px);
+}
+
+.landing-page .primary-btn:active,
+.landing-page .topbar--minimal .contact-btn:active,
+.landing-page .explore-rail:active {
+  transform: translateY(1px);
+}
+
+.landing-page .hero-visual {
+  align-self: stretch;
+  min-height: min(72dvh, 690px);
+  margin-top: 0;
+  isolation: isolate;
+}
+
+.landing-page .hero-visual::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(45vw, 650px);
+  height: min(45vw, 650px);
+  border: 1px solid rgba(238, 231, 212, 0.13);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(238, 231, 212, 0.12), transparent 44%),
+    linear-gradient(160deg, rgba(238, 231, 212, 0.06), rgba(238, 231, 212, 0.015));
+  box-shadow: inset 0 0 80px rgba(238, 231, 212, 0.04);
+  transform: translate(-49%, -46%) rotate(-8deg);
+  z-index: -2;
+}
+
+.landing-page .image-glow {
+  inset: auto 8% 12% 6%;
+  height: 42%;
+  background: radial-gradient(ellipse at center, rgba(255, 248, 234, 0.18), rgba(239, 118, 47, 0.09) 34%, transparent 70%);
+  filter: blur(34px);
+}
+
+.landing-page .horse-image {
+  left: 48%;
+  top: 50%;
+  width: clamp(460px, 43vw, 710px);
+  max-width: none;
+  transform: translate(-50%, -43%);
+  filter: drop-shadow(0 42px 48px rgba(8, 22, 15, 0.48));
+}
+
+.landing-page .hero-rail {
+  align-self: center;
+  width: 100%;
+  min-height: auto;
+  gap: 18px;
+}
+
+.landing-page .trainer-card {
+  width: 100%;
+  min-height: 245px;
+  padding: 24px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(238, 231, 212, 0.105), rgba(238, 231, 212, 0.035)),
+    rgba(13, 35, 25, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 234, 0.16),
+    0 22px 44px rgba(8, 22, 15, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.landing-page .trainer-kicker {
+  margin-bottom: auto;
+  color: #ff8f43;
+  letter-spacing: 0.16em;
+}
+
+.landing-page .trainer-avatar-stack {
+  margin-top: 30px;
+}
+
+.landing-page .trainer-avatar {
+  border-color: rgba(20, 39, 29, 0.92);
+}
+
+.landing-page .trainer-count {
+  margin-top: 4px;
+  color: #fff8ea;
+  font-size: 1.85rem;
+}
+
+.landing-page .trainer-label {
+  max-width: 18ch;
+  color: rgba(238, 231, 212, 0.66);
+  line-height: 1.4;
+}
+
+.landing-page .explore-rail {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  gap: 16px;
+  padding: 18px 18px 18px 20px;
+  border: 1px solid rgba(238, 231, 212, 0.16);
+  border-radius: 18px;
+  background: rgba(13, 35, 25, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.landing-page .rail-line {
+  display: none;
+}
+
+.landing-page .explore-copy {
+  font-size: 0.72rem;
+}
+
+.landing-page .explore-copy strong {
+  font-size: 1rem;
+}
+
+.landing-page .play-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #ff8f43;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .nav a,
+  .landing-page .primary-btn,
+  .landing-page .contact-btn,
+  .landing-page .explore-rail,
+  .landing-page .play-btn {
+    transition: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .landing-page .hero-grid {
+    grid-template-columns: minmax(430px, 1fr) minmax(390px, 0.96fr) minmax(190px, 0.46fr);
+  }
+
+  .landing-page .hero-copy h1 {
+    font-size: clamp(3.55rem, 4.8vw, 5.35rem);
+  }
+
+  .landing-page .horse-image {
+    width: clamp(420px, 42vw, 620px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .landing-page .hero-layout {
+    padding-top: 14px;
+  }
+
+  .landing-page .hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    min-height: auto;
+    padding-top: 44px;
+  }
+
+  .landing-page .hero-copy {
+    max-width: 760px;
+    transform: none;
+  }
+
+  .landing-page .hero-copy h1 {
+    max-width: 640px;
+  }
+
+  .landing-page .hero-visual {
+    min-height: 460px;
+    order: 2;
+  }
+
+  .landing-page .horse-image {
+    width: min(84vw, 620px);
+    transform: translate(-50%, -45%);
+  }
+
+  .landing-page .hero-rail {
+    order: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .landing-page .trainer-card,
+  .landing-page .explore-rail {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-page .topbar--minimal {
+    align-items: flex-start;
+  }
+
+  .landing-page .topbar--minimal .landing-nav {
+    justify-content: flex-start;
+  }
+
+  .landing-page .hero-copy h1 {
+    max-width: 100%;
+    font-size: clamp(3.05rem, 13.2vw, 5.05rem);
+  }
+
+  .landing-page .hero-copy h1 .hero-title-accent {
+    width: auto;
+    white-space: normal;
+  }
+
+  .landing-page .hero-description {
+    max-width: 32ch;
+  }
+
+  .landing-page .hero-visual {
+    min-height: 360px;
+  }
+
+  .landing-page .hero-visual::before {
+    width: 88vw;
+    height: 88vw;
+  }
+
+  .landing-page .horse-image {
+    width: min(100vw, 520px);
+  }
+
+  .landing-page .hero-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-page .trainer-card {
+    display: block;
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-page .hero-layout {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .landing-page .topbar--minimal .header-actions {
+    gap: 6px;
+  }
+
+  .landing-page .topbar--minimal .signup-btn {
+    display: none;
+  }
+
+  .landing-page .topbar--minimal .contact-btn {
+    min-height: 40px;
+    padding: 0 13px;
+    border-radius: 12px;
+  }
+
+  .landing-page .hero-grid {
+    padding-top: 30px;
+  }
+
+  .landing-page .eyebrow {
+    letter-spacing: 0.28em;
+  }
+
+  .landing-page .hero-actions {
+    margin-top: 20px;
+  }
+
+  .landing-page .primary-btn {
+    width: 100%;
+  }
+}

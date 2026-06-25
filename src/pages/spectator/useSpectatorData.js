@@ -50,13 +50,13 @@ export function useSpectatorTournamentDetail(tournamentId) {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadTournamentDetail() {
+    async function loadTournamentDetail(isBackground = false) {
       if (!tournamentId) {
-        setIsLoading(false);
+        if (!isBackground) setIsLoading(false);
         return;
       }
 
-      setIsLoading(true);
+      if (!isBackground) setIsLoading(true);
       setError("");
 
       try {
@@ -98,16 +98,21 @@ export function useSpectatorTournamentDetail(tournamentId) {
           });
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && !isBackground) {
           setIsLoading(false);
         }
       }
     }
 
-    loadTournamentDetail();
+    loadTournamentDetail(false);
+
+    const interval = setInterval(() => {
+      loadTournamentDetail(true);
+    }, 3000);
 
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, [tournamentId]);
 
@@ -146,6 +151,55 @@ export function useSpectatorRaceResults() {
   return {
     results,
     horseLeaderboard: toHorseLeaderboard(results),
+    isLoading,
+    error,
+    reload: loadResults,
+  };
+}
+
+export function useSpectatorRaceResultsSingle(raceId) {
+  const [results, setResults] = useState([]);
+  const [raceInfo, setRaceInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadResults = useCallback(async (isBackground = false) => {
+    if (!raceId) {
+      if (!isBackground) setIsLoading(false);
+      return;
+    }
+    if (!isBackground) setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await spectatorApi.getRaceResults(raceId);
+      const adapted = adaptRaceResults({ results: data.results || [] });
+      setResults(adapted.results);
+      setRaceInfo(data.race || null);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load race results.");
+      setResults([]);
+      setRaceInfo(null);
+    } finally {
+      if (!isBackground) setIsLoading(false);
+    }
+  }, [raceId]);
+
+  useEffect(() => {
+    loadResults(false);
+
+    const interval = setInterval(() => {
+      loadResults(true);
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [loadResults]);
+
+  return {
+    results,
+    raceInfo,
     isLoading,
     error,
     reload: loadResults,

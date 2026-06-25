@@ -16,6 +16,9 @@ export const mockContenders = [
   { id: "golden-gallop", horse: "Golden Gallop", jockey: "Elena Gilbert", owner: "Tuan Pham", lane: 3, weight: "57kg", form: "3-1-2", probability: 46, odds: { win: 3.4, place: 1.95 }, image: horseIvory, color: "#eee7d4" },
   { id: "midnight-run", horse: "Midnight Run", jockey: "David Miller", owner: "Nora Bennett", lane: 4, weight: "54kg", form: "4-2-2", probability: 38, odds: { win: 4.2, place: 2.25 }, image: horseRed, color: "#d96a61" },
   { id: "crimson-comet", horse: "Crimson Comet", jockey: "Maya Chen", owner: "Rachel Nguyen", lane: 5, weight: "55kg", form: "5-3-1", probability: 29, odds: { win: 5.6, place: 2.9 }, image: horseBlue, color: "#78b9ef" },
+  { id: "blazing-speed", horse: "Blazing Speed", jockey: "Jack Carter", owner: "Tran Nguyen", lane: 6, weight: "56kg", form: "2-3-4", probability: 25, odds: { win: 6.8, place: 3.2 }, image: horseAmber, color: "#e6b080" },
+  { id: "emerald-shadow", horse: "Emerald Shadow", jockey: "Sofia Rossi", owner: "Gomez Fam", lane: 7, weight: "54kg", form: "3-4-2", probability: 22, odds: { win: 7.5, place: 3.6 }, image: horseMint, color: "#b1ebd6" },
+  { id: "sapphire-wind", horse: "Sapphire Wind", jockey: "Ken Tanaka", owner: "Takahashi", lane: 8, weight: "57kg", form: "1-4-5", probability: 18, odds: { win: 9.0, place: 4.2 }, image: horseBlue, color: "#80c4e6" },
 ];
 
 export const mockWallet = Object.freeze({ balance: 1280, currency: "points" });
@@ -26,19 +29,23 @@ export const mockActivePredictions = [
   { race: "Worcester Chase", type: "Exacta", pick: "Thunderbolt / Golden Gallop", stake: 80, odds: "7.14x", status: "Pending" },
 ];
 
-const checkpointDistances = [
-  [0, 145, 425, 715, 1000],
-  [0, 132, 438, 692, 1000],
-  [0, 158, 401, 748, 1000],
-  [0, 121, 455, 681, 1000],
-  [0, 149, 416, 726, 1000],
+const sortedMockFinishTimes = [56000, 59000, 60000, 61500, 63000, 64000, 65000, 67000];
+
+const sortedCheckpointDistances = [
+  [0, 110, 380, 780, 1000], // 1st: Slow start, dramatic surge at the end
+  [0, 95, 410, 750, 1000],  // 2nd: Slower start, huge middle surge
+  [0, 165, 430, 720, 1000], // 3rd: Early leader, fades at the end
+  [0, 130, 370, 690, 1000], // 4th: Stable mid-pack
+  [0, 155, 390, 660, 1000], // 5th: Fast start, then falls behind
+  [0, 115, 420, 640, 1000], // 6th: Sprint in the middle, then tires out
+  [0, 105, 340, 620, 1000], // 7th: Slow pace throughout
+  [0, 160, 350, 600, 1000], // 8th: Fast start, then completely runs out of gas
 ];
 
-const mockFinishTimes = [61500, 64000, 56000, 67000, 59000];
-
-export function createMockRaceScript(raceId, startsAt = Date.now() + 3000) {
+export function createMockRaceScript(raceId, startsAt = Date.now() + 3000, contenders = mockContenders) {
   const durationMs = 68000;
   const checkpointTimes = [0, 15000, 30000, 45000];
+  const defaultPositions = [4, 6, 1, 8, 2, 5, 3, 7];
 
   return {
     race_id: raceId,
@@ -47,16 +54,20 @@ export function createMockRaceScript(raceId, startsAt = Date.now() + 3000) {
     starts_at: new Date(startsAt).toISOString(),
     duration_ms: durationMs,
     track_length: 1000,
-    horses: mockContenders.map((horse, horseIndex) => ({
-      horse_id: horse.id,
-      name: horse.horse,
-      lane: horse.lane,
-      color: horse.color,
-      checkpoints: [...checkpointTimes, mockFinishTimes[horseIndex]].map((time, checkpointIndex) => ({
-        time_ms: time,
-        distance: checkpointDistances[horseIndex][checkpointIndex],
-      })),
-    })),
+    horses: contenders.map((horse, horseIndex) => {
+      const pos = horse.position || defaultPositions[horseIndex] || (horseIndex + 1);
+      const posIndex = Math.max(0, Math.min(7, pos - 1));
+      return {
+        horse_id: horse.id,
+        name: horse.horse,
+        lane: horse.lane || (horseIndex + 1),
+        color: horse.color,
+        checkpoints: [...checkpointTimes, sortedMockFinishTimes[posIndex]].map((time, checkpointIndex) => ({
+          time_ms: time,
+          distance: sortedCheckpointDistances[posIndex][checkpointIndex],
+        })),
+      };
+    }),
     sequence: 300,
   };
 }
@@ -68,9 +79,12 @@ export function createMockRaceResult(raceId) {
     results: [
       { horse_id: "golden-gallop", position: 1, finish_time_ms: 56000 },
       { horse_id: "crimson-comet", position: 2, finish_time_ms: 59000 },
-      { horse_id: "thunderbolt", position: 3, finish_time_ms: 61500 },
-      { horse_id: "silver-flash", position: 4, finish_time_ms: 64000 },
-      { horse_id: "midnight-run", position: 5, finish_time_ms: 67000 },
+      { horse_id: "emerald-shadow", position: 3, finish_time_ms: 60000 },
+      { horse_id: "thunderbolt", position: 4, finish_time_ms: 61500 },
+      { horse_id: "blazing-speed", position: 5, finish_time_ms: 63000 },
+      { horse_id: "silver-flash", position: 6, finish_time_ms: 64000 },
+      { horse_id: "sapphire-wind", position: 7, finish_time_ms: 65000 },
+      { horse_id: "midnight-run", position: 8, finish_time_ms: 67000 },
     ],
     sequence: 301,
   };

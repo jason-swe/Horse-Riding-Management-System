@@ -11,12 +11,10 @@ const MainLayout = () => {
   const navItems = [
     { name: "Overview", path: "/spectator" },
     { name: "Tournaments", path: "/spectator/tournaments" },
-    { name: "Leaderboard", path: "/spectator/leaderboard" },
     { name: "Predictions", path: "/spectator/predictions" },
     { name: "Results", path: "/spectator/results" },
     { name: "Role Access", path: "/spectator/role-applications" },
   ];
-
   return (
     <div className="page-shell page-shell--spectator" style={{
       backgroundColor: "#3E5B49",
@@ -88,7 +86,6 @@ const MainLayout = () => {
               <li><Link to="/spectator/tournaments"><span>01</span>Tournaments</Link></li>
               <li><Link to="/spectator/predictions"><span>02</span>Predictions</Link></li>
               <li><Link to="/spectator/results"><span>03</span>Official results</Link></li>
-              <li><Link to="/spectator/leaderboard"><span>04</span>Leaderboard</Link></li>
             </ul>
           </nav>
 
