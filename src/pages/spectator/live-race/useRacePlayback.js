@@ -66,10 +66,10 @@ export function useRacePlayback({ connectionState, raceId, raceResult, raceScrip
           const track = trackRef.current;
           const compactTrack = track?.clientWidth <= 760;
           const trackStyles = track ? window.getComputedStyle(track) : null;
-          const baseInsetX = Number.parseFloat(trackStyles?.getPropertyValue("--track-inset-x")) || (compactTrack ? 40 : 104);
-          const baseInsetY = Number.parseFloat(trackStyles?.getPropertyValue("--track-inset-y")) || (compactTrack ? 50 : 74);
-          const laneStepX = Number.parseFloat(trackStyles?.getPropertyValue("--lane-step-x")) || (compactTrack ? 10 : 13);
-          const laneStepY = Number.parseFloat(trackStyles?.getPropertyValue("--lane-step-y")) || (compactTrack ? 8 : 10);
+          const baseInsetX = Number.parseFloat(trackStyles?.getPropertyValue("--track-inset-x")) || (compactTrack ? 28 : 84);
+          const baseInsetY = Number.parseFloat(trackStyles?.getPropertyValue("--track-inset-y")) || (compactTrack ? 36 : 54);
+          const laneStepX = Number.parseFloat(trackStyles?.getPropertyValue("--lane-step-x")) || (compactTrack ? 11 : 15);
+          const laneStepY = Number.parseFloat(trackStyles?.getPropertyValue("--lane-step-y")) || (compactTrack ? 9 : 12);
           script.horses.forEach((horse) => {
             const distance = raceResult ? script.trackLength : interpolateDistance(horse.checkpoints, elapsed);
             distances[horse.horseId] = distance;

@@ -33,7 +33,8 @@ export async function apiRequest(path, options = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const baseUrl = path.startsWith("/users") ? "" : API_BASE_URL;
+  const response = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,

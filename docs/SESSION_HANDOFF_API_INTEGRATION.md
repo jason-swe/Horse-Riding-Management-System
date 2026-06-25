@@ -315,25 +315,74 @@ The backend contains a `Bet` model, but no betting router is mounted in `app.js`
 - In the new thread, test Browser initialization first. If it succeeds, start the frontend dev server and visually inspect the changed Spectator Leaderboard and Race Detail at desktop and mobile widths.
 - If the same metadata error persists after a full restart and new thread, reinstall/toggle the Browser plugin and report the exact error through `/feedback`; do not attempt to add `sandboxPolicy` manually to browser scripts.
 
+## Phase 10 completed (2026-06-23)
+
+- Rebuilt Spectator Tournament List with a new `tcard` card system: real track images (deterministic pool selection from `owner-image-assets.md`), date range display, tournament description, animated status badge with pulse dot, interactive metric filter chips (Active / Upcoming / Total), and "View races" CTA footer.
+- Rebuilt Spectator Tournament Detail with a full-bleed hero banner (real track image + dark overlay), tournament description, date range, stats strip (total/betting/live/completed), and race schedule grouped by **Round** (Qualifier → Final) using `rh-round-group`. Each race row (`rhrow`) now shows time, date, referee name, distance, runner count, and a compact betting market strip (min/max stake, close date) when betting is open. Filters (All / Betting open / Live / Completed) with tab-style buttons still work; race grouping is disabled when a non-"all" filter is active.
+- Rebuilt Spectator Race Detail with a full-bleed horse-and-jockey hero image, race facts grid (date, time, distance, venue, runners, tournament prize), a dedicated betting market panel (status, min stake, max stake, closes at), referee card (name + experience years), registration status card (locked / open), and a "Participants — Draw pending" placeholder.
+- Enriched `spectatorAdapters.js`: added `getTrackImage(id)` and `getHorseJockeyImage(id)` helpers (hash-based deterministic pool selection); exposed `referee` name/experience, `bettingMarket` object (min/max stake, currency, formatted open/close display), `registrationLocked`, `description`, `dateDisplay`, `endDateDisplay`, `raceDateDisplay`, `roundOrder`, and `image` on every race and tournament shape.
+- Added ~1 100 lines of scoped CSS to `spectator.css` covering all new `tcard`, `tlboard`, `rh-*`, `rhrow`, and `rd-*` selectors, with desktop / tablet / mobile breakpoints and `prefers-reduced-motion` support.
+- Frontend production build passed (`✓ built in 13.20s`). No lint or test script is defined in `package.json`.
+- In-app browser QA was not possible (browser subagent could not reach `localhost:5173`); visual verification should be done in the user's own browser at `http://localhost:5173/spectator/tournaments`.
+- Backend was inspected as a read-only API contract and was not modified.
+
+Phase 10 changed files:
+
+- `src/pages/spectator/spectatorAdapters.js`
+- `src/pages/spectator/TournamentList.jsx`
+- `src/pages/spectator/TournamentDetail.jsx`
+- `src/pages/spectator/RaceDetail.jsx`
+- `src/pages/spectator/spectator.css`
+
+## Environment notes (2026-06-23)
+
+- **Taste Skill** (`Leonxlnx/taste-skill`) installed globally at `C:\Users\pc\.gemini\config\.agents\skills`. Skills available: `design-taste-frontend`, `design-taste-frontend-v1`, `high-end-visual-design`, `stitch-design-taste`, `redesign-existing-projects`, `minimalist-ui`, `full-output-enforcement`, `brandkit`, `gpt-taste`, `industrial-brutalist-ui`, `image-to-code`, `imagegen-frontend-web`, `imagegen-frontend-mobile`. These will auto-load in new sessions.
+- **Test accounts** are documented in `docs/TEST_ACCOUNTS.md`. Common password: `Password123`. Admin token can be obtained by POST to `http://localhost:3000/api/auth/login`.
+- **Servers**: frontend at `localhost:5173` (`npm run dev` in `horse-racing-frontend`), backend at `localhost:3000` (`npm start` in `horse-racing-backend`), MongoDB connected.
+
+## Phase 11 completed (2026-06-25)
+
+- Connected the Spectator Race Detail view to the live published results endpoint `/users/spectator/races/:raceId/results`.
+- Added proxy routing for `/users` in `vite.config.js` to redirect requests to the backend server.
+- Adjusted the API client `client.js` to skip prepending the `/api` prefix for routes starting with `/users`.
+- Implemented `getRaceResults` in `spectatorApi.js` and the `useSpectatorRaceResultsSingle` hook in `useSpectatorData.js`.
+- Expanded the spectator results adapter to extract horse `weight` and `ownerId` from the populated horse sub-document.
+- Updated warnings, layout status badges, and podium/viewer components in `RaceDetail.jsx` to dynamically load live results when they are published by the admin.
+- Verified compilation and build status successfully.
+
+Phase 11 changed files:
+
+- `vite.config.js`
+- `src/api/client.js`
+- `src/api/spectatorApi.js`
+- `src/pages/spectator/useSpectatorData.js`
+- `src/pages/spectator/spectatorAdapters.js`
+- `src/pages/spectator/RaceDetail.jsx`
+
+### Phase 12 completed (2026-06-25)
+
+- Expanded relative CSS inset calculations for lanes 6, 7, and 8 for both desktop and mobile viewports in `spectator.css`.
+- Updated `toSpectatorRace(apiRace)` in `spectatorAdapters.js` to map `updatedAt` field from backend `updated_at`/`updatedAt` data.
+- Handled startsAt synchronization inside `useRaceViewerSession.js` using `race.updatedAt` when the race is running.
+- Implemented Winner Alignment in `RaceDetail.jsx` by moving the horse with `position === 1` to lane 3 (index 2 when sorted), which gets the fastest finish time in the 2D script, aligning the visual animation with official backend results.
+- Verified build and compilation status using production build (`✓ built in 12.73s`).
+
+Changed files:
+
+- `src/pages/spectator/spectator.css`
+- `src/pages/spectator/spectatorAdapters.js`
+- `src/pages/spectator/RaceDetail.jsx`
+
 ## First task for the next session
 
-Phases 1 through 9 are complete. Start with the next Owner enrichment milestone only:
-
-- Join owner-scoped `GET /api/jockey-assignments` data into Owner schedule and horse views so assigned jockey names and assignment states replace the current explicit assignment-unavailable labels.
-- Audit derived horse summary fields such as next race and record. Populate only fields supported by registrations and assignments; keep race records unavailable until an owner-readable published-result contract exists.
-- Keep the backend read-only.
-- Verify with frontend build and authenticated Chrome QA, then report changed files plus remaining work.
+All primary integration phases are now completed. The next task is to perform end-to-end integration verification, monitor live spectator flow, or start prototyping advanced features like live prediction settling when the backend prediction/betting contracts become available.
 
 ## Prompt to open a new session
 
 ```text
 Work only in D:\WDP\horse-racing-frontend unless I explicitly authorize backend changes.
 
-Read horse-racing-frontend/docs/SESSION_HANDOFF_API_INTEGRATION.md first. Use actual backend code under D:\WDP\horse-racing-backend as a read-only API contract; do not rely on possibly stale backend Markdown files.
-
-Chrome extension QA works from the VS Code Codex surface. Use authenticated Chrome QA after implementation when the local frontend and backend are running. The Codex App in-app Browser recovery notes above remain a separate surface.
-
-Continue from "First task for the next session": join owner-scoped jockey assignments into Owner schedule and horse views, then audit the remaining derived horse summary fields. Inspect the current code before editing, preserve existing user changes and theme, and do not invent missing owner result or prize APIs.
+Read horse-racing-frontend/docs/SESSION_HANDOFF_API_INTEGRATION.md first. Inspect the current code before editing, preserve the existing green/beige/orange theme, and do not invent missing APIs.
 ```
 
 ## Keeping future sessions token-efficient
@@ -345,3 +394,5 @@ Continue from "First task for the next session": join owner-scoped jockey assign
 - At the end of each session, update this file with completed work, changed files, test results and the next task.
 - Start a fresh session after completing a sizeable milestone; retain this file as the durable project memory.
 - If code and this handoff disagree, code is authoritative and the handoff should be corrected.
+
+

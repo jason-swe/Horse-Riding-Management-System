@@ -108,7 +108,10 @@ function mapResult(item, index = 0) {
   const race = item.race_id || item.race || {};
   const horse = item.horse_id || item.horse || {};
   const position = Number(item.position || index + 1);
-  const finishTime = item.finish_time ? `${item.finish_time}s` : item.time || "TBA";
+  const rawTime = item.finish_time;
+  const finishTime = rawTime !== null && rawTime !== undefined && rawTime !== "" && !Number.isNaN(Number(rawTime))
+    ? `${Number(rawTime).toFixed(2)}s`
+    : item.time || "TBA";
 
   return {
     id: getId(item) || `RES-${index + 1}`,

@@ -10,8 +10,11 @@ export function adaptRaceScript(payload, expectedRaceId) {
   if (!isFiniteNumber(payload.duration_ms) || payload.duration_ms <= 0 || !isFiniteNumber(payload.track_length) || payload.track_length <= 0) {
     throw new Error("Race script timing or track length is invalid.");
   }
-  if (!Array.isArray(payload.horses) || payload.horses.length !== 5) {
-    throw new Error("The first race viewer version requires exactly five horses.");
+  if (!Array.isArray(payload.horses) || payload.horses.length === 0) {
+    throw new Error("The race viewer requires at least one horse.");
+  }
+  if (payload.horses.length > 8) {
+    throw new Error("The race viewer supports a maximum of 8 horses.");
   }
 
   const horseIds = new Set();

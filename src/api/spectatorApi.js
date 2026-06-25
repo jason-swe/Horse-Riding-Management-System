@@ -29,4 +29,8 @@ export const spectatorApi = {
   listRaceResults(params = {}) {
     return apiRequest(withQuery("/race-results", params));
   },
+
+  getRaceResults(raceId) {
+    return apiRequest(`/users/spectator/races/${raceId}/results`);
+  },
 };

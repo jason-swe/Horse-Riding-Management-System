@@ -357,7 +357,13 @@ export function adaptAdminRaceResultDetail(data) {
       ["Result status", getGroupStatus(results)],
       ["Result rows", String(results.length)],
       ["Current leader", getEntityName(leader?.horse_id, "Not ranked")],
-      ["Leader finish time", leader ? `${leader.final_finish_time ?? leader.finish_time ?? "-"}s` : "-"],
+      ["Leader finish time", (() => {
+        if (!leader) return "-";
+        const val = leader.final_finish_time ?? leader.finish_time;
+        if (val === null || val === undefined || val === "") return "-";
+        const num = Number(val);
+        return !Number.isNaN(num) ? `${num.toFixed(2)}s` : `${val}s`;
+      })()],
       ["Applied violations", String(appliedViolations)],
       ["Confirmed at", formatDate(results[0]?.confirmed_at)],
       ["Published at", formatDate(results[0]?.published_at)],

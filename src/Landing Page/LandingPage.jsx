@@ -101,7 +101,6 @@ function LandingPage() {
           <nav className="nav landing-nav" aria-label="Primary navigation">
             {navItems.map((item, index) => (
               <Link key={item.label} to={item.to} className={index === 0 ? "active" : ""}>
-                <span className="landing-nav__index">{String(index + 1).padStart(2, "0")}</span>
                 <span className="landing-nav__label">{item.label}</span>
               </Link>
             ))}
@@ -123,11 +122,11 @@ function LandingPage() {
               Manage Your <span className="hero-title-accent">Horse Racing</span> Tournament
             </h1>
             <p className="hero-description">
-              Manage registrations, race schedules, race results, rankings, and prediction features for horse owners, jockeys, referees, spectators, and admins.
+              Create tournaments, assign race roles, publish official results, and keep every stakeholder on the same track.
             </p>
             <div className="hero-actions">
               <Link className="primary-btn" to="/spectator/tournaments">
-                Explore Tournament
+                Explore tournaments
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </div>
@@ -144,7 +143,7 @@ function LandingPage() {
 
           <aside className="hero-rail" aria-label="Tournament roles and explore more">
             <div className="trainer-card">
-              <p className="trainer-kicker">Race network</p>
+              <p className="trainer-kicker">Race command</p>
               <div className="trainer-avatar-stack" aria-hidden="true">
                 <span className="trainer-avatar avatar-1">O</span>
                 <span className="trainer-avatar avatar-2">J</span>
@@ -153,7 +152,7 @@ function LandingPage() {
                 <span className="trainer-avatar avatar-5">A</span>
               </div>
               <div className="trainer-count">5 roles</div>
-              <div className="trainer-label">One shared race day</div>
+              <div className="trainer-label">Owner, jockey, referee, spectator, admin</div>
             </div>
 
             <Link className="explore-rail" to="/spectator/tournaments">
@@ -162,7 +161,7 @@ function LandingPage() {
               </div>
               <div className="explore-copy">
                 <span>Explore</span>
-                <strong>Race modules</strong>
+                <strong>Open race hub</strong>
               </div>
               <span className="play-btn" aria-hidden="true">
                 <ArrowRight size={16} />
