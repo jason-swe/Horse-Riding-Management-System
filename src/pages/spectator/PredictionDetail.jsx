@@ -28,6 +28,8 @@ import { useMockRaceSession } from "./live-race/useMockRaceSession.js";
 import { BET_TYPES, getBetType, isSelectionComplete, moveSelection, updateSelection } from "./betting/fixedOddsRules.js";
 import { createMockFixedOddsMarket, getMarketOdds } from "./betting/mockFixedOddsMarket.js";
 import { FIXED_ODDS_MARKET_STATES, validateAcceptedBetReceipt, validateFixedOddsMarket } from "./betting/fixedOddsContract.js";
+import { getHorseJockeyImage } from "./spectatorAdapters.js";
+import { refereeApi } from "../../api/refereeApi.js";
 import "./spectator.css";
 
 const stakeOptions = [50, 100, 200, 500];

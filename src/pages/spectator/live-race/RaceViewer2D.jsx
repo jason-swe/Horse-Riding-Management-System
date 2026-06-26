@@ -40,17 +40,19 @@ function StadiumEnvironment() {
 }
 
 function PodiumOverlay({ contendersById, playbackState, raceResult, ranking }) {
-  const isFinished = ["awaiting-result", "finished"].includes(playbackState);
-  if (!isFinished) return null;
-
   const isOfficial = Boolean(raceResult?.results?.length);
+  
+  // Filter finished horses for live playback
+  const finishedHorses = ranking.filter((item) => item.progress >= 1);
   const placements = isOfficial
     ? raceResult.results.filter((item) => item.position <= 3).sort((a, b) => a.position - b.position)
-    : ranking.slice(0, 3).map((item) => ({
-      finish_time_ms: item.finishTimeMs,
-      horse_id: item.horseId,
-      position: item.position,
-    }));
+    : finishedHorses.slice(0, 3).map((item, idx) => ({
+        finish_time_ms: item.finishTimeMs || item.finish_time_ms,
+        horse_id: item.horseId || item.horse_id,
+        position: idx + 1,
+      }));
+
+  if (!placements.length) return null;
 
   return (
     <div className="live-race-podium" role="status" aria-label="Top three finishers">
@@ -62,7 +64,7 @@ function PodiumOverlay({ contendersById, playbackState, raceResult, ranking }) {
         {placements.map((result) => {
           const horse = contendersById.get(result.horse_id);
           return (
-            <article className={`live-race-podium__place live-race-podium__place--${result.position}`} key={result.horse_id}>
+            <article className={`live-race-podium__place live-race-podium__place--${result.position} animate-result-fly-in`} key={result.horse_id}>
               <span>#{result.position}</span>
               <img src={horse?.image} alt="" />
               <div><strong>{horse?.horse || result.horse_id}</strong><small>Lane {horse?.lane} / {formatRaceTime(result.finish_time_ms)}</small></div>
@@ -95,6 +97,7 @@ export default function RaceViewer2D({
   const startsAt = playback.script?.startsAt;
   const msRemaining = startsAt ? startsAt - Date.now() : 0;
   const showCountdown = playback.playbackState === "ready" && msRemaining > 0 && msRemaining <= 3000;
+  const isCompleted = race.raceStatus === "completed" || playback.playbackState === "finished";
 
   const visibleStatusLabel = statusLabel || stateLabels[playback.playbackState];
   const leader = ranking[0];
@@ -120,60 +123,94 @@ export default function RaceViewer2D({
 
         {playback.scriptError && <div className="live-race-state-message live-race-state-message--error" role="alert">{playback.scriptError}</div>}
 
-        <div className="live-race-track live-race-track--oval" ref={playback.registerTrack}>
-          <StadiumEnvironment />
-          {showCountdown && (
-            <div className="live-race-countdown-overlay" role="status" aria-live="polite">
-              <div className="live-race-countdown-number">
-                {Math.ceil(msRemaining / 1000)}
+        {isCompleted ? (
+          <div className="official-results-container">
+            <div className="official-results-modal animate-results-modal">
+              <div className="official-results-modal__header">
+                <Trophy size={32} className="official-results-modal__icon" />
+                <div>
+                  <span>Official Race Results</span>
+                  <h1>{race.name}</h1>
+                </div>
+              </div>
+              <div className="official-results-modal__divider" />
+              <div className="official-results-modal__list">
+                {ranking.map((item) => {
+                  const horse = contendersById.get(item.horseId || item.horse_id);
+                  const medalClass = item.position === 1 ? "gold" : item.position === 2 ? "silver" : item.position === 3 ? "bronze" : "other";
+                  return (
+                    <div className={`official-results-modal__row official-results-modal__row--${medalClass}`} key={item.horseId || item.horse_id}>
+                      <span className="official-results-modal__position">#{item.position}</span>
+                      <img src={horse?.image} className="official-results-modal__avatar" alt="" />
+                      <div className="official-results-modal__identity">
+                        <strong>{horse?.horse || item.name}</strong>
+                        <small>Lane {item.lane} / Jockey: {horse?.jockey}</small>
+                      </div>
+                      <span className="official-results-modal__time">{formatRaceTime(item.finishTimeMs || item.finish_time_ms || 0)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          )}
-          {playback.playbackState === "ready" && !showCountdown && (
-            <div className="live-race-start-callout" role="status">
-              <Flag size={18} />
-              <span><small>Starting line</small><strong>Runners are set at the gate</strong></span>
-            </div>
-          )}
-          {isRacing && (
-            <div className="live-race-broadcast" aria-live="polite">
-              <span><Activity size={13} /> Live</span>
-              <strong>{playback.racePhase}</strong>
-            </div>
-          )}
-          {isRacing && leaderHorse && (
-            <div className="live-race-leader-callout">
-              <Sparkles size={14} />
-              <span><small>Current leader</small><strong>#{leaderHorse.lane} {leaderHorse.horse}</strong></span>
-            </div>
-          )}
-          <div className="live-race-oval__outer-rail" aria-hidden="true" />
-          <div className="live-race-oval__inner-rail" aria-hidden="true" />
-          <div className="live-race-oval__distance-markers" aria-hidden="true">
-            <span className="live-race-distance-marker live-race-distance-marker--250">250m</span>
-            <span className="live-race-distance-marker live-race-distance-marker--500">500m</span>
-            <span className="live-race-distance-marker live-race-distance-marker--750">750m</span>
           </div>
-          <div className="live-race-oval__field" aria-hidden="true"><Flag size={16} /><span>{race.name}</span><small>{race.distance}</small></div>
-          {contenders.map((horse) => <div className={`live-race-oval__lane live-race-oval__lane--${horse.lane}`} key={`lane-${horse.id}`} aria-hidden="true" />)}
-          <div className="live-race-oval__finish" aria-hidden="true">
-            <Flag size={16} className="live-race-finish-flag live-race-finish-flag--outer" />
-            <span className="live-race-finish-text live-race-finish-text--outer">
-              {playback.playbackState === "ready" ? "Start" : "Finish"}
-            </span>
-            <Flag size={16} className="live-race-finish-flag live-race-finish-flag--inner" />
-            <span className="live-race-finish-text live-race-finish-text--inner">
-              {playback.playbackState === "ready" ? "Start" : "Finish"}
-            </span>
-          </div>
-          {playback.script && contenders.map((horse) => (
-            <div className={`live-race-oval-runner live-race-oval-runner--${horse.lane}`} key={horse.id} ref={(marker) => playback.registerRunner(horse.id, marker)} style={{ "--runner-color": horse.color }}>
-              <img src={horse.image} alt="" />
-              <span>{horse.lane}</span>
+        ) : (
+          <div className="live-race-track live-race-track--oval" ref={playback.registerTrack}>
+            <StadiumEnvironment />
+            {showCountdown && (
+              <div className="live-race-countdown-overlay" role="status" aria-live="polite">
+                <div className="live-race-countdown-number">
+                  {Math.ceil(msRemaining / 1000)}
+                </div>
+              </div>
+            )}
+            {playback.playbackState === "ready" && !showCountdown && (
+              <div className="live-race-start-callout" role="status">
+                <Flag size={18} />
+                <span><small>Starting line</small><strong>Runners are set at the gate</strong></span>
+              </div>
+            )}
+            {isRacing && (
+              <div className="live-race-broadcast" aria-live="polite">
+                <span><Activity size={13} /> Live</span>
+                <strong>{playback.racePhase}</strong>
+              </div>
+            )}
+            {isRacing && leaderHorse && (
+              <div className="live-race-leader-callout">
+                <Sparkles size={14} />
+                <span><small>Current leader</small><strong>#{leaderHorse.lane} {leaderHorse.horse}</strong></span>
+              </div>
+            )}
+            <div className="live-race-oval__outer-rail" aria-hidden="true" />
+            <div className="live-race-oval__inner-rail" aria-hidden="true" />
+            <div className="live-race-oval__distance-markers" aria-hidden="true">
+              <span className="live-race-distance-marker live-race-distance-marker--250">250m</span>
+              <span className="live-race-distance-marker live-race-distance-marker--500">500m</span>
+              <span className="live-race-distance-marker live-race-distance-marker--750">750m</span>
             </div>
-          ))}
-          <PodiumOverlay contendersById={contendersById} playbackState={playback.playbackState} raceResult={raceResult} ranking={ranking} />
-        </div>
+            <div className="live-race-oval__field" aria-hidden="true"><Flag size={16} /><span>{race.name}</span><small>{race.distance}</small></div>
+            {Array.from({ length: 8 }, (_, i) => i + 1).map((lane) => (
+              <div className={`live-race-oval__lane live-race-oval__lane--${lane}`} key={`lane-${lane}`} aria-hidden="true" />
+            ))}
+            <div className="live-race-oval__finish" aria-hidden="true">
+              <Flag size={16} className="live-race-finish-flag live-race-finish-flag--outer" />
+              <span className="live-race-finish-text live-race-finish-text--outer">
+                {playback.playbackState === "ready" ? "Start" : "Finish"}
+              </span>
+              <Flag size={16} className="live-race-finish-flag live-race-finish-flag--inner" />
+              <span className="live-race-finish-text live-race-finish-text--inner">
+                {playback.playbackState === "ready" ? "Start" : "Finish"}
+              </span>
+            </div>
+            {playback.script && contenders.map((horse) => (
+              <div className={`live-race-oval-runner live-race-oval-runner--${horse.lane}`} key={horse.id} ref={(marker) => playback.registerRunner(horse.id, marker)} style={{ "--runner-color": horse.color }}>
+                <img src={horse.image} alt="" />
+                <span>{horse.lane}</span>
+              </div>
+            ))}
+            <PodiumOverlay contendersById={contendersById} playbackState={playback.playbackState} raceResult={raceResult} ranking={ranking} />
+          </div>
+        )}
 
         <div className="live-race-viewer__footer">
           <span><Clock3 size={14} /> {formatRaceTime(playback.elapsedMs)}</span>

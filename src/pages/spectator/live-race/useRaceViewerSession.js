@@ -35,7 +35,7 @@ export function useRaceViewerSession(race, contenders) {
       const startsAt = race.updatedAt ? new Date(race.updatedAt).getTime() - 68000 : Date.now() - 90000;
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
-        raceResult: createMockRaceResult(race.id),
+        raceResult: createMockRaceResult(race.id, contenders),
         raceScript: createMockRaceScript(race.id, startsAt, contenders),
       };
     }
