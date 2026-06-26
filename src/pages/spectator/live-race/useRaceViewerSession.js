@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { CONNECTION_STATES } from "../../../realtime/socketEvents";
 import { RACE_STATUS } from "../race/raceStatus";
-import { createMockRaceResult, createMockRaceScript } from "./mockRaceFixtures";
+import { createMockRaceScript } from "./mockRaceFixtures";
 
 export function useRaceViewerSession(race, contenders) {
   return useMemo(() => {
@@ -22,7 +22,7 @@ export function useRaceViewerSession(race, contenders) {
       };
     }
 
-    if (race.raceStatus === RACE_STATUS.SCHEDULED || race.raceStatus === RACE_STATUS.READY) {
+    if (race.raceStatus === RACE_STATUS.SCHEDULED) {
       const startsAt = Date.now() + 3600000; // 1 hour in the future
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
@@ -35,7 +35,7 @@ export function useRaceViewerSession(race, contenders) {
       const startsAt = race.updatedAt ? new Date(race.updatedAt).getTime() - 68000 : Date.now() - 90000;
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
-        raceResult: createMockRaceResult(race.id, contenders),
+        raceResult: null,
         raceScript: createMockRaceScript(race.id, startsAt, contenders),
       };
     }

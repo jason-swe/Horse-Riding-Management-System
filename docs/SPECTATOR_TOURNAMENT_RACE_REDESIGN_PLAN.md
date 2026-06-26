@@ -113,7 +113,6 @@ Frontend không được suy ra quyền đặt cược trực tiếp từ `race.
 Race lifecycle          Betting market lifecycle
 ------------------      ------------------------
 scheduled               unavailable
-ready                   scheduled
 running                 open
 completed               suspended
 cancelled               closed
@@ -125,7 +124,7 @@ Tên chính thức phải được backend xác nhận. Frontend sẽ normalize 
 
 ```js
 {
-  raceStatus: "scheduled" | "ready" | "running" | "completed" | "cancelled" | "postponed",
+  raceStatus: "scheduled" | "running" | "completed" | "cancelled" | "postponed",
   bettingStatus: "unavailable" | "scheduled" | "open" | "suspended" | "closed" | "settled" | "void"
 }
 ```
@@ -135,7 +134,6 @@ Tên chính thức phải được backend xác nhận. Frontend sẽ normalize 
 | Race status | Betting status | CTA chính | CTA phụ |
 |---|---|---|---|
 | scheduled | open | `Bet Now` | `View Race` |
-| ready | open | `Bet Now` | `View Race` |
 | scheduled | scheduled | `View Race` | Không có nút cược |
 | running | closed | `Watch Live` | Không có nút cược |
 | completed | settled | `View Result` | Không có nút cược |

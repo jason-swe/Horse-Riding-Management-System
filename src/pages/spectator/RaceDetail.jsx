@@ -224,7 +224,7 @@ export default function RaceDetail() {
       : bettingStatusMeta[race.bettingStatus];
 
   const canBet = race.bettingStatus === BETTING_STATUS.OPEN;
-  const isScheduled = [RACE_STATUS.SCHEDULED, RACE_STATUS.READY].includes(race.raceStatus);
+  const isScheduled = race.raceStatus === RACE_STATUS.SCHEDULED;
 
   const raceResult = hasRealResults
     ? {
@@ -239,10 +239,11 @@ export default function RaceDetail() {
       }
     : viewer.raceResult;
 
-  const viewerEyebrow = hasRealResults ? "Official 2D track" : backendParticipants.length > 0 ? "Live 2D track" : "Prototype 2D track";
-  const rankingEyebrow = hasRealResults ? "Official ranking" : backendParticipants.length > 0 ? "Live order" : "Sample order";
-  const rankingTitle = hasRealResults ? "Final standings" : backendParticipants.length > 0 ? "Current positions" : "Fixture positions";
-  const statusLabel = hasRealResults ? "Official" : backendParticipants.length > 0 ? "Live" : "Simulation only";
+  const isResultPending = race.raceStatus === RACE_STATUS.COMPLETED && !hasRealResults;
+  const viewerEyebrow = hasRealResults ? "Official 2D track" : isResultPending ? "Result pending" : backendParticipants.length > 0 ? "Live 2D track" : "Prototype 2D track";
+  const rankingEyebrow = hasRealResults ? "Official ranking" : isResultPending ? "Race Engine" : backendParticipants.length > 0 ? "Live order" : "Sample order";
+  const rankingTitle = hasRealResults ? "Final standings" : isResultPending ? "Awaiting official standings" : backendParticipants.length > 0 ? "Current positions" : "Fixture positions";
+  const statusLabel = hasRealResults ? "Official" : isResultPending ? "Awaiting official result" : backendParticipants.length > 0 ? "Live" : "Simulation only";
 
   const coreFactItems = [
     race.raceDateDisplay
@@ -407,7 +408,7 @@ export default function RaceDetail() {
           </span>
         ) : backendParticipants.length > 0 ? (
           <span>
-            <strong>Live participants connected.</strong> The runner field and 2D viewer are displaying the real-time registration data from the backend.
+            <strong>{isResultPending ? "Race completed." : "Live participants connected."}</strong> {isResultPending ? "Waiting for confirmed Race Engine results before showing the official standings." : "The runner field and 2D viewer are displaying the real-time registration data from the backend."}
           </span>
         ) : (
           <span>
@@ -440,7 +441,7 @@ export default function RaceDetail() {
           </span>
         ) : backendParticipants.length > 0 ? (
           <span>
-            <ShieldCheck size={15} /> Real-time race participants connected; viewer running in simulation mode
+            <ShieldCheck size={15} /> {isResultPending ? "Race complete; waiting for official Race Engine result" : "Real-time race participants connected; viewer running in simulation mode"}
           </span>
         ) : (
           <>

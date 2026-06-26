@@ -10,13 +10,13 @@ const filters = [
   { id: "available", label: "Available", test: (race) => race.bettingStatus === BETTING_STATUS.OPEN },
   { id: "opening", label: "Opening soon", test: (race) => race.bettingStatus === BETTING_STATUS.SCHEDULED },
   { id: "live", label: "Live races", test: (race) => race.raceStatus === RACE_STATUS.RUNNING },
-  { id: "upcoming", label: "All upcoming", test: (race) => [RACE_STATUS.SCHEDULED, RACE_STATUS.READY].includes(race.raceStatus) },
+  { id: "upcoming", label: "All upcoming", test: (race) => race.raceStatus === RACE_STATUS.SCHEDULED },
 ];
 
 function sortRaceMarkets(races) {
   const weight = (race) => {
     if (race.bettingStatus === BETTING_STATUS.OPEN) return 0;
-    if ([RACE_STATUS.SCHEDULED, RACE_STATUS.READY].includes(race.raceStatus)) return 1;
+    if (race.raceStatus === RACE_STATUS.SCHEDULED) return 1;
     if (race.raceStatus === RACE_STATUS.RUNNING) return 2;
     return 3;
   };
@@ -60,7 +60,7 @@ export default function Predictions() {
   const counts = useMemo(() => Object.fromEntries(filters.map((item) => [item.id, sortedRaces.filter(item.test).length])), [sortedRaces]);
   const visibleRaces = sortedRaces.filter(filters.find((item) => item.id === filter)?.test || (() => true));
   const openCount = counts.available || 0;
-  const nextRace = sortedRaces.find((race) => [RACE_STATUS.SCHEDULED, RACE_STATUS.READY].includes(race.raceStatus));
+  const nextRace = sortedRaces.find((race) => race.raceStatus === RACE_STATUS.SCHEDULED);
 
   if (isLoading) return <section className="spectator-page"><LoadingSkeleton ariaLabel="Loading race markets" rows={4} variant="list" /></section>;
 

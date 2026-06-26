@@ -6,7 +6,6 @@ export const RACE_PHASES = {
 
 export const RACE_STATUSES = {
   SCHEDULED: "scheduled",
-  READY: "ready",
   RUNNING: "running",
   COMPLETED: "completed",
   CANCELLED: "cancelled",

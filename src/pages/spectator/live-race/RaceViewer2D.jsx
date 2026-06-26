@@ -97,7 +97,9 @@ export default function RaceViewer2D({
   const startsAt = playback.script?.startsAt;
   const msRemaining = startsAt ? startsAt - Date.now() : 0;
   const showCountdown = playback.playbackState === "ready" && msRemaining > 0 && msRemaining <= 3000;
-  const isCompleted = race.raceStatus === "completed" || playback.playbackState === "finished";
+  const hasOfficialResult = Boolean(raceResult?.results?.length);
+  const awaitingOfficialResult = race.raceStatus === "completed" && !hasOfficialResult;
+  const showOfficialResults = hasOfficialResult && (race.raceStatus === "completed" || playback.playbackState === "finished");
 
   const visibleStatusLabel = statusLabel || stateLabels[playback.playbackState];
   const leader = ranking[0];
@@ -123,7 +125,7 @@ export default function RaceViewer2D({
 
         {playback.scriptError && <div className="live-race-state-message live-race-state-message--error" role="alert">{playback.scriptError}</div>}
 
-        {isCompleted ? (
+        {showOfficialResults ? (
           <div className="official-results-container">
             <div className="official-results-modal animate-results-modal">
               <div className="official-results-modal__header">
@@ -208,7 +210,7 @@ export default function RaceViewer2D({
                 <span>{horse.lane}</span>
               </div>
             ))}
-            <PodiumOverlay contendersById={contendersById} playbackState={playback.playbackState} raceResult={raceResult} ranking={ranking} />
+            {!awaitingOfficialResult && <PodiumOverlay contendersById={contendersById} playbackState={playback.playbackState} raceResult={raceResult} ranking={ranking} />}
           </div>
         )}
 
@@ -221,9 +223,11 @@ export default function RaceViewer2D({
 
       <div className="live-race-lower-grid">
         <section className="live-race-ranking" aria-label="Live race ranking" aria-live={raceResult ? "polite" : "off"}>
-          <div className="live-race-section-heading"><div><span className="live-race-kicker"><Medal size={14} /> {rankingEyebrow}</span><h2>{rankingTitle}</h2></div><small>{rankingStateLabel || (raceResult ? "Official" : "Provisional")}</small></div>
+          <div className="live-race-section-heading"><div><span className="live-race-kicker"><Medal size={14} /> {rankingEyebrow}</span><h2>{rankingTitle}</h2></div><small>{rankingStateLabel || (raceResult ? "Official" : awaitingOfficialResult ? "Pending" : "Provisional")}</small></div>
           <div className="live-race-ranking__list">
-            {ranking.map((item) => {
+            {awaitingOfficialResult ? (
+              <div className="live-race-state-message" role="status">Official Race Engine standings will appear here once confirmed results are available.</div>
+            ) : ranking.map((item) => {
               const horse = contendersById.get(item.horseId);
               return (
                 <div className={`live-race-ranking__row${item.position === 1 && isRacing ? " is-leading" : ""}`} key={item.horseId}>

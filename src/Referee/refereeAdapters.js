@@ -24,6 +24,12 @@ function raceIdOf(value) {
   return getId(value?.race_id || value?.race);
 }
 
+function normalizeRaceStatus(status) {
+  const value = String(status || "scheduled").trim().toLowerCase();
+  if (["ready", "at_gate", "at-the-gate"].includes(value)) return "scheduled";
+  return value || "scheduled";
+}
+
 function formatDateTime(value) {
   if (!value) return { date: "Unscheduled", time: "TBD" };
   const date = new Date(value);
@@ -171,8 +177,8 @@ export function adaptRefereeApiData({ races, participantPayloads, results, viola
       track: race.location || "Track not recorded",
       date: schedule.date,
       startTime: schedule.time,
-      status: String(race.status || "scheduled").toLowerCase(),
-      phase: getRacePhase(race.status),
+      status: normalizeRaceStatus(race.status),
+      phase: getRacePhase(normalizeRaceStatus(race.status)),
       participants: participantMap.get(id) || [],
       checks: allChecks.filter((item) => item.raceId === id),
       violations: allViolations.filter((item) => item.raceId === id),
