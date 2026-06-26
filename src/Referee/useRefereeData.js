@@ -26,11 +26,15 @@ export function useRefereeData() {
         refereeApi.listRefereeReports(),
       ]);
       const participantPayloads = participantSettled.filter((item) => item.status === "fulfilled").map((item) => item.value);
+      const unavailableRaceIds = participantSettled
+        .map((item, index) => (item.status === "rejected" ? getId(raceRows[index]) : null))
+        .filter(Boolean);
 
-      setIsUnavailable(participantSettled.some((item) => item.status === "rejected"));
+      setIsUnavailable(participantSettled.length > 0 && participantSettled.every((item) => item.status === "rejected"));
       setRaces(adaptRefereeApiData({
         races: raceData,
         participantPayloads,
+        unavailableRaceIds,
         results: resultData,
         violations: violationData,
         checks: checkData,

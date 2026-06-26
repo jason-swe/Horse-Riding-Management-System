@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { CONNECTION_STATES } from "../../../realtime/socketEvents";
 import { RACE_STATUS } from "../race/raceStatus";
-import { createMockRaceScript } from "./mockRaceFixtures";
+import { createMockRaceScript, createRaceEngineOrderScript } from "./mockRaceFixtures";
 
-export function useRaceViewerSession(race, contenders) {
+export function useRaceViewerSession(race, contenders, options = {}) {
   return useMemo(() => {
+    const createScript = options.useRaceEngineOrder ? createRaceEngineOrderScript : createMockRaceScript;
+
     if (!race) {
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
@@ -18,7 +20,7 @@ export function useRaceViewerSession(race, contenders) {
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
         raceResult: null,
-        raceScript: createMockRaceScript(race.id, startsAt, contenders),
+        raceScript: createScript(race.id, startsAt, contenders),
       };
     }
 
@@ -27,7 +29,7 @@ export function useRaceViewerSession(race, contenders) {
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
         raceResult: null,
-        raceScript: createMockRaceScript(race.id, startsAt, contenders),
+        raceScript: createScript(race.id, startsAt, contenders),
       };
     }
 
@@ -36,7 +38,7 @@ export function useRaceViewerSession(race, contenders) {
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
         raceResult: null,
-        raceScript: createMockRaceScript(race.id, startsAt, contenders),
+        raceScript: createScript(race.id, startsAt, contenders),
       };
     }
 
@@ -45,5 +47,5 @@ export function useRaceViewerSession(race, contenders) {
       raceResult: null,
       raceScript: null,
     };
-  }, [race, contenders]);
+  }, [race, contenders, options.useRaceEngineOrder]);
 }

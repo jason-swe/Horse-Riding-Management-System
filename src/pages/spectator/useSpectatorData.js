@@ -172,7 +172,7 @@ export function useSpectatorRaceResultsSingle(raceId) {
     setError("");
 
     try {
-      const data = await spectatorApi.listRaceResults({ race_id: raceId });
+      const data = await spectatorApi.getRaceResults(raceId);
       const adapted = adaptRaceResults(data);
       const sorted = (adapted.results || []).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
       setResults(sorted);

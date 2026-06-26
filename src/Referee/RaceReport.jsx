@@ -218,7 +218,7 @@ function RaceReport() {
           <p className="admin-panel__eyebrow">02 - Participants</p>
           <h2>Horses &amp; Jockeys</h2>
         </div>
-        {race.participants.length === 0 ? (
+        {race.participants.filter((participant) => participant.eligible).length === 0 ? (
           <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No participants available from the API yet.</p>
         ) : (
           <div className="admin-data-table__wrap">
@@ -227,7 +227,7 @@ function RaceReport() {
                 <tr><th>Lane</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>License</th></tr>
               </thead>
               <tbody>
-                {race.participants.map((participant) => (
+                {race.participants.filter((participant) => participant.eligible).map((participant) => (
                   <tr key={participant.horseId}>
                     <td>{participant.lane}</td>
                     <td><strong>{participant.horseName}</strong></td>

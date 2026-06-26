@@ -61,6 +61,10 @@ function adaptParticipant(item) {
     assignmentId: getId(assignment),
     assignmentStatus: assignment?.status || "unassigned",
     lane: registration.lane ?? assignment?.lane ?? null,
+    eligible: item.eligible === true,
+    blockers: asArray(item.blockers),
+    preRaceCheckStatus: item.pre_race_check?.status || "missing",
+    preRaceEligible: item.pre_race_check?.is_eligible,
   };
 }
 
@@ -156,11 +160,12 @@ function adaptReport(value) {
   };
 }
 
-export function adaptRefereeApiData({ races, participantPayloads, results, violations, checks, reports }) {
+export function adaptRefereeApiData({ races, participantPayloads, unavailableRaceIds = [], results, violations, checks, reports }) {
   const raceRows = extract(races, ["races", "data"]);
   const participantMap = new Map(
     asArray(participantPayloads).map(({ raceId, payload }) => [raceId, extract(payload, ["participants", "data"]).map(adaptParticipant)])
   );
+  const unavailableRaceSet = new Set(asArray(unavailableRaceIds));
   const allChecks = extract(checks, ["horse_checks", "checks", "data"]).map(adaptCheck);
   const allViolations = extract(violations, ["violations", "data"]).map(adaptViolation);
   const allResults = extract(results, ["race_results", "results", "data"]).map(adaptResult);
@@ -180,6 +185,7 @@ export function adaptRefereeApiData({ races, participantPayloads, results, viola
       status: normalizeRaceStatus(race.status),
       phase: getRacePhase(normalizeRaceStatus(race.status)),
       participants: participantMap.get(id) || [],
+      participantsUnavailable: unavailableRaceSet.has(id),
       checks: allChecks.filter((item) => item.raceId === id),
       violations: allViolations.filter((item) => item.raceId === id),
       result: raceResults,

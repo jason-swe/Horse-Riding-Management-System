@@ -42,6 +42,70 @@ const sortedCheckpointDistances = [
   [0, 160, 350, 600, 1000], // 8th: Fast start, then completely runs out of gas
 ];
 
+function seededRandom(seedStr) {
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i += 1) {
+    hash = (hash * 31 + seedStr.charCodeAt(i)) >>> 0;
+  }
+
+  return function nextRandom() {
+    hash = (hash * 1664525 + 1013904223) >>> 0;
+    return hash / 0xffffffff;
+  };
+}
+
+function clampDistance(value, min, max) {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function getChaoticCheckpoints(raceId, horse, horseIndex) {
+  const random = seededRandom(`${raceId}:${horse.id}:${horse.position}:${horseIndex}`);
+  const burst = random() > 0.5 ? 1 : -1;
+  const wobble = random() > 0.5 ? 1 : -1;
+  const first = clampDistance(70 + random() * 175 + burst * 35, 45, 285);
+  const second = clampDistance(first + 105 + random() * 230 + wobble * 45, first + 70, 585);
+  const thirdChaos = 515 + random() * 305 - (Number(horse.position || horseIndex + 1) * 8);
+  const third = clampDistance(thirdChaos, second + 60, 820);
+
+  return [0, first, second, third];
+}
+
+export function createRaceEngineOrderScript(raceId, startsAt = Date.now() + 3000, contenders = mockContenders) {
+  const durationMs = 68000;
+  const checkpointTimes = [0, 15000, 30000, 45000];
+  const ordered = [...contenders].sort((left, right) => (left.position || 99) - (right.position || 99));
+  const baseFinishMs = 56000;
+  const finishTimeByHorse = new Map(ordered.map((horse, index) => [
+    horse.id,
+    horse.raceEngineFinishTimeMs || baseFinishMs + index * 1700,
+  ]));
+
+  return {
+    race_id: raceId,
+    script_version: 1,
+    issued_at: new Date().toISOString(),
+    starts_at: new Date(startsAt).toISOString(),
+    duration_ms: durationMs,
+    track_length: 1000,
+    horses: contenders.map((horse, horseIndex) => {
+      const earlyDistances = getChaoticCheckpoints(raceId, horse, horseIndex);
+
+      return {
+        horse_id: horse.id,
+        name: horse.horse,
+        lane: horse.lane || (horseIndex + 1),
+        color: horse.color,
+        checkpoints: [...checkpointTimes, finishTimeByHorse.get(horse.id)].map((time, checkpointIndex) => ({
+          time_ms: time,
+          distance: checkpointIndex < earlyDistances.length ? earlyDistances[checkpointIndex] : 1000,
+        })),
+      };
+    }),
+    sequence: 300,
+    source: "race_engine_order",
+  };
+}
+
 export function createMockRaceScript(raceId, startsAt = Date.now() + 3000, contenders = mockContenders) {
   const durationMs = 68000;
   const checkpointTimes = [0, 15000, 30000, 45000];
