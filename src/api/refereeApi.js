@@ -26,9 +26,6 @@ export const refereeApi = {
     return apiRequest(`/races/${id}/participants`);
   },
 
-  readyRace(id) {
-    return apiRequest(`/races/${id}/ready`, { method: "POST" });
-  },
 
   startRace(id) {
     return apiRequest(`/races/${id}/start`, { method: "POST" });

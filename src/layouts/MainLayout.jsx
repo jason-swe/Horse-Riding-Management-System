@@ -25,7 +25,7 @@ const MainLayout = () => {
     }}>
       {/* Topbar - Exact Landing Page Pattern */}
       <header className="topbar">
-        <Link className="brand" to="/" aria-label="Horse racing home">
+        <Link className="brand" to="/spectator" aria-label="Horse racing spectator home">
           <span className="brand-mark">HR</span>
           <span className="brand-text">
             <strong>horse</strong>
@@ -69,7 +69,7 @@ const MainLayout = () => {
 
         <div className="site-footer__inner">
           <div className="footer-brand">
-            <Link className="brand footer-brand__link" to="/" aria-label="Horse racing home">
+            <Link className="brand footer-brand__link" to="/spectator" aria-label="Horse racing spectator home">
               <span className="brand-mark">HR</span>
               <span className="brand-text">
                 <strong>horse</strong>
