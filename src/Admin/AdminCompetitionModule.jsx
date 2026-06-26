@@ -4,7 +4,7 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import { adminApi } from "../api/adminApi";
 import AdminLayout from "./AdminLayout";
 
-const emptyTournament = { name: "", description: "", location: "", start_date: "", end_date: "", status: "draft" };
+const emptyTournament = { name: "", description: "", location: "", image_url: "", start_date: "", end_date: "", status: "draft" };
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
 const emptyRace = { tournament_id: "", round_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", status: "scheduled" };
 const PAGE_SIZE = 20;
@@ -70,10 +70,12 @@ function TournamentForm({ value, onChange, onSubmit, onCancel, saving, mode }) {
       <div className="admin-competition__form-columns">
         <label className="admin-field"><span>Name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Spring Championship 2026" /></label>
         <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Saigon Racecourse" /></label>
+        <label className="admin-field"><span>Image URL</span><input type="url" value={value.image_url} onChange={(event) => onChange("image_url", event.target.value)} placeholder="https://example.com/tournament.jpg" /></label>
         <label className="admin-field"><span>Start date</span><input type="date" value={value.start_date} onChange={(event) => onChange("start_date", event.target.value)} /></label>
         <label className="admin-field"><span>End date</span><input type="date" value={value.end_date} min={value.start_date || undefined} onChange={(event) => onChange("end_date", event.target.value)} /></label>
         <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="draft">Draft</option><option value="planning">Planning</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
       </div>
+      {value.image_url && <div className="admin-competition__image-preview"><img src={value.image_url} alt="" /><span>Image preview</span></div>}
       <label className="admin-field"><span>Description</span><textarea value={value.description} onChange={(event) => onChange("description", event.target.value)} placeholder="Competition format and operating notes" /></label>
       <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} tournament`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
     </form>
@@ -165,7 +167,7 @@ function AdminCompetitionModule({ moduleName }) {
 
   const openForm = (kind, item = null) => {
     let next;
-    if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
+    if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
     if (kind === "round") next = item ? { tournament_id: idOf(item.tournament_id), name: item.name || "", round_order: String(item.round_order || ""), description: item.description || "", status: item.status || "draft" } : { ...emptyRound, tournament_id: data.tournaments[0]?._id || "" };
     if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
     setForm(next);
@@ -180,7 +182,7 @@ function AdminCompetitionModule({ moduleName }) {
   const payloadFor = (kind) => {
     if (kind === "tournament") {
       if (form.start_date && form.end_date && form.end_date < form.start_date) throw new Error("End date must be on or after the start date.");
-      return { ...form, start_date: form.start_date || null, end_date: form.end_date || null };
+      return { ...form, image_url: form.image_url?.trim() || "", start_date: form.start_date || null, end_date: form.end_date || null };
     }
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);

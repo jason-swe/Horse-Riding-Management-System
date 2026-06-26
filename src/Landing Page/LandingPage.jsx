@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import LogoutButton from "../auth/LogoutButton";
+import { useAuth } from "../auth/AuthContext";
+import { getPostLoginRoute, getRoleRoute } from "../auth/roleRoutes";
 import "../App.css";
 import horseImage from "../img/img_horse03.png";
 
@@ -66,7 +69,14 @@ const testimonials = [
 
 function LandingPage() {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const { activeRole, isAuthenticated, roles, user } = useAuth();
   const year = new Date().getFullYear();
+  const workspaceRoute = getRoleRoute(activeRole) || getPostLoginRoute(roles);
+  const displayName = user?.full_name || user?.email || "Workspace";
+  const homeTarget = isAuthenticated ? workspaceRoute : "/";
+  const footerCta = isAuthenticated
+    ? { label: "Back to workspace", to: workspaceRoute }
+    : { label: "Create your account", to: "/signup" };
 
   const moveTestimonial = (direction) => {
     setTestimonialIndex(
@@ -90,7 +100,7 @@ function LandingPage() {
         <div className="hero-background" aria-hidden="true" />
 
         <header className="topbar topbar--minimal">
-          <Link className="brand" to="/" aria-label="Horse racing home">
+          <Link className="brand" to={homeTarget} aria-label="Horse racing home">
             <span className="brand-mark">HR</span>
             <span className="brand-text">
               <strong>horse</strong>
@@ -107,11 +117,20 @@ function LandingPage() {
           </nav>
 
           <div className="header-actions">
-            <Link className="signup-btn" to="/signup">Sign Up</Link>
-            <Link className="contact-btn" to="/login">
-              Login
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link className="signup-btn" to={workspaceRoute}>{displayName}</Link>
+                <LogoutButton className="contact-btn">Logout</LogoutButton>
+              </>
+            ) : (
+              <>
+                <Link className="signup-btn" to="/signup">Sign Up</Link>
+                <Link className="contact-btn" to="/login">
+                  Login
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </>
+            )}
           </div>
         </header>
 
@@ -283,7 +302,7 @@ function LandingPage() {
 
         <div className="site-footer__inner">
           <div className="footer-brand">
-            <Link className="brand footer-brand__link" to="/">
+            <Link className="brand footer-brand__link" to={homeTarget}>
               <span className="brand-mark">HR</span>
               <span className="brand-text">
                 <strong>horse</strong>
@@ -308,8 +327,8 @@ function LandingPage() {
             <p className="footer-label">Get started</p>
             <h3 id="landing-footer-cta">Your place at the track starts here.</h3>
             <p>Join the tournament workspace and keep every race-day detail within reach.</p>
-            <Link className="footer-race-call__link" to="/signup">
-              Create your account
+            <Link className="footer-race-call__link" to={footerCta.to}>
+              {footerCta.label}
               <ArrowRight size={18} aria-hidden="true" />
             </Link>
           </section>

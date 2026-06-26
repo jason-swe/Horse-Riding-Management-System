@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { useAuth } from "../auth/AuthContext";
@@ -16,6 +16,7 @@ function Login() {
   const [error, setError] = useState("");
   const [verificationEmail, setVerificationEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const notice = location.state?.notice;
 
   const updateField = (field, value) => {
@@ -95,16 +96,26 @@ function Login() {
 
             <div className="login-field">
               <label htmlFor="login-password">Password</label>
-              <input
-                id="login-password"
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                value={form.password}
-                onChange={(event) => updateField("password", event.target.value)}
-                required
-              />
+              <div className="auth-password-field">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  value={form.password}
+                  onChange={(event) => updateField("password", event.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                >
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </div>
             </div>
 
             <div className="login-page__row">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { saveRoleApplicationIntent } from "../auth/authStorage";
@@ -27,6 +28,10 @@ function SignUp() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    password: false,
+    confirmPassword: false,
+  });
   const rolePickerRef = useRef(null);
 
   useEffect(() => {
@@ -78,6 +83,10 @@ function SignUp() {
   const updateField = (field, value) => {
     setError("");
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setVisiblePasswords((current) => ({ ...current, [field]: !current[field] }));
   };
 
   const validateForm = () => {
@@ -216,30 +225,50 @@ function SignUp() {
             <div className="signup-page__grid">
               <div className="signup-field">
                 <label htmlFor="signup-password">Password</label>
-                <input
-                  id="signup-password"
-                  type="password"
-                  name="password"
-                  placeholder="Create password"
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={(event) => updateField("password", event.target.value)}
-                  required
-                />
+                <div className="auth-password-field">
+                  <input
+                    id="signup-password"
+                    type={visiblePasswords.password ? "text" : "password"}
+                    name="password"
+                    placeholder="Create password"
+                    autoComplete="new-password"
+                    value={form.password}
+                    onChange={(event) => updateField("password", event.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label={visiblePasswords.password ? "Hide password" : "Show password"}
+                    aria-pressed={visiblePasswords.password}
+                    onClick={() => togglePasswordVisibility("password")}
+                  >
+                    {visiblePasswords.password ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                  </button>
+                </div>
               </div>
 
               <div className="signup-field">
                 <label htmlFor="signup-confirm-password">Confirm password</label>
-                <input
-                  id="signup-confirm-password"
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Repeat password"
-                  autoComplete="new-password"
-                  value={form.confirmPassword}
-                  onChange={(event) => updateField("confirmPassword", event.target.value)}
-                  required
-                />
+                <div className="auth-password-field">
+                  <input
+                    id="signup-confirm-password"
+                    type={visiblePasswords.confirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Repeat password"
+                    autoComplete="new-password"
+                    value={form.confirmPassword}
+                    onChange={(event) => updateField("confirmPassword", event.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label={visiblePasswords.confirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    aria-pressed={visiblePasswords.confirmPassword}
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
+                  >
+                    {visiblePasswords.confirmPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                  </button>
+                </div>
               </div>
             </div>
 
