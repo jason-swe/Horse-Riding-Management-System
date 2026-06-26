@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,6 +23,7 @@ import { getHorseJockeyImage } from "./spectatorAdapters.js";
 import { mockContenders } from "./live-race/mockRaceFixtures.js";
 import RaceViewer2D from "./live-race/RaceViewer2D.jsx";
 import { useRaceViewerSession } from "./live-race/useRaceViewerSession.js";
+import { refereeApi } from "../../api/refereeApi.js";
 import {
   BETTING_STATUS,
   RACE_STATUS,
@@ -49,15 +51,16 @@ function FactCard({ icon: Icon, label, value, accent }) {
   );
 }
 
-function ParticipantPreview({ contenders, isOfficial }) {
+function ParticipantPreview({ contenders, isOfficial, isLiveConnection }) {
+  const isReal = isOfficial || isLiveConnection;
   return (
-    <section className="race-detail-field" aria-label={isOfficial ? "Race participants" : "Prototype race participants"}>
+    <section className="race-detail-field" aria-label={isReal ? "Race participants" : "Prototype race participants"}>
       <div className="live-race-section-heading">
         <div>
           <span className="live-race-kicker">
-            <UsersRound size={14} /> {isOfficial ? "Field" : "Prototype field"}
+            <UsersRound size={14} /> {isReal ? "Field" : "Prototype field"}
           </span>
-          <h2>{isOfficial ? "Runners and riders" : "Sample runners and riders"}</h2>
+          <h2>{isReal ? "Runners and riders" : "Sample runners and riders"}</h2>
         </div>
         <small>{contenders.length} fixtures</small>
       </div>
@@ -74,10 +77,10 @@ function ParticipantPreview({ contenders, isOfficial }) {
             </div>
             <div className="race-detail-field__form">
               <span>{horse.weight}</span>
-              {!isOfficial && <small>Form {horse.form}</small>}
+              {!isReal && <small>Form {horse.form}</small>}
             </div>
             <span className="race-detail-field__approved">
-              <CheckCircle2 size={14} /> {isOfficial ? "Official" : "Preview"}
+              <CheckCircle2 size={14} /> {isReal ? "Official" : "Preview"}
             </span>
           </article>
         ))}
@@ -86,13 +89,67 @@ function ParticipantPreview({ contenders, isOfficial }) {
   );
 }
 
+function seededRandom(seedStr) {
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i++) {
+    hash = (hash * 31 + seedStr.charCodeAt(i)) >>> 0;
+  }
+  return function() {
+    hash = (hash * 1664525 + 1013904223) >>> 0;
+    return hash / 0xffffffff;
+  };
+}
+
 export default function RaceDetail() {
   const { raceId, tournamentId } = useParams();
   const { isLoading: isLoadingTournament, races, tournament } = useSpectatorTournamentDetail(tournamentId);
   const { results: realResults, isLoading: isLoadingResults } = useSpectatorRaceResultsSingle(raceId);
   const race = races.find((item) => String(item.id) === String(raceId));
 
+  const [backendParticipants, setBackendParticipants] = useState([]);
+  const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
+
   const hasRealResults = realResults && realResults.length > 0;
+
+  useEffect(() => {
+    if (!raceId || hasRealResults) return;
+
+    let active = true;
+    async function fetchParticipants() {
+      setIsLoadingParticipants(true);
+      try {
+        const data = await refereeApi.getRaceParticipants(raceId);
+        if (active && data && data.participants) {
+          const mapped = data.participants.map((p, idx) => {
+            const horse = p.horse;
+            const jockey = p.jockey || p.assignment?.jockey_id;
+            return {
+              id: horse._id || horse.id,
+              horse: horse.name,
+              jockey: jockey?.user_id?.full_name || jockey?.full_name || "Unknown Jockey",
+              owner: p.owner?.user_id?.full_name || "Horse Owner",
+              lane: p.registration?.lane != null ? Number(p.registration.lane) : idx + 1,
+              weight: horse.weight ? `${horse.weight}kg` : "56kg",
+              form: "—",
+              image: getHorseJockeyImage(horse._id || horse.id),
+              color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
+              position: idx + 1,
+            };
+          });
+          setBackendParticipants(mapped);
+        }
+      } catch (err) {
+        console.warn("Could not fetch real participants from backend (spectator access may be restricted):", err.message);
+      } finally {
+        if (active) setIsLoadingParticipants(false);
+      }
+    }
+
+    fetchParticipants();
+    return () => {
+      active = false;
+    };
+  }, [raceId, hasRealResults]);
 
   const realContenders = hasRealResults
     ? realResults.map((r, idx) => ({
@@ -109,49 +166,37 @@ export default function RaceDetail() {
       }))
     : [];
 
-  let contenders = [...realContenders];
+  let contenders = [];
   if (hasRealResults) {
-    const winnerIndex = realContenders.findIndex((c) => c.position === 1);
-    if (winnerIndex !== -1) {
-      const winnerHorse = { ...realContenders[winnerIndex] };
-      const others = realContenders
-        .filter((_, idx) => idx !== winnerIndex)
-        .map((c) => ({ ...c }));
-
-      const usedIds = new Set(realContenders.map((c) => c.id));
-      for (const mock of mockContenders) {
-        if (others.length >= 7) break;
-        if (!usedIds.has(mock.id)) {
-          others.push({ ...mock });
-        }
-      }
-
-      winnerHorse.lane = 3;
-      const otherLanes = [1, 2, 4, 5, 6, 7, 8];
-      others.forEach((horse, idx) => {
-        horse.lane = otherLanes[idx];
-      });
-
-      contenders = [winnerHorse, ...others];
+    contenders = [...realContenders];
+  } else if (backendParticipants.length > 0) {
+    const rand = seededRandom(raceId || "default-race-id");
+    const indices = Array.from({ length: backendParticipants.length }, (_, i) => i + 1);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
     }
+    contenders = backendParticipants.map((p, idx) => ({
+      ...p,
+      position: indices[idx],
+    }));
   } else {
-    if (contenders.length < 8) {
-      const usedLanes = new Set(contenders.map((c) => c.lane));
-      const usedIds = new Set(contenders.map((c) => c.id));
-      let nextLane = 1;
-      for (const mock of mockContenders) {
-        if (contenders.length >= 8) break;
-        if (usedIds.has(mock.id)) continue;
-        while (usedLanes.has(nextLane)) {
-          nextLane++;
-        }
-        contenders.push({
-          ...mock,
-          lane: nextLane,
-          position: contenders.length + 1,
-        });
-        usedLanes.add(nextLane);
+    const usedLanes = new Set();
+    const usedIds = new Set();
+    let nextLane = 1;
+    for (const mock of mockContenders) {
+      if (contenders.length >= 8) break;
+      if (usedIds.has(mock.id)) continue;
+      while (usedLanes.has(nextLane)) {
+        nextLane++;
       }
+      contenders.push({
+        ...mock,
+        lane: nextLane,
+        position: contenders.length + 1,
+      });
+      usedLanes.add(nextLane);
+      usedIds.add(mock.id);
     }
   }
 
@@ -159,7 +204,7 @@ export default function RaceDetail() {
 
   const viewer = useRaceViewerSession(race, contenders);
 
-  const isLoading = isLoadingTournament || isLoadingResults;
+  const isLoading = isLoadingTournament || isLoadingResults || isLoadingParticipants;
 
   if (isLoading) {
     return (
@@ -194,10 +239,10 @@ export default function RaceDetail() {
       }
     : viewer.raceResult;
 
-  const viewerEyebrow = hasRealResults ? "Official 2D track" : "Prototype 2D track";
-  const rankingEyebrow = hasRealResults ? "Official ranking" : "Sample order";
-  const rankingTitle = hasRealResults ? "Final standings" : "Fixture positions";
-  const statusLabel = hasRealResults ? "Official" : "Simulation only";
+  const viewerEyebrow = hasRealResults ? "Official 2D track" : backendParticipants.length > 0 ? "Live 2D track" : "Prototype 2D track";
+  const rankingEyebrow = hasRealResults ? "Official ranking" : backendParticipants.length > 0 ? "Live order" : "Sample order";
+  const rankingTitle = hasRealResults ? "Final standings" : backendParticipants.length > 0 ? "Current positions" : "Fixture positions";
+  const statusLabel = hasRealResults ? "Official" : backendParticipants.length > 0 ? "Live" : "Simulation only";
 
   const coreFactItems = [
     race.raceDateDisplay
@@ -360,6 +405,10 @@ export default function RaceDetail() {
           <span>
             <strong>Official results connected.</strong> Standing details, finish times, and rankings are verified by the official race engine.
           </span>
+        ) : backendParticipants.length > 0 ? (
+          <span>
+            <strong>Live participants connected.</strong> The runner field and 2D viewer are displaying the real-time registration data from the backend.
+          </span>
         ) : (
           <span>
             <strong>Participant preview.</strong> The backend has no spectator-safe participant endpoint, so the runner field and 2D viewer remain an explicitly labelled prototype.
@@ -380,7 +429,7 @@ export default function RaceDetail() {
           rankingTitle={rankingTitle}
           statusLabel={statusLabel}
         >
-          <ParticipantPreview contenders={contenders} isOfficial={hasRealResults} />
+          <ParticipantPreview contenders={contenders} isOfficial={hasRealResults} isLiveConnection={backendParticipants.length > 0} />
         </RaceViewer2D>
       </div>
 
@@ -388,6 +437,10 @@ export default function RaceDetail() {
         {hasRealResults ? (
           <span>
             <ShieldCheck size={15} /> Race results are verified and live
+          </span>
+        ) : backendParticipants.length > 0 ? (
+          <span>
+            <ShieldCheck size={15} /> Real-time race participants connected; viewer running in simulation mode
           </span>
         ) : (
           <>

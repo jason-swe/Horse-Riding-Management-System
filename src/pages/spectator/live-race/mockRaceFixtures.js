@@ -72,20 +72,18 @@ export function createMockRaceScript(raceId, startsAt = Date.now() + 3000, conte
   };
 }
 
-export function createMockRaceResult(raceId) {
+export function createMockRaceResult(raceId, contenders = mockContenders) {
+  const sorted = [...contenders].sort((a, b) => (a.position || 1) - (b.position || 1));
+  const baseTimes = [56000, 59000, 60000, 61500, 63000, 64000, 65000, 67000];
+
   return {
     race_id: raceId,
     finished_at: new Date().toISOString(),
-    results: [
-      { horse_id: "golden-gallop", position: 1, finish_time_ms: 56000 },
-      { horse_id: "crimson-comet", position: 2, finish_time_ms: 59000 },
-      { horse_id: "emerald-shadow", position: 3, finish_time_ms: 60000 },
-      { horse_id: "thunderbolt", position: 4, finish_time_ms: 61500 },
-      { horse_id: "blazing-speed", position: 5, finish_time_ms: 63000 },
-      { horse_id: "silver-flash", position: 6, finish_time_ms: 64000 },
-      { horse_id: "sapphire-wind", position: 7, finish_time_ms: 65000 },
-      { horse_id: "midnight-run", position: 8, finish_time_ms: 67000 },
-    ],
+    results: sorted.map((horse, idx) => ({
+      horse_id: horse.id,
+      position: idx + 1,
+      finish_time_ms: baseTimes[idx % baseTimes.length] || (56000 + idx * 2000),
+    })),
     sequence: 301,
   };
 }

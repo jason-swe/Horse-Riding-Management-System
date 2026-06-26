@@ -172,10 +172,11 @@ export function useSpectatorRaceResultsSingle(raceId) {
     setError("");
 
     try {
-      const data = await spectatorApi.getRaceResults(raceId);
-      const adapted = adaptRaceResults({ results: data.results || [] });
-      setResults(adapted.results);
-      setRaceInfo(data.race || null);
+      const data = await spectatorApi.listRaceResults({ race_id: raceId });
+      const adapted = adaptRaceResults(data);
+      const sorted = (adapted.results || []).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
+      setResults(sorted);
+      setRaceInfo(null);
     } catch (apiError) {
       setError(apiError.message || "Unable to load race results.");
       setResults([]);

@@ -1143,3 +1143,284 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Optimized Horse Inspection Workspace */
+.referee-global-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(238, 231, 212, 0.08);
+  border: 1px solid var(--referee-line);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.referee-global-actions-bar__title {
+  font-size: 0.9rem;
+  color: var(--referee-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.referee-global-actions-bar__buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.referee-global-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.referee-global-btn--pass {
+  background: rgba(255, 123, 43, 0.15);
+  color: #ff9b5e;
+  border-color: rgba(255, 123, 43, 0.4);
+}
+
+.referee-global-btn--pass:hover:not(:disabled) {
+  background: rgba(255, 123, 43, 0.25);
+  transform: translateY(-1px);
+}
+
+.referee-global-btn--save {
+  background: #ff7b2b;
+  color: #14241b;
+}
+
+.referee-global-btn--save:hover:not(:disabled) {
+  background: #ff904d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 123, 43, 0.25);
+}
+
+.referee-global-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inspection Cards Layout */
+.referee-inspection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .referee-inspection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.referee-inspection-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--referee-line);
+  background: rgba(238, 231, 212, 0.05);
+  border-radius: 8px;
+  padding: 18px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.referee-inspection-card:hover {
+  border-color: rgba(255, 123, 43, 0.35);
+  box-shadow: 0 8px 24px rgba(8, 24, 14, 0.25);
+}
+
+.referee-inspection-card__header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid var(--referee-line);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.referee-inspection-card__title-group h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.15rem !important;
+  margin: 2px 0 0 0 !important;
+  color: var(--referee-ink);
+}
+
+.referee-info-grid-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: 0.8rem;
+  color: var(--referee-copy);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.referee-info-grid-compact > div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(238, 231, 212, 0.08);
+  padding-bottom: 4px;
+}
+
+.referee-info-grid-compact .referee-info-label {
+  color: var(--referee-muted);
+  font-weight: 500;
+}
+
+/* Compact Checklist Grid */
+.referee-checklist-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.referee-checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.referee-checklist-title-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ff9b5e;
+  letter-spacing: 0.05em;
+}
+
+.referee-single-pass-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 123, 43, 0.35);
+  color: #ff9b5e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.referee-single-pass-btn:hover {
+  background: rgba(255, 123, 43, 0.15);
+  border-color: #ff9b5e;
+}
+
+.referee-checklist-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(238, 231, 212, 0.08);
+}
+
+.referee-check-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: var(--referee-copy);
+  cursor: pointer;
+  user-select: none;
+}
+
+.referee-check-item-compact input[type="checkbox"] {
+  accent-color: #ff7b2b;
+  cursor: pointer;
+}
+
+.referee-card-form-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  margin-top: auto;
+  border-top: 1px solid var(--referee-line);
+  padding-top: 14px;
+}
+
+.referee-card-form-grid .admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.referee-card-form-grid .admin-field span {
+  font-size: 0.75rem;
+  color: var(--referee-muted);
+}
+
+.referee-card-form-grid select {
+  background: #14241b;
+  color: var(--referee-ink);
+  border: 1px solid var(--referee-line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  height: 34px;
+  outline: none;
+}
+
+.referee-card-form-grid select:focus {
+  border-color: #ff9b5e;
+}
+
+.referee-card-form-grid textarea {
+  background: #14241b;
+  color: var(--referee-ink);
+  border: 1px solid var(--referee-line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  height: 34px;
+  resize: none;
+  outline: none;
+}
+
+.referee-card-form-grid textarea:focus {
+  border-color: #ff9b5e;
+}
+
+.referee-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.referee-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 123, 43, 0.1);
+  color: #ff9b5e;
+  border: 1px solid rgba(255, 123, 43, 0.4);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.referee-save-btn:hover:not(:disabled) {
+  background: rgba(255, 123, 43, 0.2);
+  border-color: #ff9b5e;
+  transform: translateY(-1px);
+}
