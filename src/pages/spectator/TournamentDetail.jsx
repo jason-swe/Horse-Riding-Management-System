@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CircleDollarSign,
   Clock3,
-  Coins,
   Flag,
   MapPin,
   Radio,
@@ -41,10 +40,19 @@ const TOURNAMENT_STATUS_CLASS = {
 };
 
 function raceMatchesFilter(race, filter) {
-  if (filter === "betting") return race.bettingStatus === BETTING_STATUS.OPEN;
+  if (filter === "betting") return isRaceBettable(race);
   if (filter === "live") return race.raceStatus === RACE_STATUS.RUNNING;
   if (filter === "completed") return race.raceStatus === RACE_STATUS.COMPLETED;
   return true;
+}
+
+function isRaceBettable(race) {
+  return (
+    canBetOnRace(race) &&
+    race?.raceStatus !== RACE_STATUS.COMPLETED &&
+    race?.resultStatus !== "published" &&
+    race?.bettingStatus !== BETTING_STATUS.SETTLED
+  );
 }
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -64,7 +72,7 @@ function RaceStatusBadge({ status, type }) {
 
 // ─── Race Row ─────────────────────────────────────────────────────────────────
 function RaceRow({ race, tournament }) {
-  const canBet = canBetOnRace(race);
+  const canBet = isRaceBettable(race);
   const detailPath = `/spectator/tournaments/${tournament.id}/races/${race.id}`;
   const bettingPath = `/spectator/predictions/races/${encodeURIComponent(race.id)}`;
 
@@ -72,7 +80,7 @@ function RaceRow({ race, tournament }) {
   const isCompleted = race.raceStatus === RACE_STATUS.COMPLETED;
 
   return (
-    <article className={`rhrow rhrow--${race.raceStatus}${isLive ? " rhrow--live" : ""}`}>
+    <article className={`rhrow rhrow--${race.raceStatus}${isLive ? " rhrow--live" : ""}${canBet ? " rhrow--betting-open" : ""}`}>
       {/* Time block */}
       <div className="rhrow__time">
         {race.time && <span>{race.time}</span>}
@@ -109,21 +117,6 @@ function RaceRow({ race, tournament }) {
             </span>
           )}
         </div>
-        {/* Betting market mini-panel */}
-        {canBet && race.bettingMarket && (
-          <div className="rhrow__market-strip">
-            <Coins size={12} />
-            <span>
-              {race.bettingMarket.minStake}–{race.bettingMarket.maxStake}{" "}
-              {race.bettingMarket.currency}
-            </span>
-            {race.bettingMarket.closesAtDisplay && (
-              <span className="rhrow__market-closes">
-                closes {race.bettingMarket.closesAtDisplay}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Actions */}
@@ -190,7 +183,7 @@ function TournamentDetail() {
   const counts = useMemo(
     () => ({
       all: displayedRaces.length,
-      betting: displayedRaces.filter((r) => r.bettingStatus === BETTING_STATUS.OPEN).length,
+      betting: displayedRaces.filter(isRaceBettable).length,
       live: displayedRaces.filter((r) => r.raceStatus === RACE_STATUS.RUNNING).length,
       completed: displayedRaces.filter((r) => r.raceStatus === RACE_STATUS.COMPLETED).length,
     }),
@@ -226,7 +219,7 @@ function TournamentDetail() {
           icon: CalendarDays,
           term: "Race days",
           value: tournament.endDate
-            ? `${tournament.dateDisplay} – ${tournament.endDateDisplay}`
+            ? `${tournament.dateDisplay} - ${tournament.endDateDisplay}`
             : tournament.dateDisplay || tournament.date,
         }
       : null,

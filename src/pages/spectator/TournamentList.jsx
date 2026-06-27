@@ -5,6 +5,7 @@ import {
   Calendar,
   CalendarRange,
   Flag,
+  Gauge,
   MapPin,
   RefreshCw,
   SearchX,
@@ -17,7 +18,6 @@ import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { useSpectatorTournaments } from "./useSpectatorData.js";
 import "./spectator.css";
 
-// Status config
 const STATUS_META = {
   Active: {
     label: "Active",
@@ -36,7 +36,6 @@ const STATUS_META = {
   },
 };
 
-// Format short date range: "Jul 15 – 19, 2026"
 function formatDateRange(startIso, endIso) {
   if (!startIso) return null;
   const start = new Date(startIso);
@@ -52,22 +51,44 @@ function formatDateRange(startIso, endIso) {
   const sameYear = start.getUTCFullYear() === end.getUTCFullYear();
   const endStr = end.toLocaleDateString("en-US", opts);
   return sameYear
-    ? `${startStr} – ${endStr}, ${end.toLocaleDateString("en-US", yearOpts)}`
-    : `${startStr}, ${start.toLocaleDateString("en-US", yearOpts)} – ${endStr}, ${end.toLocaleDateString("en-US", yearOpts)}`;
+    ? `${startStr} - ${endStr}, ${end.toLocaleDateString("en-US", yearOpts)}`
+    : `${startStr}, ${start.toLocaleDateString("en-US", yearOpts)} - ${endStr}, ${end.toLocaleDateString("en-US", yearOpts)}`;
 }
 
-// ─── Tournament Card ──────────────────────────────────────────────────────────
-const TournamentCard = ({ tournament }) => {
+function TournamentCard({ tournament }) {
   const status = STATUS_META[tournament.status] ?? STATUS_META.Completed;
   const dateRange = formatDateRange(
     tournament.date ? `${tournament.date}T00:00:00Z` : null,
     tournament.endDate ? `${tournament.endDate}T00:00:00Z` : null
   );
+  const raceCountLabel = tournament.raceCount
+    ? `${tournament.raceCount} race${tournament.raceCount === 1 ? "" : "s"}`
+    : "Schedule";
+  const runnerLabel = tournament.runnerCapacity
+    ? `${tournament.runnerEntries ? `${tournament.runnerEntries}/` : ""}${tournament.runnerCapacity} slots`
+    : tournament.entries != null
+    ? `${tournament.entries} entries`
+    : "Entries TBA";
+  const distanceLabel = tournament.distanceSummary || tournament.distance || tournament.trackSummary || tournament.track || "Track TBA";
+  const nextRaceLabel =
+    tournament.nextRaceDateDisplay && tournament.nextRaceTime
+      ? `${tournament.nextRaceDateDisplay} / ${tournament.nextRaceTime}`
+      : tournament.nextRaceDateDisplay || dateRange || "Date TBA";
+  const liquidityHint =
+    tournament.status === "Active"
+      ? "High pool activity"
+      : tournament.status === "Upcoming"
+      ? "Market forming"
+      : "Settled board";
 
   return (
     <article className="tcard">
-      {/* Image banner */}
-      <Link className="tcard__image" to={`/spectator/tournaments/${tournament.id}`} tabIndex={-1} aria-hidden="true">
+      <Link
+        className="tcard__image"
+        to={`/spectator/tournaments/${tournament.id}`}
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <img src={tournament.image} alt="" loading="lazy" />
         <div className="tcard__image-overlay" />
         <span className={`tcard__status-badge ${status.className}`}>
@@ -76,7 +97,6 @@ const TournamentCard = ({ tournament }) => {
         </span>
       </Link>
 
-      {/* Body */}
       <div className="tcard__body">
         <div className="tcard__location">
           <MapPin size={12} />
@@ -85,34 +105,41 @@ const TournamentCard = ({ tournament }) => {
         <h3 className="tcard__name">
           <Link to={`/spectator/tournaments/${tournament.id}`}>{tournament.name}</Link>
         </h3>
-        {tournament.description && (
-          <p className="tcard__description">{tournament.description}</p>
-        )}
-
-        <div className="tcard__meta">
-          {dateRange && (
-            <div className="tcard__meta-item">
-              <CalendarRange size={13} />
-              <span>{dateRange}</span>
-            </div>
-          )}
-          {tournament.prize && (
-            <div className="tcard__meta-item">
-              <Trophy size={13} />
-              <span>{tournament.prize}</span>
-            </div>
-          )}
+        <div className="tcard__event-line">
+          <CalendarRange size={14} />
+          <strong>{nextRaceLabel}</strong>
         </div>
+
+        <div className="tcard__info-grid" aria-label="Tournament highlights">
+          <div className="tcard__info-item tcard__info-item--wide">
+            <Flag size={14} />
+            <span>Schedule</span>
+            <strong>{raceCountLabel}</strong>
+          </div>
+          <div className="tcard__info-item">
+            <Users size={14} />
+            <span>Field</span>
+            <strong>{runnerLabel}</strong>
+          </div>
+          <div className="tcard__info-item">
+            <Gauge size={14} />
+            <span>Distance</span>
+            <strong>{distanceLabel}</strong>
+          </div>
+          <div className="tcard__info-item">
+            <Trophy size={14} />
+            <span>Prize</span>
+            <strong>{tournament.prize || "TBA"}</strong>
+          </div>
+        </div>
+
       </div>
 
-      {/* Footer */}
       <div className="tcard__footer">
         <div className="tcard__footer-left">
-          {tournament.entries != null && (
-            <span className="tcard__entries">
-              <Users size={13} /> {tournament.entries} entries
-            </span>
-          )}
+          <span className="tcard__liquidity">
+            <Zap size={13} /> {liquidityHint}
+          </span>
         </div>
         <Link
           className="tcard__cta"
@@ -124,10 +151,9 @@ const TournamentCard = ({ tournament }) => {
       </div>
     </article>
   );
-};
+}
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const TournamentList = () => {
+function TournamentList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const { tournaments, isLoading, error, reload } = useSpectatorTournaments();
@@ -145,7 +171,7 @@ const TournamentList = () => {
 
   const filteredTournaments = tournaments
     .filter((t) => {
-      const haystack = `${t.name} ${t.location} ${t.description} ${t.date}`.toLowerCase();
+      const haystack = `${t.name} ${t.location} ${t.description} ${t.date} ${t.track} ${t.distance}`.toLowerCase();
       const matchesSearch = haystack.includes(searchQuery.toLowerCase());
       const matchesFilter =
         filter === "all" || t.status.toLowerCase() === filter.toLowerCase();
@@ -203,7 +229,6 @@ const TournamentList = () => {
         </section>
       )}
 
-      {/* ── Page Header ── */}
       <section className="tlboard-header">
         <div className="tlboard-header__text">
           <p className="spectator-eyebrow">Tournament Board</p>
@@ -226,7 +251,6 @@ const TournamentList = () => {
         </div>
       </section>
 
-      {/* ── Filter Bar ── */}
       <section className="tlboard-filter-bar">
         <div className="tlboard-filter-bar__chip">
           <span>Tournaments</span>
@@ -236,11 +260,10 @@ const TournamentList = () => {
           onSearch={setSearchQuery}
           onFilterChange={setFilter}
           initialValue={searchQuery}
-          placeholder="Search tournament, city, date…"
+          placeholder="Search tournament, city, date..."
         />
       </section>
 
-      {/* ── Grid ── */}
       <div className="tcard-grid">
         {filteredTournaments.length > 0 ? (
           filteredTournaments.map((t) => <TournamentCard key={t.id} tournament={t} />)
@@ -259,6 +282,6 @@ const TournamentList = () => {
       </div>
     </div>
   );
-};
+}
 
 export default TournamentList;

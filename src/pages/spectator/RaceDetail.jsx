@@ -187,7 +187,7 @@ export default function RaceDetail() {
               owner: p.owner?.user_id?.full_name || "Horse Owner",
               lane: p.registration?.lane != null ? Number(p.registration.lane) : idx + 1,
               weight: horse.weight ? `${horse.weight}kg` : "56kg",
-              form: "—",
+              form: "-",
               image: getHorseJockeyImage(horse._id || horse.id),
               color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
               position: idx + 1,
@@ -216,7 +216,7 @@ export default function RaceDetail() {
         owner: "Horse Owner",
         lane: r.lane !== "-" && r.lane != null ? Number(r.lane) : idx + 1,
         weight: r.weight ? `${r.weight}kg` : "56kg",
-        form: "—",
+        form: "-",
         image: getHorseJockeyImage(r.horseId),
         color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
         position: Number(r.position),
@@ -342,7 +342,7 @@ export default function RaceDetail() {
         <div className="rd-hero__content">
           <p className="spectator-eyebrow">
             {tournament.name}
-            {race.roundName ? ` · ${race.roundName}` : ""}
+            {race.roundName ? ` / ${race.roundName}` : ""}
           </p>
           <h1 className="rd-hero__title">{race.name}</h1>
           <div className="rd-hero__status-row">
@@ -407,7 +407,7 @@ export default function RaceDetail() {
                 <strong>
                   {race.bettingMarket.closesAtDisplay}
                   {race.bettingMarket.closesAtTimeDisplay
-                    ? ` · ${race.bettingMarket.closesAtTimeDisplay}`
+                    ? ` / ${race.bettingMarket.closesAtTimeDisplay}`
                     : ""}
                 </strong>
               </div>

@@ -195,6 +195,26 @@ export function adaptTournamentList(payload) {
   };
 }
 
+export function summarizeTournamentRaces(racesPayload) {
+  const races = extractCollection(racesPayload, ["races", "data"]).map(toSpectatorRace);
+  const sortedRaces = [...races].sort((a, b) => new Date(a.raceDate || 0) - new Date(b.raceDate || 0));
+  const nextRace = sortedRaces.find((race) => race.raceDate && new Date(race.raceDate).getTime() >= Date.now()) || sortedRaces[0];
+  const distances = [...new Set(races.map((race) => race.distance).filter(Boolean))];
+  const locations = [...new Set(races.map((race) => race.location).filter(Boolean))];
+  const runnerCapacity = races.reduce((total, race) => total + (Number(race.maxParticipants) || 0), 0);
+  const runnerEntries = races.reduce((total, race) => total + (Number(race.runnerCount) || 0), 0);
+
+  return {
+    raceCount: races.length,
+    runnerCapacity: runnerCapacity || null,
+    runnerEntries: runnerEntries || null,
+    nextRaceDateDisplay: nextRace?.raceDateDisplay || null,
+    nextRaceTime: nextRace?.time || null,
+    distanceSummary: distances.length > 2 ? `${distances[0]} - ${distances[distances.length - 1]}` : distances.join(" / ") || null,
+    trackSummary: locations[0] || null,
+  };
+}
+
 export function adaptTournamentDetail({ tournamentPayload, racesPayload }) {
   const tournamentRow = tournamentPayload?.tournament || tournamentPayload;
   const races = extractCollection(racesPayload, ["races", "data"]);
