@@ -6,7 +6,7 @@ import AdminLayout from "./AdminLayout";
 
 const emptyTournament = { name: "", description: "", location: "", image_url: "", start_date: "", end_date: "", status: "draft" };
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
-const emptyRace = { tournament_id: "", round_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", status: "scheduled" };
+const emptyRace = { tournament_id: "", round_id: "", referee_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", status: "scheduled" };
 const PAGE_SIZE = 20;
 
 const entityConfig = {
@@ -17,6 +17,22 @@ const entityConfig = {
 
 function idOf(value) {
   return String(value?._id || value || "");
+}
+
+function getRaceRefereeProfile(userEnvelope) {
+  return userEnvelope?.profiles?.race_referee || null;
+}
+
+function getRefereeOptionId(userEnvelope) {
+  const profile = getRaceRefereeProfile(userEnvelope);
+  return idOf(profile);
+}
+
+function getRefereeOptionLabel(userEnvelope) {
+  const user = userEnvelope?.user || userEnvelope || {};
+  const profile = getRaceRefereeProfile(userEnvelope);
+  const license = profile?.license_number ? ` · ${profile.license_number}` : "";
+  return `${user.full_name || user.email || "Unnamed referee"}${license}`;
 }
 
 function dateValue(value, withTime = false) {
@@ -97,7 +113,7 @@ function RoundForm({ value, tournaments, onChange, onSubmit, onCancel, saving, m
   );
 }
 
-function RaceForm({ value, tournaments, rounds, onChange, onSubmit, onCancel, saving, mode }) {
+function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, onCancel, saving, mode }) {
   const availableRounds = rounds.filter((round) => idOf(round.tournament_id) === value.tournament_id);
   return (
     <form className="admin-form-grid admin-competition__form" onSubmit={onSubmit}>
@@ -108,10 +124,11 @@ function RaceForm({ value, tournaments, rounds, onChange, onSubmit, onCancel, sa
         <label className="admin-field"><span>Race date & time</span><input type="datetime-local" value={value.race_date} onChange={(event) => onChange("race_date", event.target.value)} /></label>
         <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Track A" /></label>
         <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+        <label className="admin-field"><span>Race referee</span><select value={value.referee_id} onChange={(event) => onChange("referee_id", event.target.value)}><option value="">Unassigned</option>{referees.map((item) => <option key={getRefereeOptionId(item)} value={getRefereeOptionId(item)}>{getRefereeOptionLabel(item)}</option>)}</select></label>
         <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} placeholder="1600" /></label>
         <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} placeholder="12" /></label>
       </div>
-      <div className="admin-live-state"><strong>Referee assignment is not available in this form.</strong></div>
+      {!referees.length && <div className="admin-live-state"><strong>No active race referees are available.</strong> Approve or assign a Race Referee role before scheduling race control.</div>}
       <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
     </form>
   );
@@ -119,7 +136,7 @@ function RaceForm({ value, tournaments, rounds, onChange, onSubmit, onCancel, sa
 
 function AdminCompetitionModule({ moduleName }) {
   const isSchedule = moduleName === "schedule";
-  const [data, setData] = useState({ tournaments: [], rounds: [], races: [] });
+  const [data, setData] = useState({ tournaments: [], rounds: [], races: [], referees: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -140,15 +157,17 @@ function AdminCompetitionModule({ moduleName }) {
     quiet ? setRefreshing(true) : setLoading(true);
     setError("");
     try {
-      const [tournamentResponse, roundResponse, raceResponse] = await Promise.all([
+      const [tournamentResponse, roundResponse, raceResponse, refereeResponse] = await Promise.all([
         adminApi.listTournaments(),
         adminApi.listRounds(),
         adminApi.listRaces(),
+        adminApi.listUsers({ role: "race_referee", status: "active", limit: 100 }),
       ]);
       setData({
         tournaments: (tournamentResponse.tournaments || []).filter((item) => item.status !== "deleted"),
         rounds: (roundResponse.rounds || []).filter((item) => item.status !== "deleted"),
         races: (raceResponse.races || []).filter((item) => item.status !== "deleted"),
+        referees: (refereeResponse.users || []).filter((item) => getRefereeOptionId(item) !== ""),
       });
     } catch (apiError) {
       setError(apiError.message || "Unable to load competition data.");
@@ -169,7 +188,7 @@ function AdminCompetitionModule({ moduleName }) {
     let next;
     if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
     if (kind === "round") next = item ? { tournament_id: idOf(item.tournament_id), name: item.name || "", round_order: String(item.round_order || ""), description: item.description || "", status: item.status || "draft" } : { ...emptyRound, tournament_id: data.tournaments[0]?._id || "" };
-    if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
+    if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), referee_id: idOf(item.referee_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
     setForm(next);
     setError("");
     setModal({ kind, mode: item ? "edit" : "create", item });
@@ -187,7 +206,7 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);
     if (!selectedRound || idOf(selectedRound.tournament_id) !== form.tournament_id) throw new Error("The selected round does not belong to this tournament.");
-    return { ...form, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null };
+    return { ...form, referee_id: form.referee_id || null, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null };
   };
 
   const submitForm = async (event) => {
@@ -279,7 +298,7 @@ function AdminCompetitionModule({ moduleName }) {
         </div>
       )}
 
-      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
+      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} referees={data.referees} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
       {deleteTarget && <div className="admin-modal" role="alertdialog" aria-modal="true" aria-labelledby="competition-delete-title" aria-describedby="competition-delete-copy" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}><div className="admin-modal__card admin-competition__delete-dialog"><Trash2 size={22} aria-hidden="true" /><div><p className="admin-panel__eyebrow">Delete {entityConfig[deleteTarget.kind].title}</p><h2 id="competition-delete-title">{deleteTarget.item.name}</h2><p id="competition-delete-copy">{deleteBlocked ? `Remove ${deleteDependencyCount} linked ${deleteTarget.kind === "tournament" ? "rounds" : "races"} first.` : "This record will be removed from the competition workspace."}</p></div><div className="admin-tool-card__footer"><button className="admin-header__button admin-header__button--red" disabled={deleting || deleteBlocked} type="button" onClick={removeEntity}>{deleting ? "Deleting..." : "Delete"}</button><button className="admin-header__button admin-header__button--ghost" disabled={deleting} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button></div></div></div>}
     </AdminLayout>
   );

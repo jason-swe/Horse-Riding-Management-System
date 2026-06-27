@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
 import { refereeApi } from "../api/refereeApi";
 import { adaptRefereeApiData } from "./refereeAdapters";
 
 const getId = (value) => value?._id || value?.id || "";
 
 export function useRefereeData() {
+  const { profiles } = useAuth();
+  const refereeId = profiles?.race_referee?._id || profiles?.race_referee?.id || "";
   const [races, setRaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +19,7 @@ export function useRefereeData() {
     setIsUnavailable(false);
 
     try {
-      const raceData = await refereeApi.getAssignedRaces();
+      const raceData = await refereeApi.getAssignedRaces(refereeId ? { referee_id: refereeId } : {});
       const raceRows = Array.isArray(raceData?.races) ? raceData.races : [];
       const [participantSettled, resultData, violationData, checkData, reportData] = await Promise.all([
         Promise.allSettled(raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))),
@@ -46,7 +49,7 @@ export function useRefereeData() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refereeId]);
 
   useEffect(() => { reload(); }, [reload]);
 
