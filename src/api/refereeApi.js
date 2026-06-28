@@ -23,7 +23,7 @@ export const refereeApi = {
   },
 
   getRaceParticipants(id) {
-    return apiRequest(`/races/${id}/participants`);
+    return apiRequest(`/race-results/races/${id}/participants`);
   },
 
 

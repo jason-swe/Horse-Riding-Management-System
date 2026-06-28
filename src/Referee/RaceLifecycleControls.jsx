@@ -9,7 +9,7 @@ function getStartRestriction(race, participantsUnavailable) {
   const raceDate = race.raw?.race_date ? new Date(race.raw.race_date) : null;
   if (!raceDate || Number.isNaN(raceDate.getTime())) return "A valid race date is required before this race can start.";
   if (raceDate.getTime() > Date.now()) return `This race can start at ${raceDate.toLocaleString()}.`;
-  if (race.participants.length === 0) return "At least one eligible participant is required before this race can start.";
+  if (race.participants.filter((participant) => participant.eligible).length === 0) return "At least one eligible participant is required before this race can start.";
   return "";
 }
 

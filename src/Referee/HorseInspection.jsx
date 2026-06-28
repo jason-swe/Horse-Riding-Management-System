@@ -87,13 +87,22 @@ function HorseInspection() {
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [message, setMessage] = useState("");
   const editable = race?.phase === phase;
+  const participantsUnavailable = Boolean(isUnavailable || race?.participantsUnavailable);
 
   useEffect(() => {
     setRows(initialRows(race, phase, fields));
   }, [race, phase]);
 
   const title = phase === RACE_PHASES.PRE_RACE ? "Pre-race Horse Inspection" : "Post-race Recovery Check";
-  const participants = useMemo(() => race?.participants || [], [race]);
+  const participants = useMemo(() => {
+    const rows = race?.participants || [];
+
+    if (phase === RACE_PHASES.POST_RACE) {
+      return rows.filter((participant) => participant.eligible);
+    }
+
+    return rows;
+  }, [race, phase]);
 
   if (isLoading) {
     return (
@@ -231,7 +240,7 @@ function HorseInspection() {
         </Link>
       }
     >
-      {isUnavailable && (
+      {participantsUnavailable && (
         <section className="admin-live-state">
           Participant API is unavailable, so checks cannot be created.
         </section>
@@ -253,7 +262,7 @@ function HorseInspection() {
             <button
               type="button"
               className="referee-global-btn referee-global-btn--pass"
-              disabled={isUnavailable}
+              disabled={participantsUnavailable}
               onClick={handlePassAll}
             >
               <CheckCircle2 size={15} /> Pass All Horses
@@ -261,7 +270,7 @@ function HorseInspection() {
             <button
               type="button"
               className="referee-global-btn referee-global-btn--save"
-              disabled={isSavingAll || isUnavailable}
+              disabled={isSavingAll || participantsUnavailable}
               onClick={handleSaveAll}
             >
               <Save size={15} /> {isSavingAll ? "Saving All..." : "Save All Checks"}
@@ -375,7 +384,7 @@ function HorseInspection() {
                   <button
                     type="button"
                     className="referee-save-btn"
-                    disabled={savingId === participant.horseId || isUnavailable}
+                    disabled={savingId === participant.horseId || participantsUnavailable}
                     onClick={() => save(participant)}
                   >
                     <Save size={13} />

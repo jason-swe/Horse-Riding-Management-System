@@ -70,7 +70,7 @@ function ViolationManagement() {
   const [decisionAction, setDecisionAction] = useState("");
 
   const violations = race?.violations || [];
-  const participants = useMemo(() => (race?.participants || []).map((participant) => ({
+  const participants = useMemo(() => (race?.participants || []).filter((participant) => participant.eligible).map((participant) => ({
     id: form.subjectKind === "Horse" ? participant.horseId : participant.jockeyId,
     horseId: participant.horseId,
     jockeyId: participant.jockeyId,

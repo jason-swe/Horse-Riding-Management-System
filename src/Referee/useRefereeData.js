@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
 import { refereeApi } from "../api/refereeApi";
 import { adaptRefereeApiData } from "./refereeAdapters";
 
 const getId = (value) => value?._id || value?.id || "";
 
 export function useRefereeData() {
+  const { profiles } = useAuth();
+  const refereeId = profiles?.race_referee?._id || profiles?.race_referee?.id || "";
   const [races, setRaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,25 +19,43 @@ export function useRefereeData() {
     setIsUnavailable(false);
 
     try {
-      const raceData = await refereeApi.getAssignedRaces();
+      const raceData = await refereeApi.getAssignedRaces(refereeId ? { referee_id: refereeId } : {});
       const raceRows = Array.isArray(raceData?.races) ? raceData.races : [];
-      const [participantSettled, resultData, violationData, checkData, reportData] = await Promise.all([
-        Promise.allSettled(raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))),
+      const participantSettled = await Promise.allSettled(
+        raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))
+      );
+      const participantPayloads = participantSettled.filter((item) => item.status === "fulfilled").map((item) => item.value);
+      const unavailableRaceIds = participantSettled
+        .map((item, index) => (item.status === "rejected" ? getId(raceRows[index]) : null))
+        .filter(Boolean);
+
+      setIsUnavailable(participantSettled.length > 0 && participantSettled.every((item) => item.status === "rejected"));
+      const baseData = {
+        races: raceData,
+        participantPayloads,
+        unavailableRaceIds,
+        results: { results: [] },
+        violations: { violations: [] },
+        checks: { horse_checks: [] },
+        reports: { referee_reports: [] },
+      };
+
+      setRaces(adaptRefereeApiData(baseData));
+      setIsLoading(false);
+
+      const [resultData, violationData, checkData, reportData] = await Promise.allSettled([
         refereeApi.listRaceResults(),
         refereeApi.listViolations(),
         refereeApi.listHorseChecks(),
         refereeApi.listRefereeReports(),
       ]);
-      const participantPayloads = participantSettled.filter((item) => item.status === "fulfilled").map((item) => item.value);
 
-      setIsUnavailable(participantSettled.some((item) => item.status === "rejected"));
       setRaces(adaptRefereeApiData({
-        races: raceData,
-        participantPayloads,
-        results: resultData,
-        violations: violationData,
-        checks: checkData,
-        reports: reportData,
+        ...baseData,
+        results: resultData.status === "fulfilled" ? resultData.value : baseData.results,
+        violations: violationData.status === "fulfilled" ? violationData.value : baseData.violations,
+        checks: checkData.status === "fulfilled" ? checkData.value : baseData.checks,
+        reports: reportData.status === "fulfilled" ? reportData.value : baseData.reports,
       }));
     } catch (apiError) {
       setRaces([]);
@@ -42,7 +63,7 @@ export function useRefereeData() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refereeId]);
 
   useEffect(() => { reload(); }, [reload]);
 

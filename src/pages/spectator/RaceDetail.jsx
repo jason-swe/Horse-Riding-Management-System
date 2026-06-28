@@ -23,7 +23,7 @@ import { getHorseJockeyImage } from "./spectatorAdapters.js";
 import { mockContenders } from "./live-race/mockRaceFixtures.js";
 import RaceViewer2D from "./live-race/RaceViewer2D.jsx";
 import { useRaceViewerSession } from "./live-race/useRaceViewerSession.js";
-import { refereeApi } from "../../api/refereeApi.js";
+import { spectatorApi } from "../../api/spectatorApi.js";
 import {
   BETTING_STATUS,
   RACE_STATUS,
@@ -31,6 +31,8 @@ import {
   raceStatusMeta,
 } from "./race/raceStatus.js";
 import "./spectator.css";
+
+const RUNNER_COLORS = ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"];
 
 function StatusPill({ meta }) {
   if (!meta) return null;
@@ -89,15 +91,68 @@ function ParticipantPreview({ contenders, isOfficial, isLiveConnection }) {
   );
 }
 
-function seededRandom(seedStr) {
-  let hash = 0;
-  for (let i = 0; i < seedStr.length; i++) {
-    hash = (hash * 31 + seedStr.charCodeAt(i)) >>> 0;
-  }
-  return function() {
-    hash = (hash * 1664525 + 1013904223) >>> 0;
-    return hash / 0xffffffff;
-  };
+function getId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value._id || value.id || "";
+}
+
+function getJockeyName(jockey) {
+  if (!jockey || typeof jockey === "string") return "Unknown Jockey";
+  return jockey.user_id?.full_name || jockey.full_name || jockey.name || "Unknown Jockey";
+}
+
+function mapRaceEngineContenders(engine) {
+  if (!engine?.finish_order?.length) return [];
+
+  const participants = engine.participants?.length ? engine.participants : engine.finish_order;
+  const orderByHorse = new Map(engine.finish_order.map((order) => [getId(order.horse_id || order.horse), order]));
+
+  return participants.map((participant, index) => {
+    const horse = participant.horse || participant.horse_id || {};
+    const jockey = participant.jockey || participant.jockey_id || {};
+    const horseId = getId(participant.horse_id || horse);
+    const order = orderByHorse.get(horseId);
+    const position = Number(order?.position || index + 1);
+    const finishTime = Number(order?.finish_time);
+
+    return {
+      id: horseId,
+      horse: horse?.name || order?.horse?.name || "Unknown horse",
+      jockey: getJockeyName(jockey || order?.jockey),
+      owner: horse?.owner_id?.stable_name || "Horse Owner",
+      lane: participant.lane != null ? Number(participant.lane) : index + 1,
+      weight: horse?.weight ? `${horse.weight}kg` : "56kg",
+      form: "Race Engine",
+      image: getHorseJockeyImage(horseId),
+      color: RUNNER_COLORS[index % RUNNER_COLORS.length],
+      position,
+      raceEngineFinishTimeMs: Number.isFinite(finishTime) ? Math.round(finishTime * 1000) : undefined,
+    };
+  });
+}
+
+function mapLiveParticipantContenders(participants = []) {
+  return participants
+    .filter((participant) => !participant.pre_race_check || participant.eligible)
+    .map((participant, index) => {
+    const horse = participant.horse || participant.horse_id || {};
+    const jockey = participant.jockey || participant.jockey_id || {};
+    const horseId = getId(participant.horse_id || horse);
+
+    return {
+      id: horseId,
+      horse: horse?.name || "Unknown horse",
+      jockey: participant.jockey_name || getJockeyName(jockey),
+      owner: participant.owner_name || participant.owner?.stable_name || "Horse Owner",
+      lane: participant.lane != null ? Number(participant.lane) : index + 1,
+      weight: horse?.weight ? `${horse.weight}kg` : "56kg",
+      form: participant.eligible ? "Eligible" : "Pending check",
+      image: getHorseJockeyImage(horseId),
+      color: RUNNER_COLORS[index % RUNNER_COLORS.length],
+      position: index + 1,
+    };
+  });
 }
 
 export default function RaceDetail() {
@@ -106,19 +161,24 @@ export default function RaceDetail() {
   const { results: realResults, isLoading: isLoadingResults } = useSpectatorRaceResultsSingle(raceId);
   const race = races.find((item) => String(item.id) === String(raceId));
 
-  const [backendParticipants, setBackendParticipants] = useState([]);
-  const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
+  const [raceLiveState, setRaceLiveState] = useState(null);
+  const [isLoadingLiveState, setIsLoadingLiveState] = useState(false);
 
   const hasRealResults = realResults && realResults.length > 0;
 
   useEffect(() => {
-    if (!raceId || hasRealResults) return;
+    if (!raceId || hasRealResults) {
+      setIsLoadingLiveState(false);
+      return;
+    }
 
     let active = true;
     async function fetchParticipants() {
-      setIsLoadingParticipants(true);
+      setIsLoadingLiveState(true);
       try {
-        const data = await refereeApi.getRaceParticipants(raceId);
+        const data = await spectatorApi.getRaceLiveState(raceId);
+        if (active) setRaceLiveState(data || null);
+        return;
         if (active && data && data.participants) {
           const mapped = data.participants.map((p, idx) => {
             const horse = p.horse;
@@ -130,18 +190,18 @@ export default function RaceDetail() {
               owner: p.owner?.user_id?.full_name || "Horse Owner",
               lane: p.registration?.lane != null ? Number(p.registration.lane) : idx + 1,
               weight: horse.weight ? `${horse.weight}kg` : "56kg",
-              form: "—",
+              form: "-",
               image: getHorseJockeyImage(horse._id || horse.id),
               color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
               position: idx + 1,
             };
           });
-          setBackendParticipants(mapped);
+          setRaceLiveState({ engine: { participants: mapped, finish_order: [] } });
         }
       } catch (err) {
         console.warn("Could not fetch real participants from backend (spectator access may be restricted):", err.message);
       } finally {
-        if (active) setIsLoadingParticipants(false);
+        if (active) setIsLoadingLiveState(false);
       }
     }
 
@@ -159,27 +219,24 @@ export default function RaceDetail() {
         owner: "Horse Owner",
         lane: r.lane !== "-" && r.lane != null ? Number(r.lane) : idx + 1,
         weight: r.weight ? `${r.weight}kg` : "56kg",
-        form: "—",
+        form: "-",
         image: getHorseJockeyImage(r.horseId),
         color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
         position: Number(r.position),
       }))
     : [];
+  const raceEngineContenders = mapRaceEngineContenders(raceLiveState?.engine);
+  const liveParticipantContenders = mapLiveParticipantContenders(raceLiveState?.participants || []);
+  const hasRaceEngineOrder = !hasRealResults && raceEngineContenders.length > 0;
+  const hasBackendParticipants = !hasRealResults && liveParticipantContenders.length > 0;
 
   let contenders = [];
   if (hasRealResults) {
     contenders = [...realContenders];
-  } else if (backendParticipants.length > 0) {
-    const rand = seededRandom(raceId || "default-race-id");
-    const indices = Array.from({ length: backendParticipants.length }, (_, i) => i + 1);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    contenders = backendParticipants.map((p, idx) => ({
-      ...p,
-      position: indices[idx],
-    }));
+  } else if (hasRaceEngineOrder) {
+    contenders = [...raceEngineContenders];
+  } else if (hasBackendParticipants) {
+    contenders = [...liveParticipantContenders];
   } else {
     const usedLanes = new Set();
     const usedIds = new Set();
@@ -202,9 +259,9 @@ export default function RaceDetail() {
 
   contenders.sort((a, b) => a.lane - b.lane);
 
-  const viewer = useRaceViewerSession(race, contenders);
+  const viewer = useRaceViewerSession(race, contenders, { useRaceEngineOrder: hasRaceEngineOrder });
 
-  const isLoading = isLoadingTournament || isLoadingResults || isLoadingParticipants;
+  const isLoading = isLoadingTournament || isLoadingResults || isLoadingLiveState;
 
   if (isLoading) {
     return (
@@ -240,10 +297,10 @@ export default function RaceDetail() {
     : viewer.raceResult;
 
   const isResultPending = race.raceStatus === RACE_STATUS.COMPLETED && !hasRealResults;
-  const viewerEyebrow = hasRealResults ? "Official 2D track" : isResultPending ? "Result pending" : backendParticipants.length > 0 ? "Live 2D track" : "Prototype 2D track";
-  const rankingEyebrow = hasRealResults ? "Official ranking" : isResultPending ? "Race Engine" : backendParticipants.length > 0 ? "Live order" : "Sample order";
-  const rankingTitle = hasRealResults ? "Final standings" : isResultPending ? "Awaiting official standings" : backendParticipants.length > 0 ? "Current positions" : "Fixture positions";
-  const statusLabel = hasRealResults ? "Official" : isResultPending ? "Awaiting official result" : backendParticipants.length > 0 ? "Live" : "Simulation only";
+  const viewerEyebrow = hasRealResults ? "Official 2D track" : hasRaceEngineOrder ? "Race Engine 2D track" : hasBackendParticipants ? "Backend field preview" : isResultPending ? "Result pending" : "Prototype 2D track";
+  const rankingEyebrow = hasRealResults ? "Official ranking" : hasRaceEngineOrder ? "Race Engine order" : hasBackendParticipants ? "Backend field" : isResultPending ? "Race Engine" : "Sample order";
+  const rankingTitle = hasRealResults ? "Final standings" : isResultPending && !hasRaceEngineOrder ? "Awaiting official standings" : hasRaceEngineOrder ? "Engine-driven running order" : hasBackendParticipants ? "Registered runners" : "Fixture positions";
+  const statusLabel = hasRealResults ? "Official" : hasRaceEngineOrder ? "Engine order connected" : hasBackendParticipants ? "Participants connected" : isResultPending ? "Awaiting official result" : "Simulation only";
 
   const coreFactItems = [
     race.raceDateDisplay
@@ -288,7 +345,7 @@ export default function RaceDetail() {
         <div className="rd-hero__content">
           <p className="spectator-eyebrow">
             {tournament.name}
-            {race.roundName ? ` · ${race.roundName}` : ""}
+            {race.roundName ? ` / ${race.roundName}` : ""}
           </p>
           <h1 className="rd-hero__title">{race.name}</h1>
           <div className="rd-hero__status-row">
@@ -353,7 +410,7 @@ export default function RaceDetail() {
                 <strong>
                   {race.bettingMarket.closesAtDisplay}
                   {race.bettingMarket.closesAtTimeDisplay
-                    ? ` · ${race.bettingMarket.closesAtTimeDisplay}`
+                    ? ` / ${race.bettingMarket.closesAtTimeDisplay}`
                     : ""}
                 </strong>
               </div>
@@ -406,9 +463,13 @@ export default function RaceDetail() {
           <span>
             <strong>Official results connected.</strong> Standing details, finish times, and rankings are verified by the official race engine.
           </span>
-        ) : backendParticipants.length > 0 ? (
+        ) : hasRaceEngineOrder ? (
           <span>
-            <strong>{isResultPending ? "Race completed." : "Live participants connected."}</strong> {isResultPending ? "Waiting for confirmed Race Engine results before showing the official standings." : "The runner field and 2D viewer are displaying the real-time registration data from the backend."}
+            <strong>{isResultPending ? "Race completed." : "Race Engine order connected."}</strong> {isResultPending ? "The 2D viewer can replay the provisional engine order while official results are pending." : "The runner field uses backend participants and the final stretch follows the Race Engine finish order."}
+          </span>
+        ) : hasBackendParticipants ? (
+          <span>
+            <strong>Backend participants connected.</strong> The 2D viewer uses registered horses and jockeys while waiting for the referee to start the race.
           </span>
         ) : (
           <span>
@@ -430,7 +491,7 @@ export default function RaceDetail() {
           rankingTitle={rankingTitle}
           statusLabel={statusLabel}
         >
-          <ParticipantPreview contenders={contenders} isOfficial={hasRealResults} isLiveConnection={backendParticipants.length > 0} />
+          <ParticipantPreview contenders={contenders} isOfficial={hasRealResults} isLiveConnection={hasRaceEngineOrder || hasBackendParticipants} />
         </RaceViewer2D>
       </div>
 
@@ -439,9 +500,13 @@ export default function RaceDetail() {
           <span>
             <ShieldCheck size={15} /> Race results are verified and live
           </span>
-        ) : backendParticipants.length > 0 ? (
+        ) : hasRaceEngineOrder ? (
           <span>
-            <ShieldCheck size={15} /> {isResultPending ? "Race complete; waiting for official Race Engine result" : "Real-time race participants connected; viewer running in simulation mode"}
+            <ShieldCheck size={15} /> {isResultPending ? "Race complete; replaying provisional Race Engine order" : "Race Engine finish order connected; 2D path is generated on the frontend"}
+          </span>
+        ) : hasBackendParticipants ? (
+          <span>
+            <ShieldCheck size={15} /> Backend registered field connected; Race Engine order starts after referee start
           </span>
         ) : (
           <>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { spectatorApi } from "../../api/spectatorApi";
-import { adaptRaceResults, adaptTournamentDetail, adaptTournamentList, toHorseLeaderboard } from "./spectatorAdapters";
+import { adaptRaceResults, adaptTournamentDetail, adaptTournamentList, summarizeTournamentRaces, toHorseLeaderboard } from "./spectatorAdapters";
 
 function isAuthError(apiError) {
   return apiError?.status === 401 || apiError?.status === 403;
@@ -18,7 +18,21 @@ export function useSpectatorTournaments() {
     try {
       const data = await spectatorApi.listTournaments();
       const adapted = adaptTournamentList(data);
-      setTournaments(adapted.tournaments);
+      const enrichedResults = await Promise.allSettled(
+        adapted.tournaments.map(async (tournament) => {
+          const racesPayload = await spectatorApi.listRaces({ tournament_id: tournament.id });
+          return {
+            ...tournament,
+            ...summarizeTournamentRaces(racesPayload),
+          };
+        })
+      );
+      const enrichedTournaments = adapted.tournaments.map((tournament, index) =>
+        enrichedResults[index]?.status === "fulfilled"
+          ? enrichedResults[index].value
+          : tournament
+      );
+      setTournaments(enrichedTournaments);
     } catch (apiError) {
       setError(apiError.message || (isAuthError(apiError) ? "Your session expired. Please sign in again." : "Unable to load tournaments."));
       setTournaments([]);
@@ -172,7 +186,7 @@ export function useSpectatorRaceResultsSingle(raceId) {
     setError("");
 
     try {
-      const data = await spectatorApi.listRaceResults({ race_id: raceId });
+      const data = await spectatorApi.getRaceResults(raceId);
       const adapted = adaptRaceResults(data);
       const sorted = (adapted.results || []).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
       setResults(sorted);

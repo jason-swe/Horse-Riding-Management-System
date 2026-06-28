@@ -2,6 +2,18 @@ import { clearSession, getAuthToken } from "../auth/authStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
+function getRequestBaseUrl(path) {
+  if (!path.startsWith("/users")) {
+    return API_BASE_URL;
+  }
+
+  try {
+    return new URL(API_BASE_URL).origin;
+  } catch {
+    return "";
+  }
+}
+
 export class ApiError extends Error {
   constructor(message, details = [], status = 0) {
     super(message);
@@ -33,7 +45,7 @@ export async function apiRequest(path, options = {}) {
     ...options.headers,
   };
 
-  const baseUrl = path.startsWith("/users") ? "" : API_BASE_URL;
+  const baseUrl = getRequestBaseUrl(path);
   const response = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
