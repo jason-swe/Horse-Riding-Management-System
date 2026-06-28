@@ -21,27 +21,41 @@ export function useRefereeData() {
     try {
       const raceData = await refereeApi.getAssignedRaces(refereeId ? { referee_id: refereeId } : {});
       const raceRows = Array.isArray(raceData?.races) ? raceData.races : [];
-      const [participantSettled, resultData, violationData, checkData, reportData] = await Promise.all([
-        Promise.allSettled(raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))),
-        refereeApi.listRaceResults(),
-        refereeApi.listViolations(),
-        refereeApi.listHorseChecks(),
-        refereeApi.listRefereeReports(),
-      ]);
+      const participantSettled = await Promise.allSettled(
+        raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))
+      );
       const participantPayloads = participantSettled.filter((item) => item.status === "fulfilled").map((item) => item.value);
       const unavailableRaceIds = participantSettled
         .map((item, index) => (item.status === "rejected" ? getId(raceRows[index]) : null))
         .filter(Boolean);
 
       setIsUnavailable(participantSettled.length > 0 && participantSettled.every((item) => item.status === "rejected"));
-      setRaces(adaptRefereeApiData({
+      const baseData = {
         races: raceData,
         participantPayloads,
         unavailableRaceIds,
-        results: resultData,
-        violations: violationData,
-        checks: checkData,
-        reports: reportData,
+        results: { results: [] },
+        violations: { violations: [] },
+        checks: { horse_checks: [] },
+        reports: { referee_reports: [] },
+      };
+
+      setRaces(adaptRefereeApiData(baseData));
+      setIsLoading(false);
+
+      const [resultData, violationData, checkData, reportData] = await Promise.allSettled([
+        refereeApi.listRaceResults(),
+        refereeApi.listViolations(),
+        refereeApi.listHorseChecks(),
+        refereeApi.listRefereeReports(),
+      ]);
+
+      setRaces(adaptRefereeApiData({
+        ...baseData,
+        results: resultData.status === "fulfilled" ? resultData.value : baseData.results,
+        violations: violationData.status === "fulfilled" ? violationData.value : baseData.violations,
+        checks: checkData.status === "fulfilled" ? checkData.value : baseData.checks,
+        reports: reportData.status === "fulfilled" ? reportData.value : baseData.reports,
       }));
     } catch (apiError) {
       setRaces([]);
