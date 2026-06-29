@@ -14,6 +14,10 @@ function withQuery(path, params = {}) {
 }
 
 export const refereeApi = {
+  getWorkspace() {
+    return apiRequest("/referees/me/workspace");
+  },
+
   getAssignedRaces(params = {}) {
     return apiRequest(withQuery("/races", params));
   },
@@ -127,6 +131,18 @@ export const refereeApi = {
   updateHorseCheck(id, payload) {
     return apiRequest(`/horse-checks/${id}`, {
       method: "PATCH",
+      body: payload,
+    });
+  },
+
+  bulkSaveHorseChecks(phase, payload) {
+    const phasePath = {
+      pre_race: "pre-race",
+      post_race: "post-race",
+    }[phase];
+
+    return apiRequest(`/horse-checks/${phasePath}/bulk`, {
+      method: "POST",
       body: payload,
     });
   },

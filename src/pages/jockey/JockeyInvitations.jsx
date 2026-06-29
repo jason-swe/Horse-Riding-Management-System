@@ -21,26 +21,26 @@ const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
-  if (["Rejected", "Expired", "Meeting rejected", "Contract rejected", "Cancelled"].includes(status)) {
+  if (["Rejected", "Expired", "Meeting rejected", "Appointment rejected", "Contract rejected", "Cancelled"].includes(status)) {
     return "jockey-badge--muted";
   }
   return "jockey-badge--amber";
 };
 
 const getStageCopy = (rawStatus) => ({
-  meeting_invited: "Review the Meet details and respond to the owner's meeting invitation.",
-  meeting_accepted: "Meet accepted. Join at the scheduled time, then wait for the owner to record the agreed terms.",
+  meeting_invited: "Review the offline appointment details and respond to the owner's invitation.",
+  meeting_accepted: "Appointment accepted. Attend at the scheduled time, then wait for the owner to record the agreed terms.",
   terms_agreed: "The owner recorded the terms and is preparing the contract.",
   contract_uploaded: "Review the terms and contract. Confirming the contract accepts the assignment.",
   accepted: "Assignment accepted. This horse and race are now confirmed in your plan.",
-  meeting_rejected: "You declined this meeting invitation.",
+  meeting_rejected: "You declined this appointment invitation.",
   contract_rejected: "You rejected this contract. The assignment is not accepted.",
   cancelled: "The owner cancelled this assignment.",
-}[rawStatus] || "Track this assignment through its meeting and contract stages.");
+}[rawStatus] || "Track this assignment through its appointment and contract stages.");
 
 const getStatusGroup = (rawStatus) => ({
-  meeting_invited: "Meet",
-  meeting_accepted: "Meet",
+  meeting_invited: "Appointment",
+  meeting_accepted: "Appointment",
   terms_agreed: "Terms",
   contract_uploaded: "Contract",
   accepted: "Accepted",
@@ -67,8 +67,8 @@ function JockeyInvitations() {
     setActiveActionId(id);
 
     try {
-      if (action === "accept-meeting" || action === "reject-meeting") {
-        await respondToMeeting(id, action === "accept-meeting");
+      if (action === "accept-appointment" || action === "reject-appointment") {
+        await respondToMeeting(id, action === "accept-appointment");
       } else {
         await respondToContract(id, action === "confirm-contract");
       }
@@ -106,7 +106,7 @@ function JockeyInvitations() {
 
       <section className="jockey-invitation-stats" aria-label="Invitation summary">
         {[
-          { label: "Meet invites", value: pendingCount, note: "Waiting for your response", icon: Send },
+          { label: "Appointments", value: pendingCount, note: "Waiting for your response", icon: Send },
           { label: "Contract review", value: reviewCount, note: "Needs your confirmation", icon: FileText },
           { label: "Accepted", value: acceptedCount, note: "Added to race plan", icon: CheckCircle2 },
           { label: "Total invites", value: invitations.length, note: "Owner requests", icon: CalendarDays },
@@ -130,7 +130,7 @@ function JockeyInvitations() {
             <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
           </div>
           <div className="jockey-segmented">
-              {["All", "Meet", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
+              {["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>
@@ -167,17 +167,20 @@ function JockeyInvitations() {
                   <div><span>Tournament</span><strong>{invite.tournament}</strong></div>
                   <div><span><Clock3 size={13} /> Time</span><strong>{invite.date}</strong></div>
                   <div><span><MapPin size={13} /> Venue</span><strong>{invite.venue}</strong></div>
-                  <div><span><Clock3 size={13} /> Meet time</span><strong>{invite.meetingTime || "Pending"}</strong></div>
+                  <div><span><Clock3 size={13} /> Appointment</span><strong>{invite.meetingTime || "Pending"}</strong></div>
+                  <div><span><MapPin size={13} /> Location</span><strong>{invite.locationName || invite.venue || "Pending"}</strong></div>
                   <div><span><FileText size={13} /> Contract</span><strong>{invite.contractTitle || invite.contractFileName || "Contract pending"}</strong></div>
                 </div>
 
                 <div className="jockey-invitation-review">
                   <div>
-                    <span><LinkIcon size={13} /> Google Meet</span>
-                    {invite.meetingUrl ? <a href={invite.meetingUrl} rel="noreferrer" target="_blank">{invite.meetingUrl}</a> : <strong>Meeting link pending</strong>}
+                    <span><MapPin size={13} /> Offline appointment</span>
+                    <strong>{[invite.address, invite.ward, invite.district, invite.city].filter(Boolean).join(", ") || "Address pending"}</strong>
+                    {invite.mapUrl && <a href={invite.mapUrl} rel="noreferrer" target="_blank"><LinkIcon size={13} /> Open map</a>}
+                    {(invite.contactName || invite.contactPhone) && <small>{[invite.contactName, invite.contactPhone].filter(Boolean).join(" / ")}</small>}
                   </div>
                   <div>
-                    <span><FileText size={13} /> Online contract</span>
+                    <span><FileText size={13} /> Contract</span>
                     {invite.contractUrl ? <a href={invite.contractUrl} rel="noreferrer" target="_blank">{invite.contractFileName || invite.contractUrl}</a> : <strong>{invite.contractFileName || "Contract link pending"}</strong>}
                   </div>
                 </div>
@@ -193,11 +196,11 @@ function JockeyInvitations() {
                 <div className="jockey-invitation-card__actions">
                   {invite.rawStatus === "meeting_invited" && (
                     <>
-                      <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-meeting")} type="button">
-                        <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Decline Meet"}
+                      <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-appointment")} type="button">
+                        <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Decline appointment"}
                       </button>
-                      <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "accept-meeting")} type="button">
-                        <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept Meet"}
+                      <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "accept-appointment")} type="button">
+                        <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept appointment"}
                       </button>
                     </>
                   )}

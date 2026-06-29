@@ -13,7 +13,6 @@ import {
   Filter,
   Flag,
   HeartPulse,
-  Link2,
   Mail,
   MapPin,
   MessageSquareText,
@@ -39,7 +38,7 @@ const statusClass = (status) => {
   if (["Ready", "Approved", "Assigned", "Confirmed", "Published", "Won", "Verified"].includes(status)) {
     return "owner-badge--green";
   }
-  if (["Rejected", "Closed", "Cancelled", "Meet rejected", "Contract rejected"].includes(status)) {
+  if (["Rejected", "Closed", "Cancelled", "Meet rejected", "Appointment rejected", "Contract rejected"].includes(status)) {
     return "owner-badge--muted";
   }
   return "owner-badge--amber";
@@ -59,9 +58,9 @@ const imageIndexForId = (value, length) => {
 };
 
 const assignmentStatusLabel = (status) => ({
-  meeting_invited: "Meet invitation sent",
-  meeting_accepted: "Meet accepted",
-  meeting_rejected: "Meet rejected",
+  meeting_invited: "Appointment invitation sent",
+  meeting_accepted: "Appointment accepted",
+  meeting_rejected: "Appointment rejected",
   terms_agreed: "Terms recorded",
   contract_uploaded: "Contract awaiting jockey",
   contract_rejected: "Contract rejected",
@@ -956,8 +955,15 @@ function OwnerJockeys() {
     registrationId: "",
     message: "",
     meetingTitle: "",
-    meetingUrl: "",
     meetingTime: "",
+    locationName: "",
+    address: "",
+    city: "",
+    district: "",
+    ward: "",
+    mapUrl: "",
+    contactName: "",
+    contactPhone: "",
   });
   const jockeys = liveJockeys.map((jockey) => ({
     ...jockey,
@@ -1158,22 +1164,32 @@ function OwnerJockeys() {
     }
 
     if (!assignment.meetingTitle.trim()) {
-      setAssignmentError("Meeting title is required.");
-      return;
-    }
-
-    if (!assignment.meetingUrl.trim().startsWith("https://meet.google.com/")) {
-      setAssignmentError("Google Meet URL is required and must start with https://meet.google.com/.");
+      setAssignmentError("Appointment title is required.");
       return;
     }
 
     if (!assignment.meetingTime) {
-      setAssignmentError("Meeting time is required.");
+      setAssignmentError("Appointment time is required.");
       return;
     }
 
     if (new Date(assignment.meetingTime) <= new Date()) {
-      setAssignmentError("Meeting time must be in the future.");
+      setAssignmentError("Appointment time must be in the future.");
+      return;
+    }
+
+    if (!assignment.locationName.trim()) {
+      setAssignmentError("Appointment location name is required.");
+      return;
+    }
+
+    if (!assignment.address.trim()) {
+      setAssignmentError("Appointment address is required.");
+      return;
+    }
+
+    if (assignment.mapUrl.trim() && !/^https?:\/\//i.test(assignment.mapUrl.trim())) {
+      setAssignmentError("Map URL must start with http:// or https://.");
       return;
     }
 
@@ -1192,8 +1208,15 @@ function OwnerJockeys() {
         invitation_message: assignment.message || `Please ride ${selectedHorse.name} in ${selectedRace.name}.`,
         meeting: {
           title: assignment.meetingTitle,
-          meeting_url: assignment.meetingUrl,
           meeting_time: new Date(assignment.meetingTime).toISOString(),
+          location_name: assignment.locationName,
+          address: assignment.address,
+          city: assignment.city,
+          district: assignment.district,
+          ward: assignment.ward,
+          map_url: assignment.mapUrl,
+          contact_name: assignment.contactName,
+          contact_phone: assignment.contactPhone,
           note: assignment.message,
         },
       };
@@ -1209,7 +1232,7 @@ function OwnerJockeys() {
       }
       updateStatus(selectedJockey.id, "Pending");
       setAssignmentSaved(true);
-      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the Meet.");
+      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the offline appointment.");
     } catch (apiError) {
       setAssignmentError(apiError.status === 409
         ? `This horse already has a jockey assignment for ${selectedRace.name}. Choose another horse or race.`
@@ -1246,7 +1269,7 @@ function OwnerJockeys() {
         <div className="owner-jockey-hero__copy">
           <p className="owner-eyebrow">Jockey assignments</p>
           <h1>Invite riders after race approval.</h1>
-          <p>Start with a Meet invitation, then record terms and send the contract after the jockey accepts.</p>
+          <p>Start with an offline appointment, then record terms and send the contract after the jockey accepts.</p>
         </div>
         <aside className="owner-jockey-hero__panel">
           <span className="owner-badge owner-badge--green"><UsersRound size={14} /> {assignedCount} assigned</span>
@@ -1333,7 +1356,7 @@ function OwnerJockeys() {
                 {!existingAssignments.length && (
                   <div className="owner-assignment-empty" role="status">
                     <ClipboardCheck size={18} />
-                    <div><strong>No jockey negotiations yet.</strong><span>Create a Meet invitation below to start the assignment flow.</span></div>
+                  <div><strong>No jockey negotiations yet.</strong><span>Create an offline appointment invitation below to start the assignment flow.</span></div>
                   </div>
                 )}
               </div>
@@ -1359,23 +1382,23 @@ function OwnerJockeys() {
                     </div>
 
                     <div className="owner-assignment-steps" aria-label={`Assignment status: ${assignmentStatusLabel(status)}`}>
-                      <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Meet invite</span>
-                      <span className={["meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Meet accepted</span>
+                      <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Appointment invite</span>
+                      <span className={["meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Appointment accepted</span>
                       <span className={["terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "meeting_accepted" ? "is-current" : ""}>Terms</span>
                       <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "terms_agreed" ? "is-current" : ""}>Contract</span>
                       <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
                     </div>
 
-                    {status === "meeting_invited" && <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the Meet invitation.</p>}
+                    {status === "meeting_invited" && <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the offline appointment invitation.</p>}
                     {status === "meeting_accepted" && (
                       <div className="owner-assignment-workflow__form">
                         <label className="owner-field owner-field--full">
                           <span>Agreed terms <em>Required</em></span>
-                          <textarea maxLength={5000} value={draft.agreedTerms || ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the Meet." />
+                          <textarea maxLength={5000} value={draft.agreedTerms || ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the appointment." />
                         </label>
                         <label className="owner-field owner-field--full">
-                          <span>Meeting note <small>Optional</small></span>
-                          <textarea maxLength={2000} value={draft.meetingNote || ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short meeting summary." />
+                          <span>Appointment note <small>Optional</small></span>
+                          <textarea maxLength={2000} value={draft.meetingNote || ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short appointment summary." />
                         </label>
                         <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => submitTerms(item)} type="button">
                           <Save size={16} /> {isBusy ? "Saving terms..." : "Save agreed terms"}
@@ -1418,7 +1441,7 @@ function OwnerJockeys() {
 
                     {status === "contract_uploaded" && <p className="owner-assignment-workflow__note">Contract sent. The assignment becomes accepted only after the jockey confirms it.</p>}
                     {status === "accepted" && <p className="owner-assignment-workflow__note is-success"><CheckCircle2 size={16} /> The jockey confirmed the contract and accepted this assignment.</p>}
-                    {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the Meet invitation.</p>}
+                    {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the offline appointment invitation.</p>}
                     {status === "contract_rejected" && <p className="owner-assignment-workflow__note">The jockey rejected the contract. This assignment was not accepted.</p>}
                     {item.contract?.file_url && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
                   </article>
@@ -1506,19 +1529,47 @@ function OwnerJockeys() {
           </fieldset>
 
           <fieldset className="owner-invitation-section owner-invitation-section--meeting">
-            <legend><Link2 size={18} /><span>Meeting details</span></legend>
+            <legend><MapPin size={18} /><span>Offline appointment</span></legend>
             <div className="owner-invitation-section__grid">
               <label className="owner-field">
-                <span>Meeting title <em>Required</em></span>
-                <input required value={assignment.meetingTitle} onChange={(event) => updateAssignment("meetingTitle", event.target.value)} placeholder="Race briefing with stable owner" />
+                <span>Appointment title <em>Required</em></span>
+                <input required value={assignment.meetingTitle} onChange={(event) => updateAssignment("meetingTitle", event.target.value)} placeholder="Contract discussion at the stable office" />
               </label>
               <label className="owner-field">
-                <span>Meeting time <em>Required</em></span>
+                <span>Appointment time <em>Required</em></span>
                 <input required type="datetime-local" value={assignment.meetingTime} onChange={(event) => updateAssignment("meetingTime", event.target.value)} />
               </label>
+              <label className="owner-field">
+                <span>Location name <em>Required</em></span>
+                <input required value={assignment.locationName} onChange={(event) => updateAssignment("locationName", event.target.value)} placeholder="Saigon Racing Club Office" />
+              </label>
               <label className="owner-field owner-field--full">
-                <span>Google Meet URL <em>Required</em></span>
-                <input required type="url" value={assignment.meetingUrl} onChange={(event) => updateAssignment("meetingUrl", event.target.value)} placeholder="https://meet.google.com/abc-defg-hij" />
+                <span>Address <em>Required</em></span>
+                <input required value={assignment.address} onChange={(event) => updateAssignment("address", event.target.value)} placeholder="123 Nguyen Hue Street" />
+              </label>
+              <label className="owner-field">
+                <span>City <small>Optional</small></span>
+                <input value={assignment.city} onChange={(event) => updateAssignment("city", event.target.value)} placeholder="Ho Chi Minh City" />
+              </label>
+              <label className="owner-field">
+                <span>District <small>Optional</small></span>
+                <input value={assignment.district} onChange={(event) => updateAssignment("district", event.target.value)} placeholder="District 1" />
+              </label>
+              <label className="owner-field">
+                <span>Ward <small>Optional</small></span>
+                <input value={assignment.ward} onChange={(event) => updateAssignment("ward", event.target.value)} placeholder="Ben Nghe" />
+              </label>
+              <label className="owner-field">
+                <span>Map URL <small>Optional</small></span>
+                <input type="url" value={assignment.mapUrl} onChange={(event) => updateAssignment("mapUrl", event.target.value)} placeholder="https://maps.google.com/..." />
+              </label>
+              <label className="owner-field">
+                <span>Contact name <small>Optional</small></span>
+                <input value={assignment.contactName} onChange={(event) => updateAssignment("contactName", event.target.value)} placeholder="Nguyen Van A" />
+              </label>
+              <label className="owner-field">
+                <span>Contact phone <small>Optional</small></span>
+                <input value={assignment.contactPhone} onChange={(event) => updateAssignment("contactPhone", event.target.value)} placeholder="+84901234567" />
               </label>
             </div>
           </fieldset>
@@ -1543,7 +1594,7 @@ function OwnerJockeys() {
           <div className="owner-invitation-feedback" aria-live="polite">
             {assignmentSaved && <span className="owner-success"><CheckCircle2 size={16} /> Invitation sent.</span>}
             {assignmentError && <span className="owner-success owner-success--error">{assignmentError}</span>}
-            {!assignmentSaved && !assignmentError && <span>Send the Meet invitation first. Terms and contract unlock after the jockey accepts.</span>}
+            {!assignmentSaved && !assignmentError && <span>Send the offline appointment invitation first. Terms and contract unlock after the jockey accepts.</span>}
           </div>
           <button className="owner-button owner-button--primary owner-invitation-submit" disabled={isAssigning || assignmentsLoading || invitationLocked || detailLoadingId === selectedJockeyId} type="submit">
             <Send size={17} />
