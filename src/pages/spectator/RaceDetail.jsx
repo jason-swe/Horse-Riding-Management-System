@@ -258,7 +258,7 @@ export default function RaceDetail() {
 
   const viewer = useRaceViewerSession(race, contenders, { useRaceEngineOrder: hasRaceEngineOrder });
 
-  const isLoading = isLoadingTournament || isLoadingResults || isLoadingLiveState;
+  const isLoading = isLoadingTournament || isLoadingResults;
 
   if (isLoading) {
     return (
@@ -318,8 +318,8 @@ export default function RaceDetail() {
               : `Max ${race.maxParticipants}`,
         }
       : null,
-    tournament.prize
-      ? { icon: Trophy, label: "Tournament prize", value: tournament.prize }
+    race.prize
+      ? { icon: Trophy, label: "Race prize", value: race.prize }
       : null,
   ].filter(Boolean);
 
@@ -467,6 +467,10 @@ export default function RaceDetail() {
         ) : hasBackendParticipants ? (
           <span>
             <strong>Backend participants connected.</strong> The 2D viewer uses registered horses and jockeys while waiting for the referee to start the race.
+          </span>
+        ) : isLoadingLiveState ? (
+          <span>
+            <strong>Race field loading.</strong> Race details are ready while participant and engine data loads in the background.
           </span>
         ) : (
           <span>

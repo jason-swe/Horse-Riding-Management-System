@@ -53,7 +53,7 @@ export function useAdminModuleApi(moduleName) {
     load();
   }, [load]);
 
-  const applyRowAction = useCallback(async ({ actionLabel, id, note }) => {
+  const applyRowAction = useCallback(async ({ actionLabel, id, note, status }) => {
     if (!supportsLiveData) return false;
 
     if (moduleName === "users") {
@@ -85,12 +85,20 @@ export function useAdminModuleApi(moduleName) {
     }
 
     if (moduleName === "results") {
-      if (actionLabel === "Confirm") {
-        await adminApi.confirmRaceResults(id);
+      if (actionLabel === "Request Correction") {
+        await adminApi.requestRaceResultCorrection(id, note);
         await load();
         return true;
       }
-      if (actionLabel === "Publish") {
+      if (actionLabel === "Mark Correction Resolved") {
+        await adminApi.resolveRaceResultCorrection(id);
+        await load();
+        return true;
+      }
+      if (actionLabel === "Publish Result") {
+        if (status === "Draft") {
+          await adminApi.confirmRaceResults(id);
+        }
         await adminApi.publishRaceResults(id);
         await load();
         return true;
@@ -110,7 +118,23 @@ export function useAdminModuleApi(moduleName) {
     }
 
     if (moduleName === "results") {
-      return adaptAdminRaceResultDetail(await adminApi.listRaceResults({ race_id: id }));
+      const [results, readiness, participants, reports, violations, awards] = await Promise.all([
+        adminApi.listRaceResults({ race_id: id }),
+        adminApi.getRaceResultReadiness(id).catch(() => null),
+        adminApi.getRaceResultParticipants(id).catch(() => null),
+        adminApi.listRefereeReports({ race_id: id }).catch(() => null),
+        adminApi.listViolations({ race_id: id }).catch(() => null),
+        adminApi.listRacePrizeAwards(id).catch(() => null),
+      ]);
+
+      return adaptAdminRaceResultDetail({
+        results,
+        readiness,
+        participants,
+        reports,
+        violations,
+        awards,
+      });
     }
 
     return null;

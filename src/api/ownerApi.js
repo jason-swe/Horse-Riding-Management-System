@@ -107,6 +107,14 @@ export const ownerApi = {
     return apiRequest(`/registrations${query ? `?${query}` : ""}`);
   },
 
+  getPrizeAwards(params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")
+    ).toString();
+
+    return apiRequest(`/prizes${query ? `?${query}` : ""}`);
+  },
+
   createJockeyAssignment(payload) {
     return apiRequest("/jockey-assignments", {
       method: "POST",
@@ -133,6 +141,13 @@ export const ownerApi = {
     return apiRequest(`/jockey-assignments/${id}/contract`, {
       method: "POST",
       body: { contract },
+    });
+  },
+
+  promoteJockeyAssignment(id, reason) {
+    return apiRequest(`/jockey-assignments/${id}/promote`, {
+      method: "POST",
+      body: { reason },
     });
   },
 

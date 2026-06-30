@@ -154,6 +154,9 @@ function adaptResult(value) {
     appliedViolationIds: asArray(value.applied_violation_ids).map(getId).filter(Boolean),
     penaltyApplied: asArray(value.applied_violation_ids).length > 0,
     note: value.note || "",
+    correctionRequested: value.correction_requested === true,
+    correctionNote: value.correction_note || "",
+    correctionRequestedAt: value.correction_requested_at || null,
     status: value.status || "draft",
   };
 }

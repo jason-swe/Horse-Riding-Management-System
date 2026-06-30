@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { CalendarDays, Lock, Pencil, Plus, RefreshCw, Trash2, Unlock } from "lucide-react";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { adminApi } from "../api/adminApi";
 import AdminLayout from "./AdminLayout";
 
 const emptyTournament = { name: "", description: "", location: "", image_url: "", start_date: "", end_date: "", status: "draft" };
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
-const emptyRace = { tournament_id: "", round_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", status: "scheduled" };
+const emptyRace = { tournament_id: "", round_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", prize_pool: "", prize_currency: "VND", status: "scheduled" };
 const PAGE_SIZE = 20;
 
 const entityConfig = {
@@ -37,6 +37,16 @@ function formatDate(value, withTime = false) {
   }).format(date);
 }
 
+function formatMoney(value, currency = "VND") {
+  const number = Number(value || 0);
+  if (!number) return "No prize";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "VND",
+    maximumFractionDigits: 0,
+  }).format(number);
+}
+
 function titleCase(value) {
   return String(value || "unknown").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
@@ -49,9 +59,10 @@ function StatusBadge({ value }) {
   return <span className={`admin-status-badge admin-status-badge--${tone}`}>{titleCase(value)}</span>;
 }
 
-function RowActions({ label, onEdit, onDelete }) {
+function RowActions({ label, onEdit, onDelete, children }) {
   return (
     <div className="admin-competition__row-actions">
+      {children}
       <button type="button" onClick={onEdit} aria-label={`Edit ${label}`}><Pencil size={15} aria-hidden="true" /> Edit</button>
       <button type="button" className="admin-competition__delete" onClick={onDelete} aria-label={`Delete ${label}`}><Trash2 size={15} aria-hidden="true" /> Delete</button>
     </div>
@@ -110,6 +121,8 @@ function RaceForm({ value, tournaments, rounds, onChange, onSubmit, onCancel, sa
         <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
         <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} placeholder="1600" /></label>
         <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} placeholder="12" /></label>
+        <label className="admin-field"><span>Prize pool</span><input min="0" type="number" value={value.prize_pool} onChange={(event) => onChange("prize_pool", event.target.value)} placeholder="50000000" /></label>
+        <label className="admin-field"><span>Prize currency</span><select value={value.prize_currency} onChange={(event) => onChange("prize_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
       </div>
       <div className="admin-live-state"><strong>Referee assignment is not available in this form.</strong></div>
       <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
@@ -135,6 +148,7 @@ function AdminCompetitionModule({ moduleName }) {
   const [tournamentPage, setTournamentPage] = useState(1);
   const [roundPage, setRoundPage] = useState(1);
   const [racePage, setRacePage] = useState(1);
+  const [registrationModeLoading, setRegistrationModeLoading] = useState("");
 
   const loadData = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -169,7 +183,7 @@ function AdminCompetitionModule({ moduleName }) {
     let next;
     if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
     if (kind === "round") next = item ? { tournament_id: idOf(item.tournament_id), name: item.name || "", round_order: String(item.round_order || ""), description: item.description || "", status: item.status || "draft" } : { ...emptyRound, tournament_id: data.tournaments[0]?._id || "" };
-    if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
+    if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND", status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
     setForm(next);
     setError("");
     setModal({ kind, mode: item ? "edit" : "create", item });
@@ -187,7 +201,7 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);
     if (!selectedRound || idOf(selectedRound.tournament_id) !== form.tournament_id) throw new Error("The selected round does not belong to this tournament.");
-    return { ...form, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null };
+    return { ...form, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null, prize_pool: form.prize_pool ? Number(form.prize_pool) : 0, prize_currency: form.prize_currency || "VND" };
   };
 
   const submitForm = async (event) => {
@@ -228,6 +242,23 @@ function AdminCompetitionModule({ moduleName }) {
     }
   };
 
+  const setOwnerRegistrationMode = async (enabled) => {
+    setRegistrationModeLoading(enabled ? "on" : "off");
+    setError("");
+    try {
+      const data = await adminApi.setRaceRegistrationDemoMode(enabled);
+      const updatedCount = data.updated_count ?? 0;
+      setNotice(enabled
+        ? `Owner registration turned on for ${updatedCount} scheduled races.`
+        : `Owner registration turned off for ${updatedCount} scheduled races.`);
+      await loadData(true);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to update owner registration mode.");
+    } finally {
+      setRegistrationModeLoading("");
+    }
+  };
+
   const matchesFilters = (item) => {
     const haystack = [item.name, item.location, item.status, item.description, item.tournament_id?.name, item.round_id?.name].join(" ").toLowerCase();
     return (!query.trim() || haystack.includes(query.trim().toLowerCase())) && (status === "all" || item.status === status);
@@ -258,7 +289,7 @@ function AdminCompetitionModule({ moduleName }) {
   if (loading) return <AdminLayout title={title} eyebrow="Competition planning" description={description}><LoadingSkeleton ariaLabel={`Loading ${title}`} rows={6} variant="table" /></AdminLayout>;
 
   return (
-    <AdminLayout title={title} eyebrow="Competition planning" description={description} actions={<><button className="admin-header__button" type="button" onClick={() => openForm(isSchedule ? "race" : "tournament")}><Plus size={17} aria-hidden="true" /> {isSchedule ? "Create race" : "Create tournament"}</button>{!isSchedule && <button className="admin-header__button admin-header__button--ghost" disabled={!data.tournaments.length} type="button" onClick={() => openForm("round")}><Plus size={17} aria-hidden="true" /> Add round</button>}</>}>
+    <AdminLayout title={title} eyebrow="Competition planning" description={description} actions={<><button className="admin-header__button" type="button" onClick={() => openForm(isSchedule ? "race" : "tournament")}><Plus size={17} aria-hidden="true" /> {isSchedule ? "Create race" : "Create tournament"}</button>{isSchedule && <><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(true)}><Unlock size={17} aria-hidden="true" /> {registrationModeLoading === "on" ? "Turning on" : "Turn on entries"}</button><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(false)}><Lock size={17} aria-hidden="true" /> {registrationModeLoading === "off" ? "Turning off" : "Turn off entries"}</button></>}{!isSchedule && <button className="admin-header__button admin-header__button--ghost" disabled={!data.tournaments.length} type="button" onClick={() => openForm("round")}><Plus size={17} aria-hidden="true" /> Add round</button>}</>}>
       <section className="admin-metrics admin-metrics--module" aria-label="Competition summary">
         {isSchedule ? <><article className="admin-metric-card"><p className="admin-metric-card__label">Total races</p><div className="admin-metric-card__value">{data.races.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Scheduled</p><div className="admin-metric-card__value">{scheduledCount}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Rounds</p><div className="admin-metric-card__value">{data.rounds.length}</div></article></> : <><article className="admin-metric-card"><p className="admin-metric-card__label">Tournaments</p><div className="admin-metric-card__value">{data.tournaments.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Rounds</p><div className="admin-metric-card__value">{data.rounds.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Active</p><div className="admin-metric-card__value">{data.tournaments.filter((item) => item.status === "active").length}</div></article></>}
       </section>

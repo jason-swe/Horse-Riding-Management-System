@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ownerApi } from "../../api/ownerApi";
 import { useAuth } from "../../auth/AuthContext";
-import { toHorseApprovalStatus, toOwnerHorse, toOwnerJockey, toOwnerProfile, toOwnerRegistration, toOwnerTournament } from "./ownerAdapters";
+import { toHorseApprovalStatus, toOwnerHorse, toOwnerJockey, toOwnerPrizeAward, toOwnerProfile, toOwnerRegistration, toOwnerTournament } from "./ownerAdapters";
 
 export function useOwnerHorses() {
   const [horses, setHorses] = useState([]);
@@ -225,4 +225,58 @@ export function useOwnerRegistrations() {
   }, [loadRegistrations]);
 
   return { registrations, isLoading, error, reload: loadRegistrations };
+}
+
+export function useOwnerJockeyAssignments() {
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadAssignments = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getJockeyAssignments();
+      setAssignments(data.assignments || []);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load jockey assignments.");
+      setAssignments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [loadAssignments]);
+
+  return { assignments, isLoading, error, reload: loadAssignments };
+}
+
+export function useOwnerPrizeAwards() {
+  const [awards, setAwards] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadAwards = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getPrizeAwards();
+      setAwards((data.awards || []).map(toOwnerPrizeAward));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load owner results and prizes.");
+      setAwards([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAwards();
+  }, [loadAwards]);
+
+  return { awards, isLoading, error, reload: loadAwards };
 }

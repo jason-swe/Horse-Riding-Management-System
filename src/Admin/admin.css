@@ -1019,12 +1019,22 @@
   align-items: start;
 }
 
-.admin-command-ledger,
-.admin-command-detail {
+.admin-command-ledger {
   min-width: 0;
   border: 1px solid var(--admin-line);
   border-radius: 6px;
   background: rgba(238, 231, 212, 0.025);
+}
+
+.admin-command-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  padding: 28px;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 9, 7, 0.72);
+  backdrop-filter: blur(8px);
 }
 
 .admin-command-ledger > header {
@@ -1191,12 +1201,20 @@
 }
 
 .admin-command-detail {
-  position: sticky;
-  top: 20px;
-  overflow: hidden;
+  width: min(1120px, 100%);
+  max-height: min(86vh, 920px);
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: #10150f;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.44);
 }
 
 .admin-command-detail > header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1289,6 +1307,42 @@
   color: var(--admin-copy);
   font-size: 0.73rem;
   font-weight: 650;
+}
+
+.admin-command-detail__section,
+.admin-command-detail__table {
+  padding: 15px;
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-command-detail__section h3,
+.admin-command-detail__table h3 {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.admin-command-detail__section .admin-command-detail__fields {
+  border: 1px solid var(--admin-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.admin-command-detail__table .admin-data-table__wrap {
+  max-width: 100%;
+}
+
+.admin-command-detail__table .admin-data-table {
+  min-width: 620px;
+}
+
+.admin-command-detail__table p {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.74rem;
 }
 
 .admin-command-role-editor {
@@ -1403,10 +1457,15 @@
 }
 
 .admin-command-detail > footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   padding: 14px 15px;
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
+  border-top: 1px solid var(--admin-line);
+  background: rgba(16, 21, 15, 0.96);
 }
 
 .admin-command-action--danger {
@@ -2281,6 +2340,11 @@
     grid-row: 1;
   }
 
+  .admin-command-modal .admin-command-detail {
+    position: relative;
+    grid-row: auto;
+  }
+
   .admin-actions-panel .admin-toolbar {
     grid-template-columns: 1fr;
   }
@@ -2439,6 +2503,16 @@
   .admin-command-pagination > div {
     max-width: 100%;
     overflow-x: auto;
+  }
+
+  .admin-command-modal {
+    padding: 12px;
+    align-items: stretch;
+  }
+
+  .admin-command-modal .admin-command-detail {
+    width: 100%;
+    max-height: calc(100vh - 24px);
   }
 
   .admin-command-detail__fields {

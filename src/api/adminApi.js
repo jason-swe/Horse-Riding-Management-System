@@ -90,12 +90,47 @@ export const adminApi = {
     return apiRequest(withQuery("/race-results", params));
   },
 
+  getRaceResultParticipants(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/participants`);
+  },
+
+  getRaceResultReadiness(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/readiness`);
+  },
+
   confirmRaceResults(raceId) {
     return apiRequest(`/race-results/races/${raceId}/confirm`, { method: "POST" });
   },
 
+  requestRaceResultCorrection(raceId, correctionNote) {
+    return apiRequest(`/race-results/races/${raceId}/request-correction`, {
+      method: "POST",
+      body: { correction_note: correctionNote },
+    });
+  },
+
+  resolveRaceResultCorrection(raceId) {
+    return apiRequest(`/race-results/races/${raceId}/resolve-correction`, { method: "POST" });
+  },
+
   publishRaceResults(raceId) {
     return apiRequest(`/race-results/races/${raceId}/publish`, { method: "POST" });
+  },
+
+  configureRacePrizes(raceId, payload) {
+    return apiRequest(`/prizes/races/${raceId}/config`, { method: "POST", body: payload });
+  },
+
+  listRacePrizeAwards(raceId) {
+    return apiRequest(`/prizes/races/${raceId}/awards`);
+  },
+
+  listRefereeReports(params = {}) {
+    return apiRequest(withQuery("/referee-reports", params));
+  },
+
+  listViolations(params = {}) {
+    return apiRequest(withQuery("/violations", params));
   },
 
   listTournaments(params = {}) {
@@ -152,6 +187,17 @@ export const adminApi = {
 
   updateRace(id, payload) {
     return apiRequest(`/races/${id}`, { method: "PATCH", body: payload });
+  },
+
+  openRaceRegistrationDemo(id) {
+    return apiRequest(`/races/${id}/open-registration-demo`, { method: "POST" });
+  },
+
+  setRaceRegistrationDemoMode(enabled) {
+    return apiRequest("/races/registration-demo-mode", {
+      method: "POST",
+      body: { enabled },
+    });
   },
 
   deleteRace(id) {

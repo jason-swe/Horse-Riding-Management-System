@@ -55,6 +55,7 @@ function normalizeStatus(status, fallback = "Pending") {
     contract_uploaded: "Contract review",
     contract_rejected: "Contract rejected",
     accepted: "Accepted",
+    replaced: "Replaced",
     approved: "Accepted",
     confirmed: "Accepted",
     rejected: "Rejected",
@@ -77,12 +78,17 @@ function mapAssignment(item, index = 0) {
   const meeting = item.meeting || {};
   const contract = item.contract || {};
   const status = normalizeStatus(item.status);
+  const assignmentType = item.assignment_type || "primary";
 
   return {
     id: getId(item) || `ASG-${index + 1}`,
     horse: getName(horse, item.horse_name || `Horse ${index + 1}`),
     owner: getName(owner, item.owner_name || "Race owner"),
     status,
+    assignmentType,
+    assignmentTypeLabel: assignmentType === "backup" ? "Backup jockey" : "Primary jockey",
+    isBackup: assignmentType === "backup",
+    backupPriority: item.backup_priority || "",
     race: getName(race, item.race_name || "Assigned race"),
     tournament: getName(race.tournament_id || item.tournament_id, item.tournament_name || "Tournament"),
     date: formatRaceTime(race.race_date || item.race_date || item.created_at),

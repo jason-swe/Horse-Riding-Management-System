@@ -37,8 +37,8 @@ const controlLanes = [
   {
     number: "03",
     label: "Official record",
-    title: "Confirm race results",
-    description: "Review referee drafts, confirm outcomes, then publish the official finishing order.",
+    title: "Publish race results",
+    description: "Review referee drafts, request corrections when needed, then publish the official finishing order.",
     to: "/admin/results",
     action: "Review result board",
     icon: Trophy,
@@ -51,7 +51,7 @@ const modules = [
   { label: "Tournaments", note: "Competition and round structure", to: "/admin/tournament", icon: Flag },
   { label: "Race schedule", note: "Race dates, tracks and status", to: "/admin/schedule", icon: CalendarRange },
   { label: "Registrations", note: "Horse entry approval queue", to: "/admin/registrations", icon: ClipboardCheck },
-  { label: "Official results", note: "Confirm and publish outcomes", to: "/admin/results", icon: Trophy },
+  { label: "Official results", note: "Review and publish outcomes", to: "/admin/results", icon: Trophy },
   { label: "Referee desk", note: "Assignments and report status", to: "/admin/referees", icon: ShieldCheck },
 ];
 

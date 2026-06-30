@@ -65,10 +65,40 @@ function StatusBadge({ value }) {
   return <span className={`admin-status-badge admin-status-badge--${toneFor(value)}`}>{value || "Unknown"}</span>;
 }
 
-function actionsFor(moduleName, status) {
+function DetailFields({ fields }) {
+  if (!fields?.length) return null;
+  return <div className="admin-command-detail__fields">{fields.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>;
+}
+
+function DetailTable({ table }) {
+  if (!table) return null;
+
+  return (
+    <section className="admin-command-detail__table">
+      <h3>{table.title}</h3>
+      {table.rows?.length ? (
+        <div className="admin-data-table__wrap">
+          <table className="admin-data-table">
+            <thead><tr>{table.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+            <tbody>{table.rows.map((row, rowIndex) => <tr key={`${table.title}-${rowIndex}`}>{row.map((cell, index) => <td key={`${table.title}-${rowIndex}-${table.columns[index]}`}>{cell}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      ) : (
+        <p>{table.emptyText || "No data available."}</p>
+      )}
+    </section>
+  );
+}
+
+function actionsFor(moduleName, status, detail) {
   if (moduleName === "users") return status === "Active" ? ["Suspend"] : ["Activate"];
   if (moduleName === "registrations") return status === "Pending" ? ["Approve", "Reject"] : [];
-  if (moduleName === "results") return status === "Draft" ? ["Confirm"] : status === "Confirmed" ? ["Publish"] : [];
+  if (moduleName === "results") {
+    if (status === "Published") return [];
+    if (detail?.correctionRequested) return ["Mark Correction Resolved"];
+    if (status === "Draft") return ["Publish Result", "Request Correction"];
+    if (status === "Confirmed") return ["Publish Result", "Request Correction"];
+  }
   return [];
 }
 
@@ -117,6 +147,25 @@ function AdminCommandModule({ moduleName }) {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
+  useEffect(() => {
+    if (!selected) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") {
+        setSelected(null);
+        setDetail(null);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
+
   const openDetail = async (row) => {
     setSelected(row);
     setDetail(null);
@@ -134,10 +183,14 @@ function AdminCommandModule({ moduleName }) {
 
   const runAction = async (action) => {
     if (!selected) return;
+    if (action === "Request Correction" && !decisionNote.trim()) {
+      setDetailError("Correction reason is required.");
+      return;
+    }
     setActionLoading(action);
     setDetailError("");
     try {
-      await api.applyRowAction({ actionLabel: action, id: selected[0], note: decisionNote });
+      await api.applyRowAction({ actionLabel: action, id: selected[0], note: decisionNote, status: selectedStatus });
       setNotice(`${action} completed for ${selected[1] || selected[0]}.`);
       setSelected(null);
       setDetail(null);
@@ -165,7 +218,7 @@ function AdminCommandModule({ moduleName }) {
   };
 
   const selectedStatus = selected?.[statusIndex];
-  const availableActions = actionsFor(moduleName, selectedStatus);
+  const availableActions = actionsFor(moduleName, selectedStatus, detail);
   const Icon = config.icon;
 
   if (api.isLoading && !api.liveData) {
@@ -197,7 +250,7 @@ function AdminCommandModule({ moduleName }) {
         {(query || status !== "All") && <button className="admin-command-reset" type="button" onClick={() => { setQuery(""); setStatus("All"); }}><X size={15} aria-hidden="true" /> Clear</button>}
       </section>
 
-      <section className={`admin-command-workspace${selected ? " admin-command-workspace--detail" : ""}`}>
+      <section className="admin-command-workspace">
         <article className="admin-command-ledger">
           <header><div><Icon size={19} aria-hidden="true" /><span><strong>{config.tableLabel}</strong><small>{filteredRows.length} records</small></span></div><span>20 rows per page</span></header>
           {filteredRows.length ? (
@@ -219,13 +272,22 @@ function AdminCommandModule({ moduleName }) {
         </article>
 
         {selected && (
-          <aside className="admin-command-detail" aria-label="Selected record detail">
+          <div className="admin-command-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setSelected(null); setDetail(null); } }}>
+          <aside className="admin-command-detail" aria-label="Selected record detail" aria-modal="true" role="dialog">
             <header><div><p>Record inspection</p><h2>{selected[1] || selected[0]}</h2><span className="admin-command-id">{selected[0]}</span></div><button type="button" onClick={() => { setSelected(null); setDetail(null); }} aria-label="Close record detail"><X size={18} aria-hidden="true" /></button></header>
             <div className="admin-command-detail__status"><span>Current state</span><StatusBadge value={selectedStatus} /></div>
 
             {detailLoading && <LoadingSkeleton ariaLabel="Loading record detail" variant="inline" />}
             {detailError && <div className="admin-live-state admin-live-state--warning">{detailError}</div>}
-            {detail && <div className="admin-command-detail__fields">{detail.fields.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>}
+            {detail?.warnings?.map((warning) => <div className="admin-live-state admin-live-state--warning" key={warning}>{warning}</div>)}
+            {detail && <DetailFields fields={detail.fields} />}
+            {detail?.sections?.map((section) => (
+              <section className="admin-command-detail__section" key={section.title}>
+                <h3>{section.title}</h3>
+                <DetailFields fields={section.fields} />
+              </section>
+            ))}
+            {detail?.tables?.map((table) => <DetailTable key={table.title} table={table} />)}
 
             {detail?.type === "user" && (
               <section className="admin-command-role-editor">
@@ -236,12 +298,14 @@ function AdminCommandModule({ moduleName }) {
             )}
 
             {moduleName === "registrations" && availableActions.length > 0 && <label className="admin-command-note"><span>Decision note</span><textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Record the reason for this approval decision..." /></label>}
+            {moduleName === "results" && availableActions.includes("Request Correction") && <label className="admin-command-note"><span>Correction reason</span><textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Explain what must be corrected before this race can be confirmed or published..." /></label>}
 
             <footer>
-              {availableActions.map((action) => <button key={action} className={action === "Reject" || action === "Suspend" ? "admin-command-action admin-command-action--danger" : "admin-command-action"} disabled={Boolean(actionLoading)} type="button" onClick={() => runAction(action)}>{actionLoading === action ? "Processing..." : action}<Check size={15} aria-hidden="true" /></button>)}
+              {availableActions.map((action) => <button key={action} className={["Reject", "Suspend", "Request Correction"].includes(action) ? "admin-command-action admin-command-action--danger" : "admin-command-action"} disabled={Boolean(actionLoading)} type="button" onClick={() => runAction(action)}>{actionLoading === action ? "Processing..." : action}<Check size={15} aria-hidden="true" /></button>)}
               {!availableActions.length && <div className="admin-command-locked"><CheckCircle2 size={17} aria-hidden="true" /><span><strong>No actions available</strong><small>This record is complete.</small></span></div>}
             </footer>
           </aside>
+          </div>
         )}
       </section>
     </AdminLayout>

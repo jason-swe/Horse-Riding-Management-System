@@ -86,6 +86,15 @@ function formatPrize(value) {
   return String(value);
 }
 
+function formatRacePrize(value, currency = "VND") {
+  if (value === undefined || value === null || value === "" || Number(value) <= 0) return null;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "VND",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
 function normalizeTournamentStatus(status) {
   const value = String(status || "").toLowerCase();
   if (["active", "ongoing", "running", "in_progress", "started"].includes(value)) return "Active";
@@ -179,6 +188,10 @@ export function toSpectatorRace(apiRace) {
     bettingClosesAt: apiRace.betting_closes_at || apiRace.betting_market?.closes_at || null,
     bettingClosesAtDisplay: formatDateDisplay(apiRace.betting_closes_at || apiRace.betting_market?.closes_at),
     bettingMarket,
+    prizePool: apiRace.prize_pool ?? 0,
+    prizeCurrency: apiRace.prize_currency || "VND",
+    prize: formatRacePrize(apiRace.prize_pool, apiRace.prize_currency || "VND"),
+    prizeDistribution: apiRace.prize_distribution || [],
     resultStatus: apiRace.result_status || null,
     refereeName,
     refereeExperience,

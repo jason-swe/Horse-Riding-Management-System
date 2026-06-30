@@ -27,12 +27,19 @@ const statusClass = (status) => {
   return "jockey-badge--amber";
 };
 
-const getStageCopy = (rawStatus) => ({
-  meeting_invited: "Review the offline appointment details and respond to the owner's invitation.",
-  meeting_accepted: "Appointment accepted. Attend at the scheduled time, then wait for the owner to record the agreed terms.",
+const getStageCopy = (rawStatus, isBackup = false) => ({
+  meeting_invited: isBackup
+    ? "Review the standby appointment details and respond to the owner's backup invitation."
+    : "Review the offline appointment details and respond to the owner's invitation.",
+  meeting_accepted: isBackup
+    ? "Standby appointment accepted. Attend at the scheduled time, then wait for the owner to record standby terms."
+    : "Appointment accepted. Attend at the scheduled time, then wait for the owner to record the agreed terms.",
   terms_agreed: "The owner recorded the terms and is preparing the contract.",
-  contract_uploaded: "Review the terms and contract. Confirming the contract accepts the assignment.",
-  accepted: "Assignment accepted. This horse and race are now confirmed in your plan.",
+  contract_uploaded: isBackup
+    ? "Review the terms and contract. Confirming accepts the standby assignment or promoted primary contract."
+    : "Review the terms and contract. Confirming the contract accepts the assignment.",
+  accepted: isBackup ? "Standby assignment accepted. You are available if the primary jockey is replaced." : "Assignment accepted. This horse and race are now confirmed in your plan.",
+  replaced: "This assignment was replaced by another jockey assignment.",
   meeting_rejected: "You declined this appointment invitation.",
   contract_rejected: "You rejected this contract. The assignment is not accepted.",
   cancelled: "The owner cancelled this assignment.",
@@ -100,7 +107,7 @@ function JockeyInvitations() {
         <aside className="jockey-invitations-hero__panel">
           <span className={`jockey-badge ${statusClass(featuredInvite.status)}`}>{featuredInvite.status}</span>
           <strong>{featuredInvite.horse}</strong>
-          <p>{featuredInvite.race} / {featuredInvite.date}</p>
+          <p>{featuredInvite.assignmentTypeLabel} / {featuredInvite.race} / {featuredInvite.date}</p>
         </aside>
       </section>
 
@@ -156,10 +163,11 @@ function JockeyInvitations() {
                 </div>
 
                 <p>{invite.note}</p>
+                <span className="jockey-badge">{invite.assignmentTypeLabel}</span>
 
                 <div className="jockey-invitation-stage" role="status">
                   <ShieldCheck size={17} />
-                  <span>{getStageCopy(invite.rawStatus)}</span>
+                  <span>{getStageCopy(invite.rawStatus, invite.isBackup)}</span>
                 </div>
 
                 <div className="jockey-invitation-meta">
@@ -167,6 +175,7 @@ function JockeyInvitations() {
                   <div><span>Tournament</span><strong>{invite.tournament}</strong></div>
                   <div><span><Clock3 size={13} /> Time</span><strong>{invite.date}</strong></div>
                   <div><span><MapPin size={13} /> Venue</span><strong>{invite.venue}</strong></div>
+                  <div><span>Role</span><strong>{invite.assignmentTypeLabel}{invite.backupPriority ? ` #${invite.backupPriority}` : ""}</strong></div>
                   <div><span><Clock3 size={13} /> Appointment</span><strong>{invite.meetingTime || "Pending"}</strong></div>
                   <div><span><MapPin size={13} /> Location</span><strong>{invite.locationName || invite.venue || "Pending"}</strong></div>
                   <div><span><FileText size={13} /> Contract</span><strong>{invite.contractTitle || invite.contractFileName || "Contract pending"}</strong></div>
