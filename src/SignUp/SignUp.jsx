@@ -1,24 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
-import { saveRoleApplicationIntent } from "../auth/authStorage";
 import "../index.css";
 import "../App.css";
 
-const fallbackRoleOptions = [
-  { value: "horse_owner", label: "Horse Owner" },
-  { value: "jockey", label: "Jockey" },
-  { value: "race_referee", label: "Race Referee" },
-  { value: "spectator", label: "Spectator" },
-  { value: "admin", label: "Admin" },
-];
-
 function SignUp() {
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState("");
-  const [isRoleOpen, setIsRoleOpen] = useState(false);
-  const [roleOptions, setRoleOptions] = useState(fallbackRoleOptions);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -32,53 +20,6 @@ function SignUp() {
     password: false,
     confirmPassword: false,
   });
-  const rolePickerRef = useRef(null);
-
-  useEffect(() => {
-    const closeRolePicker = (event) => {
-      if (!rolePickerRef.current?.contains(event.target)) {
-        setIsRoleOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", closeRolePicker);
-    return () => document.removeEventListener("pointerdown", closeRolePicker);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadRoles() {
-      try {
-        const data = await authApi.getRoles();
-        if (!cancelled && Array.isArray(data.roles) && data.roles.length) {
-          setRoleOptions(data.roles.map((role) => ({
-            value: role.value,
-            label: role.label,
-            description: role.description,
-          })));
-        }
-      } catch {
-        if (!cancelled) {
-          setRoleOptions(fallbackRoleOptions);
-        }
-      }
-    }
-
-    loadRoles();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const chooseRole = (role) => {
-    setSelectedRole(role.value);
-    setError("");
-    setIsRoleOpen(false);
-  };
-
-  const selectedRoleOption = roleOptions.find((role) => role.value === selectedRole);
 
   const updateField = (field, value) => {
     setError("");
@@ -91,7 +32,6 @@ function SignUp() {
 
   const validateForm = () => {
     if (!form.fullName.trim()) return "Full name is required.";
-    if (!selectedRole) return "Please choose a role.";
     if (!form.email.trim()) return "Email is required.";
     if (form.password.length < 8) return "Password must be at least 8 characters.";
     if (form.password !== form.confirmPassword) return "Confirm password does not match.";
@@ -117,7 +57,6 @@ function SignUp() {
         email: form.email,
         password: form.password,
       });
-      saveRoleApplicationIntent(selectedRole, form.email);
       const email = form.email.trim().toLowerCase();
       navigate(`/verify-account?email=${encodeURIComponent(email)}`, {
         replace: true,
@@ -148,64 +87,22 @@ function SignUp() {
           <p className="signup-page__eyebrow">GET STARTED</p>
           <h1 className="signup-page__title">Create your account</h1>
           <p className="signup-page__description">
-            Choose a role and enter your account details.
+            New accounts start as spectators. Apply for professional access after email verification.
           </p>
 
           <form className="signup-page__form" onSubmit={handleSubmit}>
-            <div className="signup-page__grid">
-              <div className="signup-field">
-                <label htmlFor="signup-first-name">Full name</label>
-                <input
-                  id="signup-first-name"
-                  type="text"
-                  name="fullName"
-                  placeholder="Your full name"
-                  autoComplete="name"
-                  value={form.fullName}
-                  onChange={(event) => updateField("fullName", event.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="signup-field">
-                <label id="signup-role-label" htmlFor="signup-role">Role</label>
-                <div className={`signup-role-picker ${isRoleOpen ? "signup-role-picker--open" : ""}`} ref={rolePickerRef}>
-                  <input id="signup-role" type="hidden" name="role" value={selectedRole} />
-                  <button
-                    className="signup-role-picker__button"
-                    type="button"
-                    aria-haspopup="listbox"
-                    aria-expanded={isRoleOpen}
-                    aria-labelledby="signup-role-label"
-                    onClick={() => setIsRoleOpen((open) => !open)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        setIsRoleOpen(false);
-                      }
-                    }}
-                  >
-                    <span className={selectedRoleOption ? "" : "signup-role-picker__placeholder"}>
-                      {selectedRoleOption?.label || "Choose your role"}
-                    </span>
-                    <span className="signup-role-picker__chevron" aria-hidden="true" />
-                  </button>
-
-                  <div className="signup-role-picker__menu" role="listbox" aria-labelledby="signup-role-label">
-                    {roleOptions.map((role) => (
-                      <button
-                        className={`signup-role-picker__option ${selectedRole === role.value ? "signup-role-picker__option--active" : ""}`}
-                        type="button"
-                        role="option"
-                        aria-selected={selectedRole === role.value}
-                        key={role.value}
-                        onClick={() => chooseRole(role)}
-                      >
-                        <span>{role.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="signup-field">
+              <label htmlFor="signup-first-name">Full name</label>
+              <input
+                id="signup-first-name"
+                type="text"
+                name="fullName"
+                placeholder="Your full name"
+                autoComplete="name"
+                value={form.fullName}
+                onChange={(event) => updateField("fullName", event.target.value)}
+                required
+              />
             </div>
 
             <div className="signup-field">
@@ -303,7 +200,7 @@ function SignUp() {
             <ul className="signup-page__intro-list">
               <li>
                 <span className="signup-page__intro-badge">01</span>
-                <div><h4>Choose a role</h4><p>Select how you want to take part in race day.</p></div>
+                <div><h4>Create spectator account</h4><p>Use one account to follow races while access is reviewed.</p></div>
               </li>
               <li>
                 <span className="signup-page__intro-badge">02</span>
@@ -311,7 +208,7 @@ function SignUp() {
               </li>
               <li>
                 <span className="signup-page__intro-badge">03</span>
-                <div><h4>Enter workspace</h4><p>Sign in and continue to spectator access or your role application.</p></div>
+                <div><h4>Request professional access</h4><p>Apply for owner, jockey, or referee permissions from your spectator workspace.</p></div>
               </li>
             </ul>
           </div>

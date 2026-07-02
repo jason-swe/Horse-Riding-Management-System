@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { refereeApi } from "../api/refereeApi";
 import { adaptRefereeApiData } from "./refereeAdapters";
 
-const getId = (value) => value?._id || value?.id || "";
-
 export function useRefereeData() {
   const [races, setRaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,30 +14,10 @@ export function useRefereeData() {
     setIsUnavailable(false);
 
     try {
-      const raceData = await refereeApi.getAssignedRaces();
-      const raceRows = Array.isArray(raceData?.races) ? raceData.races : [];
-      const [participantSettled, resultData, violationData, checkData, reportData] = await Promise.all([
-        Promise.allSettled(raceRows.map(async (race) => ({ raceId: getId(race), payload: await refereeApi.getRaceParticipants(getId(race)) }))),
-        refereeApi.listRaceResults(),
-        refereeApi.listViolations(),
-        refereeApi.listHorseChecks(),
-        refereeApi.listRefereeReports(),
-      ]);
-      const participantPayloads = participantSettled.filter((item) => item.status === "fulfilled").map((item) => item.value);
-      const unavailableRaceIds = participantSettled
-        .map((item, index) => (item.status === "rejected" ? getId(raceRows[index]) : null))
-        .filter(Boolean);
+      const workspace = await refereeApi.getWorkspace();
 
-      setIsUnavailable(participantSettled.length > 0 && participantSettled.every((item) => item.status === "rejected"));
-      setRaces(adaptRefereeApiData({
-        races: raceData,
-        participantPayloads,
-        unavailableRaceIds,
-        results: resultData,
-        violations: violationData,
-        checks: checkData,
-        reports: reportData,
-      }));
+      setIsUnavailable(false);
+      setRaces(adaptRefereeApiData(workspace));
     } catch (apiError) {
       setRaces([]);
       setError(apiError.message || "Unable to load referee workspace data.");

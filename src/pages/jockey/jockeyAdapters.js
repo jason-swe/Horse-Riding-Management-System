@@ -48,13 +48,14 @@ function normalizeStatus(status, fallback = "Pending") {
   const value = String(status || fallback).toLowerCase();
   const map = {
     pending: "Pending",
-    meeting_invited: "Meeting invite",
-    meeting_accepted: "Meeting accepted",
-    meeting_rejected: "Meeting rejected",
+    meeting_invited: "Appointment invite",
+    meeting_accepted: "Appointment accepted",
+    meeting_rejected: "Appointment rejected",
     terms_agreed: "Terms ready",
     contract_uploaded: "Contract review",
     contract_rejected: "Contract rejected",
     accepted: "Accepted",
+    replaced: "Replaced",
     approved: "Accepted",
     confirmed: "Accepted",
     rejected: "Rejected",
@@ -77,12 +78,17 @@ function mapAssignment(item, index = 0) {
   const meeting = item.meeting || {};
   const contract = item.contract || {};
   const status = normalizeStatus(item.status);
+  const assignmentType = item.assignment_type || "primary";
 
   return {
     id: getId(item) || `ASG-${index + 1}`,
     horse: getName(horse, item.horse_name || `Horse ${index + 1}`),
     owner: getName(owner, item.owner_name || "Race owner"),
     status,
+    assignmentType,
+    assignmentTypeLabel: assignmentType === "backup" ? "Backup jockey" : "Primary jockey",
+    isBackup: assignmentType === "backup",
+    backupPriority: item.backup_priority || "",
     race: getName(race, item.race_name || "Assigned race"),
     tournament: getName(race.tournament_id || item.tournament_id, item.tournament_name || "Tournament"),
     date: formatRaceTime(race.race_date || item.race_date || item.created_at),
@@ -90,9 +96,17 @@ function mapAssignment(item, index = 0) {
     round: getName(race.round_id || item.round_id, item.round_name || "Race round"),
     note: item.invitation_message || item.response_message || item.note || "Owner invitation is ready for review.",
     rawStatus: item.status || "",
-    meetingTitle: meeting.title || item.meeting_title || "Owner meeting",
+    meetingTitle: meeting.title || item.meeting_title || "Owner appointment",
     meetingUrl: meeting.meeting_url || item.meeting_url || "",
     meetingTime: formatRaceTime(meeting.meeting_time || item.meeting_time),
+    locationName: meeting.location_name || item.location_name || "",
+    address: meeting.address || item.address || "",
+    city: meeting.city || item.city || "",
+    district: meeting.district || item.district || "",
+    ward: meeting.ward || item.ward || "",
+    mapUrl: meeting.map_url || item.map_url || "",
+    contactName: meeting.contact_name || item.contact_name || "",
+    contactPhone: meeting.contact_phone || item.contact_phone || "",
     contractTitle: contract.title || item.contract_title || "Jockey agreement",
     contractUrl: contract.file_url || item.contract_url || item.contract_link || "",
     contractFileName: contract.file_name || item.contract_file_name || "",

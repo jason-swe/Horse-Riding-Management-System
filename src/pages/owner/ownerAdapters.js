@@ -114,6 +114,38 @@ function getName(value, fallback = "Unknown") {
   return value.full_name || value.name || value.email || fallback;
 }
 
+function getEntityId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value._id || value.id || "";
+}
+
+function titleCaseStatus(value, fallback = "Unknown") {
+  if (!value) return fallback;
+  return String(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function getDisplayDate(value, fallback = "Date unavailable") {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
+
+function getTimeLabel(value) {
+  if (value === undefined || value === null || value === "") return "-";
+  const numericValue = Number(value);
+
+  if (Number.isNaN(numericValue)) {
+    return String(value);
+  }
+
+  return `${numericValue.toFixed(2)}s`;
+}
+
 export function toOwnerJockey(apiJockey, index = 0) {
   const user = apiJockey.user_id || apiJockey.user || {};
   const races = apiJockey.total_races || apiJockey.races || 0;
@@ -189,7 +221,32 @@ export function toOwnerRegistration(apiRegistration, index = 0) {
   };
 }
 
-export function toOwnerScheduleEntry(registration) {
+function nestedId(value) {
+  return String(value?._id || value?.id || value || "");
+}
+
+function assignmentJockeyName(assignment) {
+  const jockey = assignment?.jockey_id || assignment?.jockey;
+  if (!jockey || typeof jockey === "string") return "Assignment unavailable";
+
+  return jockey.name
+    || jockey.full_name
+    || jockey.user_id?.full_name
+    || jockey.user_id?.email
+    || "Assignment unavailable";
+}
+
+export function findAcceptedPrimaryAssignment(assignments, registration) {
+  return (assignments || []).find((assignment) => {
+    const type = assignment.assignment_type || "primary";
+    return type === "primary"
+      && assignment.status === "accepted"
+      && nestedId(assignment.race_id || assignment.race) === nestedId(registration.raceId)
+      && nestedId(assignment.horse_id || assignment.horse) === nestedId(registration.horseId);
+  });
+}
+
+export function toOwnerScheduleEntry(registration, assignment = null) {
   const raceDate = registration.raceDate ? new Date(registration.raceDate) : null;
   const hasRaceDate = raceDate && !Number.isNaN(raceDate.getTime());
   const status = registration.status === "Approved"
@@ -205,7 +262,7 @@ export function toOwnerScheduleEntry(registration) {
     race: registration.race,
     tournament: registration.tournament,
     horse: registration.horse,
-    jockey: "Assignment unavailable",
+    jockey: assignmentJockeyName(assignment),
     venue: registration.venue,
     round: registration.round,
     status,
@@ -219,5 +276,66 @@ export function toOwnerScheduleEntry(registration) {
     time: hasRaceDate
       ? `${raceDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}, ${raceDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
       : "Date unavailable",
+  };
+}
+
+export function toOwnerPrizeAward(apiAward, index = 0) {
+  const result = apiAward?.race_result_id || apiAward?.race_result || {};
+  const prize = apiAward?.prize_id || apiAward?.prize || {};
+  const race = result.race_id || result.race || prize.race_id || prize.race || {};
+  const tournament = race.tournament_id || race.tournament || prize.tournament_id || prize.tournament || {};
+  const round = race.round_id || race.round || {};
+  const horse = apiAward?.horse_id || result.horse_id || result.horse || {};
+  const jockey = apiAward?.jockey_id || result.jockey_id || result.jockey || {};
+  const violations = Array.isArray(result.applied_violation_ids) ? result.applied_violation_ids : [];
+  const finalPosition = result.final_position ?? result.position ?? apiAward?.position ?? null;
+  const rawPosition = result.raw_position ?? result.position ?? apiAward?.position ?? null;
+  const isDisqualified = finalPosition === null || finalPosition === undefined || result.disqualified === true;
+  const penaltySummary = isDisqualified
+    ? "Disqualified"
+    : violations.length > 0
+      ? violations
+        .slice(0, 2)
+        .map((violation) => `${titleCaseStatus(violation.violation_type || violation.type, "Penalty")} (${titleCaseStatus(violation.severity, "Severity")})`)
+        .join(", ")
+      : "No penalty";
+
+  return {
+    id: apiAward?._id || apiAward?.id || `AWARD-${index + 1}`,
+    raceId: getEntityId(race),
+    raceName: race.name || `Race ${index + 1}`,
+    tournamentName: tournament.name || "Tournament unavailable",
+    roundName: getName(round, "Round unavailable"),
+    horseName: horse.name || `Horse ${index + 1}`,
+    jockeyName: getName(jockey.user_id || jockey.user || jockey, "Jockey unavailable"),
+    awardStatus: titleCaseStatus(apiAward?.status || "calculated"),
+    resultStatus: titleCaseStatus(result.status || "published"),
+    date: getDisplayDate(race.race_date || result.created_at || apiAward?.awarded_at || apiAward?.calculated_at),
+    calculatedAt: getDisplayDate(apiAward?.calculated_at || apiAward?.created_at),
+    awardedAt: getDisplayDate(apiAward?.awarded_at || apiAward?.approved_at || apiAward?.paid_at || apiAward?.calculated_at),
+    paidAt: apiAward?.paid_at ? getDisplayDate(apiAward.paid_at) : "Not paid yet",
+    position: finalPosition,
+    rawPosition,
+    finalPositionLabel: isDisqualified ? "DQ" : `#${finalPosition}`,
+    rawPositionLabel: rawPosition ? `#${rawPosition}` : "-",
+    rawTime: getTimeLabel(result.raw_finish_time ?? result.finish_time),
+    finalTime: getTimeLabel(result.final_finish_time ?? result.finish_time),
+    currency: apiAward?.currency || prize.currency || "VND",
+    grossAmount: Number(apiAward?.gross_amount ?? apiAward?.amount ?? 0),
+    ownerAmount: Number(apiAward?.owner_amount ?? apiAward?.amount ?? 0),
+    jockeyAmount: Number(apiAward?.jockey_amount ?? 0),
+    penaltyCount: violations.length,
+    penaltySummary,
+    isDisqualified,
+    violations: violations.map((violation) => ({
+      id: violation._id || violation.id,
+      type: titleCaseStatus(violation.violation_type || violation.type, "Penalty"),
+      severity: titleCaseStatus(violation.severity, "Severity"),
+      status: titleCaseStatus(violation.status, "Confirmed"),
+      description: violation.description || violation.note || "No detail",
+      penaltyType: titleCaseStatus(violation.penalty?.type, "Penalty"),
+      penaltyValue: violation.penalty?.value ?? null,
+    })),
+    raw: apiAward,
   };
 }

@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { spectatorApi } from "../../api/spectatorApi";
 import { adaptRaceResults, adaptTournamentDetail, adaptTournamentList, summarizeTournamentRaces, toHorseLeaderboard } from "./spectatorAdapters";
 
+const TOURNAMENT_DETAIL_REFRESH_MS = 10000;
+const RACE_RESULT_REFRESH_MS = 3000;
+
 function isAuthError(apiError) {
   return apiError?.status === 401 || apiError?.status === 403;
 }
@@ -122,7 +125,7 @@ export function useSpectatorTournamentDetail(tournamentId) {
 
     const interval = setInterval(() => {
       loadTournamentDetail(true);
-    }, 3000);
+    }, TOURNAMENT_DETAIL_REFRESH_MS);
 
     return () => {
       cancelled = true;
@@ -205,7 +208,7 @@ export function useSpectatorRaceResultsSingle(raceId) {
 
     const interval = setInterval(() => {
       loadResults(true);
-    }, 3000);
+    }, RACE_RESULT_REFRESH_MS);
 
     return () => {
       clearInterval(interval);

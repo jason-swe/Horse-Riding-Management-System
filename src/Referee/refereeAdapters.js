@@ -20,6 +20,19 @@ function extract(payload, keys) {
   return [];
 }
 
+function groupMap(source, adapter) {
+  if (!source || Array.isArray(source) || typeof source !== "object") {
+    return null;
+  }
+
+  return new Map(
+    Object.entries(source).map(([raceId, rows]) => [
+      raceId,
+      asArray(rows).map(adapter),
+    ])
+  );
+}
+
 function raceIdOf(value) {
   return getId(value?.race_id || value?.race);
 }
@@ -141,6 +154,9 @@ function adaptResult(value) {
     appliedViolationIds: asArray(value.applied_violation_ids).map(getId).filter(Boolean),
     penaltyApplied: asArray(value.applied_violation_ids).length > 0,
     note: value.note || "",
+    correctionRequested: value.correction_requested === true,
+    correctionNote: value.correction_note || "",
+    correctionRequestedAt: value.correction_requested_at || null,
     status: value.status || "draft",
   };
 }
@@ -160,21 +176,27 @@ function adaptReport(value) {
   };
 }
 
-export function adaptRefereeApiData({ races, participantPayloads, unavailableRaceIds = [], results, violations, checks, reports }) {
-  const raceRows = extract(races, ["races", "data"]);
-  const participantMap = new Map(
+export function adaptRefereeApiData(payload = {}) {
+  const { races, participantPayloads, unavailableRaceIds = [], results, violations, checks, reports } = payload;
+  const raceRows = Array.isArray(races) ? races : extract(races, ["races", "data"]);
+  const groupedParticipantMap = groupMap(payload.participants_by_race, adaptParticipant);
+  const participantMap = groupedParticipantMap || new Map(
     asArray(participantPayloads).map(({ raceId, payload }) => [raceId, extract(payload, ["participants", "data"]).map(adaptParticipant)])
   );
   const unavailableRaceSet = new Set(asArray(unavailableRaceIds));
-  const allChecks = extract(checks, ["horse_checks", "checks", "data"]).map(adaptCheck);
-  const allViolations = extract(violations, ["violations", "data"]).map(adaptViolation);
-  const allResults = extract(results, ["race_results", "results", "data"]).map(adaptResult);
-  const allReports = extract(reports, ["referee_reports", "reports", "data"]).map(adaptReport);
+  const groupedCheckMap = groupMap(payload.horse_checks_by_race, adaptCheck);
+  const groupedViolationMap = groupMap(payload.violations_by_race, adaptViolation);
+  const groupedResultMap = groupMap(payload.results_by_race, adaptResult);
+  const groupedReportMap = groupMap(payload.reports_by_race, adaptReport);
+  const allChecks = groupedCheckMap ? [] : extract(checks, ["horse_checks", "checks", "data"]).map(adaptCheck);
+  const allViolations = groupedViolationMap ? [] : extract(violations, ["violations", "data"]).map(adaptViolation);
+  const allResults = groupedResultMap ? [] : extract(results, ["race_results", "results", "data"]).map(adaptResult);
+  const allReports = groupedReportMap ? [] : extract(reports, ["referee_reports", "reports", "data"]).map(adaptReport);
 
   return raceRows.map((race) => {
     const id = getId(race);
     const schedule = formatDateTime(race.race_date);
-    const raceResults = allResults.filter((item) => item.raceId === id);
+    const raceResults = groupedResultMap ? groupedResultMap.get(id) || [] : allResults.filter((item) => item.raceId === id);
     return {
       id,
       name: race.name || "Unnamed race",
@@ -186,11 +208,11 @@ export function adaptRefereeApiData({ races, participantPayloads, unavailableRac
       phase: getRacePhase(normalizeRaceStatus(race.status)),
       participants: participantMap.get(id) || [],
       participantsUnavailable: unavailableRaceSet.has(id),
-      checks: allChecks.filter((item) => item.raceId === id),
-      violations: allViolations.filter((item) => item.raceId === id),
+      checks: groupedCheckMap ? groupedCheckMap.get(id) || [] : allChecks.filter((item) => item.raceId === id),
+      violations: groupedViolationMap ? groupedViolationMap.get(id) || [] : allViolations.filter((item) => item.raceId === id),
       result: raceResults,
       resultStatus: raceResults.find((item) => ["published", "confirmed"].includes(item.status))?.status || raceResults[0]?.status || null,
-      report: allReports.find((item) => item.raceId === id) || null,
+      report: groupedReportMap ? (groupedReportMap.get(id) || [])[0] || null : allReports.find((item) => item.raceId === id) || null,
       raw: race,
     };
   });

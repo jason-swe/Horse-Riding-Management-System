@@ -31,7 +31,7 @@ export const spectatorApi = {
   },
 
   getRaceResults(raceId) {
-    return apiRequest(`/users/spectator/races/${raceId}/results`);
+    return apiRequest(withQuery("/race-results", { race_id: raceId, status: "published" }));
   },
 
   getRaceLiveState(raceId) {

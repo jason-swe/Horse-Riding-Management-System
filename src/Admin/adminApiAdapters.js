@@ -32,6 +32,20 @@ function formatDate(value) {
   return date.toLocaleDateString();
 }
 
+function formatDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString();
+}
+
+function formatNumber(value, suffix = "") {
+  if (value === undefined || value === null || value === "") return "-";
+  const number = Number(value);
+  if (!Number.isNaN(number)) return `${number.toFixed(suffix === "s" ? 2 : 0)}${suffix}`;
+  return `${value}${suffix}`;
+}
+
 function getUserFromEnvelope(item) {
   return item.user || item;
 }
@@ -69,6 +83,70 @@ function getEntityName(value, fallback = "Unknown") {
   if (!value) return fallback;
   if (typeof value === "string") return value;
   return value.name || value.full_name || value.email || value.title || value.race_name || value.horse_name || fallback;
+}
+
+function unwrapResultDetailData(data) {
+  if (data?.results && (data.readiness || data.participants || data.reports || data.violations || data.awards)) {
+    return {
+      resultsPayload: data.results,
+      readiness: data.readiness || null,
+      participantsPayload: data.participants || null,
+      reportsPayload: data.reports || null,
+      violationsPayload: data.violations || null,
+      awardsPayload: data.awards || null,
+    };
+  }
+
+  return {
+    resultsPayload: data,
+    readiness: null,
+    participantsPayload: null,
+    reportsPayload: null,
+    violationsPayload: null,
+    awardsPayload: null,
+  };
+}
+
+function getParticipantRows(payload) {
+  return asArray(payload, "participants");
+}
+
+function getRefereeReports(payload) {
+  return asArray(payload, "referee_reports");
+}
+
+function getViolations(payload) {
+  return asArray(payload, "violations");
+}
+
+function getPrizeAwards(payload) {
+  return asArray(payload, "awards").concat(asArray(payload, "prize_awards"));
+}
+
+function getRaceResultHorse(result) {
+  return getNamedEntity(result.horse_id || result.horse || result.horseId, {});
+}
+
+function getRaceResultJockey(result) {
+  return getNamedEntity(result.jockey_id || result.jockey || result.jockeyId, {});
+}
+
+function getPenaltyLabel(violation) {
+  const penalty = violation?.penalty || {};
+  const type = penalty.type || violation?.penalty_type;
+
+  if (!type) return "-";
+  if (penalty.disqualified) return "Disqualification";
+  if (penalty.time_penalty_seconds) return `${getStatusLabel(type)} +${penalty.time_penalty_seconds}s`;
+  if (penalty.position_delta) return `${getStatusLabel(type)} +${penalty.position_delta} position`;
+  if (penalty.score_deduction) return `${getStatusLabel(type)} -${penalty.score_deduction} score`;
+  if (penalty.suspension_days) return `${getStatusLabel(type)} ${penalty.suspension_days} days`;
+  if (penalty.fine_amount) return `${getStatusLabel(type)} ${penalty.fine_amount}`;
+  return getStatusLabel(type);
+}
+
+function getAwardRecipient(award) {
+  return getEntityName(award.owner_id || award.owner || award.recipient_id || award.recipient, "-");
 }
 
 function unwrapRegistrations(data) {
@@ -343,18 +421,90 @@ export function adaptAdminRaceResults(data) {
 }
 
 export function adaptAdminRaceResultDetail(data) {
-  const results = getRaceResultRows(data);
+  const {
+    resultsPayload,
+    readiness,
+    participantsPayload,
+    reportsPayload,
+    violationsPayload,
+    awardsPayload,
+  } = unwrapResultDetailData(data);
+  const results = getRaceResultRows(resultsPayload);
   const race = getRaceResultRace(results[0] || {});
   const leader = getLeadingResult(results);
   const appliedViolations = results.reduce((total, result) => total + asArray(result.applied_violation_ids).length, 0);
+  const reports = getRefereeReports(reportsPayload);
+  const submittedReport = reports.find((report) => report.status === "submitted") || reports[0] || {};
+  const participants = getParticipantRows(participantsPayload);
+  const violations = getViolations(violationsPayload);
+  const correctionRequested = results.some((result) => result.correction_requested === true);
+  const correctionSource = results.find((result) => result.correction_requested === true || result.correction_note) || {};
+  const unresolvedViolations = violations.filter((violation) => !["confirmed", "dismissed"].includes(String(violation.status || "").toLowerCase()));
+  const awards = getPrizeAwards(awardsPayload);
+  const missingPostChecks = asArray(readiness?.missing_post_check_horse_ids);
+  const underInvestigation = asArray(readiness?.under_investigation_horse_ids);
+  const readinessWarnings = [
+    correctionRequested ? "Admin correction is requested. Resolve it before confirming results." : "",
+    readiness?.missing_report ? "Referee report has not been submitted." : "",
+    missingPostChecks.length ? `${missingPostChecks.length} post-race check(s) missing.` : "",
+    underInvestigation.length ? `${underInvestigation.length} horse(s) still under investigation.` : "",
+    unresolvedViolations.length ? `${unresolvedViolations.length} unresolved violation(s).` : "",
+  ].filter(Boolean);
+  const resultRows = [...results]
+    .sort((first, second) => (first.final_position ?? first.position ?? 9999) - (second.final_position ?? second.position ?? 9999))
+    .map((result) => {
+      const rawPosition = result.raw_position ?? result.position;
+      const finalPosition = result.final_position ?? result.position;
+      const applied = asArray(result.applied_violation_ids).length;
+      return [
+        finalPosition ? `#${finalPosition}` : "DQ",
+        getEntityName(getRaceResultHorse(result), "Unknown horse"),
+        getEntityName(getRaceResultJockey(result), "-"),
+        rawPosition ? `#${rawPosition}` : "-",
+        formatNumber(result.raw_finish_time ?? result.finish_time, "s"),
+        formatNumber(result.final_finish_time ?? result.finish_time, "s"),
+        String(applied),
+      ];
+    });
+  const participantRows = participants.map((participant) => [
+    getEntityName(participant.horse || participant.horse_id, "Unknown horse"),
+    getEntityName(participant.jockey || participant.jockey_id, "-"),
+    getStatusLabel(participant.pre_race_check?.status || "missing"),
+    getStatusLabel(participant.post_race_check?.status || "missing"),
+    participant.eligible ? "Eligible" : "Blocked",
+    asArray(participant.blockers).map(getStatusLabel).join(", ") || "None",
+  ]);
+  const violationRows = violations.map((violation) => [
+    getStatusLabel(violation.violation_type),
+    getEntityName(violation.horse_id || violation.horse, "-"),
+    getEntityName(violation.jockey_id || violation.jockey, "-"),
+    getStatusLabel(violation.severity),
+    getStatusLabel(violation.status),
+    getPenaltyLabel(violation),
+  ]);
+  const awardRows = awards.map((award) => [
+    award.position ? `#${award.position}` : getStatusLabel(award.award_type || "award"),
+    getEntityName(award.horse_id || award.horse, "-"),
+    getAwardRecipient(award),
+    formatNumber(award.amount || award.prize_amount),
+    getStatusLabel(award.status),
+  ]);
+
   return {
     type: "raceResults",
     id: getEntityId(race),
     title: getEntityName(race, "Race results"),
+    correctionRequested,
     fields: [
       ["Tournament", getEntityName(race.tournament_id || race.tournament, "-")],
       ["Round", getEntityName(race.round_id || race.round, "-")],
+      ["Race date", formatDateTime(race.race_date || race.start_time)],
+      ["Race status", getStatusLabel(race.status)],
       ["Result status", getGroupStatus(results)],
+      ["Correction", correctionRequested ? "Requested" : "Clear"],
+      ["Correction note", correctionSource.correction_note || "-"],
+      ["Correction requested by", getEntityName(correctionSource.correction_requested_by, "-")],
+      ["Correction requested at", formatDateTime(correctionSource.correction_requested_at)],
       ["Result rows", String(results.length)],
       ["Current leader", getEntityName(leader?.horse_id, "Not ranked")],
       ["Leader finish time", (() => {
@@ -367,6 +517,57 @@ export function adaptAdminRaceResultDetail(data) {
       ["Applied violations", String(appliedViolations)],
       ["Confirmed at", formatDate(results[0]?.confirmed_at)],
       ["Published at", formatDate(results[0]?.published_at)],
+    ],
+    warnings: readinessWarnings,
+    sections: [
+      {
+        title: "Referee report",
+        fields: [
+          ["Status", getStatusLabel(submittedReport.status || "missing")],
+          ["Title", submittedReport.report_title || "-"],
+          ["Weather", submittedReport.weather || "-"],
+          ["Track condition", submittedReport.track_condition || "-"],
+          ["Race condition", submittedReport.race_condition || "-"],
+          ["Submitted at", formatDateTime(submittedReport.submitted_at)],
+          ["Conclusion", submittedReport.conclusion || "-"],
+        ],
+      },
+      {
+        title: "Readiness gate",
+        fields: [
+          ["Ready to confirm", readiness?.ready ? "Yes" : "No"],
+          ["Eligible participants", String(readiness?.eligible_participant_count ?? participants.length ?? 0)],
+          ["Missing post checks", String(missingPostChecks.length)],
+          ["Under investigation", String(underInvestigation.length)],
+          ["Unresolved violations", String(unresolvedViolations.length)],
+        ],
+      },
+    ],
+    tables: [
+      {
+        title: "Raw vs final result",
+        columns: ["Final", "Horse", "Jockey", "Raw", "Raw time", "Final time", "Violations"],
+        rows: resultRows,
+        emptyText: "No draft result rows are available yet.",
+      },
+      {
+        title: "Participant audit",
+        columns: ["Horse", "Jockey", "Pre-check", "Post-check", "Eligibility", "Blockers"],
+        rows: participantRows,
+        emptyText: "No participant audit data returned.",
+      },
+      {
+        title: "Violation and penalty review",
+        columns: ["Type", "Horse", "Jockey", "Severity", "Status", "Penalty"],
+        rows: violationRows,
+        emptyText: "No violations were recorded for this race.",
+      },
+      {
+        title: "Prize award impact",
+        columns: ["Place", "Horse", "Recipient", "Amount", "Status"],
+        rows: awardRows,
+        emptyText: "Prize awards are not calculated yet.",
+      },
     ],
   };
 }

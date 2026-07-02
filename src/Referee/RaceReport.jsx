@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { refereeApi } from "../api/refereeApi";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import RefereeLayout from "./RefereeLayout";
-import { RESULT_STATUSES } from "./refereeConstants";
+import { formatStatus, RESULT_STATUSES } from "./refereeConstants";
 import { useRefereeData } from "./useRefereeData";
 
 function buildReportForm(race) {

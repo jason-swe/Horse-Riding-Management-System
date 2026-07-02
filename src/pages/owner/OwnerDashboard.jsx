@@ -14,8 +14,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
-import { toOwnerScheduleEntry } from "./ownerAdapters";
-import { useOwnerHorses, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
+import { findAcceptedPrimaryAssignment, toOwnerScheduleEntry } from "./ownerAdapters";
+import { useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
 
 const quickActions = [
   { label: "Add Horse", meta: "Create a new horse profile", to: "/owner/horses/new", icon: Plus },
@@ -66,15 +66,23 @@ function OwnerDashboard() {
     isLoading: registrationsLoading,
     error: registrationsError,
   } = useOwnerRegistrations();
+  const {
+    assignments: liveAssignments,
+    isLoading: assignmentsLoading,
+    error: assignmentsError,
+  } = useOwnerJockeyAssignments();
 
   const horses = liveHorses;
   const jockeys = liveJockeys;
   const profile = liveProfile;
   const registrations = liveRegistrations;
-  const schedule = registrations.map(toOwnerScheduleEntry);
+  const schedule = registrations.map((registration) => toOwnerScheduleEntry(
+    registration,
+    findAcceptedPrimaryAssignment(liveAssignments, registration)
+  ));
   const nextRace = schedule.find((race) => race.date !== "Date unavailable");
-  const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading;
-  const liveError = horsesError || jockeysError || profileError || registrationsError;
+  const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading || assignmentsLoading;
+  const liveError = horsesError || jockeysError || profileError || registrationsError || assignmentsError;
   const raceReadyCount = horses.filter((horse) => horse.status === "Ready").length;
   const pendingRegistrationCount = registrations.filter((item) => item.status !== "Approved").length;
   const ownerStats = [

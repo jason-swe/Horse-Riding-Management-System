@@ -47,8 +47,8 @@ export function useJockeyApiData() {
   }, [loadJockeyData]);
 
   const respondToMeeting = useCallback(async (id, accepted) => {
-    const action = accepted ? jockeyApi.acceptMeeting : jockeyApi.rejectMeeting;
-    await action(id, accepted ? "Meeting accepted" : "Meeting rejected");
+    const action = accepted ? jockeyApi.acceptAppointment : jockeyApi.rejectAppointment;
+    await action(id, accepted ? "Appointment accepted" : "Appointment rejected");
     await loadJockeyData();
   }, [loadJockeyData]);
 

@@ -13,7 +13,6 @@ import {
   Filter,
   Flag,
   HeartPulse,
-  Link2,
   Mail,
   MapPin,
   MessageSquareText,
@@ -32,17 +31,31 @@ import {
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
 import { readFileAsDataUri } from "../../utils/fileData";
-import { toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerScheduleEntry } from "./ownerAdapters";
-import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
+import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerScheduleEntry } from "./ownerAdapters";
+import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
 
 const statusClass = (status) => {
-  if (["Ready", "Approved", "Assigned", "Confirmed", "Published", "Won", "Verified"].includes(status)) {
+  if (["Ready", "Approved", "Assigned", "Confirmed", "Published", "Won", "Verified", "Paid"].includes(status)) {
     return "owner-badge--green";
   }
-  if (["Rejected", "Closed", "Cancelled", "Meet rejected", "Contract rejected"].includes(status)) {
+  if (["Rejected", "Closed", "Cancelled", "Meet rejected", "Appointment rejected", "Contract rejected", "Replaced", "Disqualified"].includes(status)) {
     return "owner-badge--muted";
   }
   return "owner-badge--amber";
+};
+
+const formatMoney = (value, currency = "VND") => {
+  const amount = Number(value || 0);
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString("en-US")} ${currency}`;
+  }
 };
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
@@ -59,15 +72,18 @@ const imageIndexForId = (value, length) => {
 };
 
 const assignmentStatusLabel = (status) => ({
-  meeting_invited: "Meet invitation sent",
-  meeting_accepted: "Meet accepted",
-  meeting_rejected: "Meet rejected",
+  meeting_invited: "Appointment invitation sent",
+  meeting_accepted: "Appointment accepted",
+  meeting_rejected: "Appointment rejected",
   terms_agreed: "Terms recorded",
   contract_uploaded: "Contract awaiting jockey",
   contract_rejected: "Contract rejected",
   accepted: "Accepted",
+  replaced: "Replaced",
   cancelled: "Cancelled",
 }[status] || status || "Unknown");
+
+const activeAssignmentStatuses = ["meeting_invited", "meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"];
 
 const assignmentPartyName = (party, fallback) => {
   if (!party) return fallback;
@@ -953,11 +969,19 @@ function OwnerJockeys() {
   const [isWorkflowOpen, setIsWorkflowOpen] = useState(false);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState("");
   const [assignment, setAssignment] = useState({
+    assignmentType: "primary",
     registrationId: "",
     message: "",
     meetingTitle: "",
-    meetingUrl: "",
     meetingTime: "",
+    locationName: "",
+    address: "",
+    city: "",
+    district: "",
+    ward: "",
+    mapUrl: "",
+    contactName: "",
+    contactPhone: "",
   });
   const jockeys = liveJockeys.map((jockey) => ({
     ...jockey,
@@ -967,14 +991,22 @@ function OwnerJockeys() {
   const updateStatus = (id, status) => setLocalStatuses((current) => ({ ...current, [id]: status }));
   const selectedJockey = jockeys.find((jockey) => jockey.id === selectedJockeyId) ?? jockeys[0];
 
-  const findAssignmentForRegistration = (registration) => existingAssignments.find((item) => {
+  const getAssignmentsForRegistration = (registration) => existingAssignments.filter((item) => {
     const horseId = item.horse_id?._id || item.horse_id?.id || item.horse_id;
     const raceId = item.race_id?._id || item.race_id?.id || item.race_id;
     return String(horseId) === String(registration?.horseId) && String(raceId) === String(registration?.raceId);
   });
+  const isActiveAssignment = (item) => activeAssignmentStatuses.includes(item.status);
+  const findPrimaryAssignmentForRegistration = (registration) => getAssignmentsForRegistration(registration)
+    .find((item) => (item.assignment_type || "primary") === "primary" && isActiveAssignment(item));
+  const getBackupAssignmentsForRegistration = (registration) => getAssignmentsForRegistration(registration)
+    .filter((item) => item.assignment_type === "backup" && isActiveAssignment(item));
 
   const approvedRaceEntries = liveRegistrations.filter((item) => item.status === "Approved" && item.horseId && item.raceId);
-  const assignableRaceEntries = approvedRaceEntries.filter((item) => !findAssignmentForRegistration(item));
+  const isBackupInvitation = assignment.assignmentType === "backup";
+  const assignableRaceEntries = approvedRaceEntries.filter((item) => isBackupInvitation
+    ? Boolean(findPrimaryAssignmentForRegistration(item))
+    : !findPrimaryAssignmentForRegistration(item));
   const selectedEntry = assignableRaceEntries.find((item) => item.id === assignment.registrationId) ?? assignableRaceEntries[0] ?? null;
   const selectedHorse = selectedEntry
     ? horses.find((horse) => String(horse.id) === String(selectedEntry.horseId)) ?? { id: selectedEntry.horseId, name: selectedEntry.horse }
@@ -982,12 +1014,19 @@ function OwnerJockeys() {
   const selectedRace = selectedEntry
     ? { id: selectedEntry.raceId, name: selectedEntry.race, tournament: selectedEntry.tournament }
     : null;
-  const existingAssignment = selectedEntry ? findAssignmentForRegistration(selectedEntry) : null;
+  const existingAssignment = selectedEntry ? findPrimaryAssignmentForRegistration(selectedEntry) : null;
+  const backupAssignments = selectedEntry ? getBackupAssignmentsForRegistration(selectedEntry) : [];
+  const selectedJockeyDuplicate = selectedEntry && selectedJockey
+    ? getAssignmentsForRegistration(selectedEntry).find((item) => {
+      const jockeyId = item.jockey_id?._id || item.jockey_id?.id || item.jockey_id;
+      return String(jockeyId) === String(selectedJockey.id) && isActiveAssignment(item);
+    })
+    : null;
   const assignedCount = existingAssignments.filter((item) => item.status === "accepted").length;
   const pendingCount = existingAssignments.filter((item) => ["meeting_invited", "meeting_accepted", "terms_agreed", "contract_uploaded"].includes(item.status)).length;
   const topWinRate = Math.max(0, ...jockeys.map((jockey) => Math.round((jockey.wins / Math.max(jockey.races, 1)) * 100)));
   const blockedByNoEntry = !assignmentsLoading && !selectedEntry;
-  const invitationLocked = blockedByNoEntry || Boolean(existingAssignment);
+  const invitationLocked = blockedByNoEntry || (!isBackupInvitation && Boolean(existingAssignment)) || (isBackupInvitation && !existingAssignment) || Boolean(selectedJockeyDuplicate);
   const selectedWorkflowAssignment = existingAssignments.find((item) => String(item._id) === String(selectedWorkflowId)) || null;
 
   useEffect(() => {
@@ -1148,7 +1187,9 @@ function OwnerJockeys() {
     }
 
     if (!selectedEntry) {
-      setAssignmentError("No approved race registration without a jockey assignment is available.");
+      setAssignmentError(isBackupInvitation
+        ? "No approved race entry with a primary jockey is available for a backup invitation."
+        : "No approved race registration without a primary jockey assignment is available.");
       return;
     }
 
@@ -1158,27 +1199,47 @@ function OwnerJockeys() {
     }
 
     if (!assignment.meetingTitle.trim()) {
-      setAssignmentError("Meeting title is required.");
-      return;
-    }
-
-    if (!assignment.meetingUrl.trim().startsWith("https://meet.google.com/")) {
-      setAssignmentError("Google Meet URL is required and must start with https://meet.google.com/.");
+      setAssignmentError("Appointment title is required.");
       return;
     }
 
     if (!assignment.meetingTime) {
-      setAssignmentError("Meeting time is required.");
+      setAssignmentError("Appointment time is required.");
       return;
     }
 
     if (new Date(assignment.meetingTime) <= new Date()) {
-      setAssignmentError("Meeting time must be in the future.");
+      setAssignmentError("Appointment time must be in the future.");
       return;
     }
 
-    if (existingAssignment) {
+    if (!assignment.locationName.trim()) {
+      setAssignmentError("Appointment location name is required.");
+      return;
+    }
+
+    if (!assignment.address.trim()) {
+      setAssignmentError("Appointment address is required.");
+      return;
+    }
+
+    if (assignment.mapUrl.trim() && !/^https?:\/\//i.test(assignment.mapUrl.trim())) {
+      setAssignmentError("Map URL must start with http:// or https://.");
+      return;
+    }
+
+    if (!isBackupInvitation && existingAssignment) {
       setAssignmentError(`This approved race entry already has a ${existingAssignment.status || "current"} jockey assignment.`);
+      return;
+    }
+
+    if (isBackupInvitation && !existingAssignment) {
+      setAssignmentError("Invite and complete the primary jockey flow before adding a backup jockey.");
+      return;
+    }
+
+    if (selectedJockeyDuplicate) {
+      setAssignmentError(`${selectedJockey.name} already has an active assignment for this horse and race.`);
       return;
     }
 
@@ -1189,11 +1250,22 @@ function OwnerJockeys() {
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
         jockey_id: selectedJockey.id,
-        invitation_message: assignment.message || `Please ride ${selectedHorse.name} in ${selectedRace.name}.`,
+        assignment_type: assignment.assignmentType,
+        backup_priority: isBackupInvitation ? backupAssignments.length + 1 : undefined,
+        invitation_message: assignment.message || (isBackupInvitation
+          ? `Please stand by as backup jockey for ${selectedHorse.name} in ${selectedRace.name}.`
+          : `Please ride ${selectedHorse.name} in ${selectedRace.name}.`),
         meeting: {
           title: assignment.meetingTitle,
-          meeting_url: assignment.meetingUrl,
           meeting_time: new Date(assignment.meetingTime).toISOString(),
+          location_name: assignment.locationName,
+          address: assignment.address,
+          city: assignment.city,
+          district: assignment.district,
+          ward: assignment.ward,
+          map_url: assignment.mapUrl,
+          contact_name: assignment.contactName,
+          contact_phone: assignment.contactPhone,
           note: assignment.message,
         },
       };
@@ -1202,6 +1274,7 @@ function OwnerJockeys() {
       if (data.assignment) {
         setExistingAssignments((current) => [{
           ...data.assignment,
+          assignment_type: data.assignment.assignment_type || assignment.assignmentType,
           horse_id: selectedHorse,
           race_id: selectedRace,
           jockey_id: selectedJockey.raw || selectedJockey,
@@ -1209,13 +1282,40 @@ function OwnerJockeys() {
       }
       updateStatus(selectedJockey.id, "Pending");
       setAssignmentSaved(true);
-      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the Meet.");
+      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the offline appointment.");
     } catch (apiError) {
       setAssignmentError(apiError.status === 409
-        ? `This horse already has a jockey assignment for ${selectedRace.name}. Choose another horse or race.`
+        ? `This horse already has an active primary jockey assignment for ${selectedRace.name}. Choose backup mode or another race entry.`
         : apiError.message || "Unable to create jockey assignment.");
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  const promoteBackupAssignment = async (item) => {
+    const id = item._id;
+    const jockeyName = assignmentPartyName(item.jockey_id, "Jockey");
+    const horseName = assignmentPartyName(item.horse_id, "Horse");
+
+    setWorkflowActionId(id);
+    setAssignmentError("");
+    setWorkflowMessage("");
+    try {
+      const data = await ownerApi.promoteJockeyAssignment(id, `Promote ${jockeyName} from backup to primary for ${horseName}.`);
+      const previousPrimaryId = data.previous_primary_assignment_id;
+
+      if (previousPrimaryId) {
+        setExistingAssignments((current) => current.map((currentItem) => String(currentItem._id) === String(previousPrimaryId)
+          ? { ...currentItem, status: "replaced" }
+          : currentItem));
+      }
+
+      replaceAssignment(data.assignment);
+      setWorkflowMessage("Backup jockey promoted. Upload a new primary contract for final confirmation.");
+    } catch (apiError) {
+      setAssignmentError(apiError.message || "Unable to promote this backup jockey.");
+    } finally {
+      setWorkflowActionId("");
     }
   };
 
@@ -1246,7 +1346,7 @@ function OwnerJockeys() {
         <div className="owner-jockey-hero__copy">
           <p className="owner-eyebrow">Jockey assignments</p>
           <h1>Invite riders after race approval.</h1>
-          <p>Start with a Meet invitation, then record terms and send the contract after the jockey accepts.</p>
+          <p>Start with an offline appointment, then record terms and send the contract after the jockey accepts.</p>
         </div>
         <aside className="owner-jockey-hero__panel">
           <span className="owner-badge owner-badge--green"><UsersRound size={14} /> {assignedCount} assigned</span>
@@ -1258,7 +1358,7 @@ function OwnerJockeys() {
       <section className="owner-jockey-stats" aria-label="Jockey assignment summary">
         {[
           { label: "Assigned", value: assignedCount, note: "Confirmed pairings", icon: BadgeCheck },
-          { label: "Ready entries", value: assignableRaceEntries.length, note: "Approved, no jockey", icon: ClipboardCheck },
+          { label: "Ready entries", value: assignableRaceEntries.length, note: isBackupInvitation ? "Ready for backup" : "Approved, no primary", icon: ClipboardCheck },
           { label: "Pending", value: pendingCount, note: "Awaiting response", icon: ClipboardCheck },
           { label: "Jockey pool", value: jockeys.length, note: "Profiles in stable list", icon: UsersRound },
         ].map((item) => {
@@ -1323,7 +1423,7 @@ function OwnerJockeys() {
                     >
                       <span>
                         <strong>{horseName} / {jockeyName}</strong>
-                        <small>{raceName}</small>
+                        <small>{raceName} / {(item.assignment_type || "primary") === "backup" ? `Backup${item.backup_priority ? ` #${item.backup_priority}` : ""}` : "Primary"}</small>
                       </span>
                       <span className={`owner-badge ${statusClass(assignmentStatusLabel(item.status))}`}>{assignmentStatusLabel(item.status)}</span>
                     </button>
@@ -1333,7 +1433,7 @@ function OwnerJockeys() {
                 {!existingAssignments.length && (
                   <div className="owner-assignment-empty" role="status">
                     <ClipboardCheck size={18} />
-                    <div><strong>No jockey negotiations yet.</strong><span>Create a Meet invitation below to start the assignment flow.</span></div>
+                  <div><strong>No jockey negotiations yet.</strong><span>Create an offline appointment invitation below to start the assignment flow.</span></div>
                   </div>
                 )}
               </div>
@@ -1347,35 +1447,36 @@ function OwnerJockeys() {
                 const raceName = assignmentPartyName(item.race_id, "Race");
                 const jockeyName = assignmentPartyName(item.jockey_id, "Jockey");
                 const isBusy = workflowActionId === id;
+                const isBackupAssignment = item.assignment_type === "backup";
 
                 return (
                   <article className="owner-assignment-workflow__detail">
                     <div className="owner-assignment-workflow__summary">
                       <div>
-                        <span className="owner-kicker">{horseName} / {raceName}</span>
+                        <span className="owner-kicker">{horseName} / {raceName} / {isBackupAssignment ? `Backup${item.backup_priority ? ` #${item.backup_priority}` : ""}` : "Primary"}</span>
                         <h3>{jockeyName}</h3>
                       </div>
                       <span className={`owner-badge ${statusClass(assignmentStatusLabel(status))}`}>{assignmentStatusLabel(status)}</span>
                     </div>
 
                     <div className="owner-assignment-steps" aria-label={`Assignment status: ${assignmentStatusLabel(status)}`}>
-                      <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Meet invite</span>
-                      <span className={["meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Meet accepted</span>
+                      <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Appointment invite</span>
+                      <span className={["meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Appointment accepted</span>
                       <span className={["terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "meeting_accepted" ? "is-current" : ""}>Terms</span>
                       <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "terms_agreed" ? "is-current" : ""}>Contract</span>
                       <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
                     </div>
 
-                    {status === "meeting_invited" && <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the Meet invitation.</p>}
+                    {status === "meeting_invited" && <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the offline appointment invitation.</p>}
                     {status === "meeting_accepted" && (
                       <div className="owner-assignment-workflow__form">
                         <label className="owner-field owner-field--full">
                           <span>Agreed terms <em>Required</em></span>
-                          <textarea maxLength={5000} value={draft.agreedTerms || ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the Meet." />
+                          <textarea maxLength={5000} value={draft.agreedTerms || ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the appointment." />
                         </label>
                         <label className="owner-field owner-field--full">
-                          <span>Meeting note <small>Optional</small></span>
-                          <textarea maxLength={2000} value={draft.meetingNote || ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short meeting summary." />
+                          <span>Appointment note <small>Optional</small></span>
+                          <textarea maxLength={2000} value={draft.meetingNote || ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short appointment summary." />
                         </label>
                         <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => submitTerms(item)} type="button">
                           <Save size={16} /> {isBusy ? "Saving terms..." : "Save agreed terms"}
@@ -1417,8 +1518,18 @@ function OwnerJockeys() {
                     )}
 
                     {status === "contract_uploaded" && <p className="owner-assignment-workflow__note">Contract sent. The assignment becomes accepted only after the jockey confirms it.</p>}
-                    {status === "accepted" && <p className="owner-assignment-workflow__note is-success"><CheckCircle2 size={16} /> The jockey confirmed the contract and accepted this assignment.</p>}
-                    {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the Meet invitation.</p>}
+                    {status === "accepted" && (
+                      <div className="owner-assignment-workflow__form">
+                        <p className="owner-assignment-workflow__note is-success"><CheckCircle2 size={16} /> {isBackupAssignment ? "The jockey accepted this standby assignment." : "The jockey confirmed the contract and accepted this assignment."}</p>
+                        {isBackupAssignment && (
+                          <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => promoteBackupAssignment(item)} type="button">
+                            <RotateCcw size={16} /> {isBusy ? "Promoting..." : "Promote to primary"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {status === "replaced" && <p className="owner-assignment-workflow__note">This primary assignment was replaced by a promoted backup jockey.</p>}
+                    {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the offline appointment invitation.</p>}
                     {status === "contract_rejected" && <p className="owner-assignment-workflow__note">The jockey rejected the contract. This assignment was not accepted.</p>}
                     {item.contract?.file_url && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
                   </article>
@@ -1444,17 +1555,33 @@ function OwnerJockeys() {
           <Send size={20} />
         </div>
 
+        <div className="owner-segmented owner-segmented--schedule" aria-label="Jockey assignment type">
+          {[
+            { value: "primary", label: "Primary" },
+            { value: "backup", label: "Backup" },
+          ].map((item) => (
+            <button
+              className={assignment.assignmentType === item.value ? "owner-segmented__active" : ""}
+              key={item.value}
+              onClick={() => setAssignment((current) => ({ ...current, assignmentType: item.value, registrationId: "" }))}
+              type="button"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
         <section className="owner-approved-entry-panel">
           <div className="owner-approved-entry-panel__header">
             <div>
               <span className="owner-kicker">Approved race entries</span>
               <h3>Choose the race slot before selecting a jockey</h3>
             </div>
-            <span className="owner-badge owner-badge--green">{assignableRaceEntries.length} ready</span>
+            <span className="owner-badge owner-badge--green">{assignableRaceEntries.length} {isBackupInvitation ? "backup-ready" : "ready"}</span>
           </div>
 
           {assignableRaceEntries.length ? (
-            <div className="owner-approved-entry-list" role="listbox" aria-label="Approved race entries without jockey assignments">
+            <div className="owner-approved-entry-list" role="listbox" aria-label={isBackupInvitation ? "Approved race entries with primary jockey assignments" : "Approved race entries without primary jockey assignments"}>
               {assignableRaceEntries.map((entry) => (
                 <button
                   aria-selected={selectedEntry?.id === entry.id}
@@ -1480,7 +1607,7 @@ function OwnerJockeys() {
               <ClipboardCheck size={18} />
               <div>
                 <strong>No race entry is ready for a jockey invitation.</strong>
-                <span>Admin must approve the horse race registration, and the entry must not already have a jockey assignment.</span>
+                <span>{isBackupInvitation ? "A backup invitation needs an approved race registration with an active primary jockey first." : "Admin must approve the horse race registration, and the entry must not already have a primary jockey assignment."}</span>
               </div>
             </div>
           )}
@@ -1490,6 +1617,7 @@ function OwnerJockeys() {
           <div><span>Horse</span><strong>{selectedHorse?.name || "Not selected"}</strong></div>
           <div><span>Race</span><strong>{selectedRace?.name || "Not selected"}</strong></div>
           <div><span>Jockey</span><strong>{selectedJockeyDetail?.name || selectedJockey?.name || "Not selected"}</strong></div>
+          <div><span>Role</span><strong>{isBackupInvitation ? `Backup #${backupAssignments.length + 1}` : "Primary"}</strong></div>
           <span className={`owner-invitation-gate ${selectedEntry ? "is-ready" : ""}`}>
             {selectedEntry ? <CheckCircle2 size={16} /> : <ClipboardCheck size={16} />}
             {selectedEntry ? "Entry approved" : "Entry required"}
@@ -1506,19 +1634,47 @@ function OwnerJockeys() {
           </fieldset>
 
           <fieldset className="owner-invitation-section owner-invitation-section--meeting">
-            <legend><Link2 size={18} /><span>Meeting details</span></legend>
+            <legend><MapPin size={18} /><span>Offline appointment</span></legend>
             <div className="owner-invitation-section__grid">
               <label className="owner-field">
-                <span>Meeting title <em>Required</em></span>
-                <input required value={assignment.meetingTitle} onChange={(event) => updateAssignment("meetingTitle", event.target.value)} placeholder="Race briefing with stable owner" />
+                <span>Appointment title <em>Required</em></span>
+                <input required value={assignment.meetingTitle} onChange={(event) => updateAssignment("meetingTitle", event.target.value)} placeholder="Contract discussion at the stable office" />
               </label>
               <label className="owner-field">
-                <span>Meeting time <em>Required</em></span>
+                <span>Appointment time <em>Required</em></span>
                 <input required type="datetime-local" value={assignment.meetingTime} onChange={(event) => updateAssignment("meetingTime", event.target.value)} />
               </label>
+              <label className="owner-field">
+                <span>Location name <em>Required</em></span>
+                <input required value={assignment.locationName} onChange={(event) => updateAssignment("locationName", event.target.value)} placeholder="Saigon Racing Club Office" />
+              </label>
               <label className="owner-field owner-field--full">
-                <span>Google Meet URL <em>Required</em></span>
-                <input required type="url" value={assignment.meetingUrl} onChange={(event) => updateAssignment("meetingUrl", event.target.value)} placeholder="https://meet.google.com/abc-defg-hij" />
+                <span>Address <em>Required</em></span>
+                <input required value={assignment.address} onChange={(event) => updateAssignment("address", event.target.value)} placeholder="123 Nguyen Hue Street" />
+              </label>
+              <label className="owner-field">
+                <span>City <small>Optional</small></span>
+                <input value={assignment.city} onChange={(event) => updateAssignment("city", event.target.value)} placeholder="Ho Chi Minh City" />
+              </label>
+              <label className="owner-field">
+                <span>District <small>Optional</small></span>
+                <input value={assignment.district} onChange={(event) => updateAssignment("district", event.target.value)} placeholder="District 1" />
+              </label>
+              <label className="owner-field">
+                <span>Ward <small>Optional</small></span>
+                <input value={assignment.ward} onChange={(event) => updateAssignment("ward", event.target.value)} placeholder="Ben Nghe" />
+              </label>
+              <label className="owner-field">
+                <span>Map URL <small>Optional</small></span>
+                <input type="url" value={assignment.mapUrl} onChange={(event) => updateAssignment("mapUrl", event.target.value)} placeholder="https://maps.google.com/..." />
+              </label>
+              <label className="owner-field">
+                <span>Contact name <small>Optional</small></span>
+                <input value={assignment.contactName} onChange={(event) => updateAssignment("contactName", event.target.value)} placeholder="Nguyen Van A" />
+              </label>
+              <label className="owner-field">
+                <span>Contact phone <small>Optional</small></span>
+                <input value={assignment.contactPhone} onChange={(event) => updateAssignment("contactPhone", event.target.value)} placeholder="+84901234567" />
               </label>
             </div>
           </fieldset>
@@ -1528,14 +1684,21 @@ function OwnerJockeys() {
         {blockedByNoEntry && (
           <div className="owner-assignment-conflict" role="status">
             <ClipboardCheck size={16} />
-            <span><strong>No eligible race entry.</strong> A horse must have an approved race registration and no existing jockey assignment before you can invite a jockey.</span>
+            <span><strong>No eligible race entry.</strong> {isBackupInvitation ? "Choose a race entry that already has an active primary jockey before inviting a backup." : "A horse must have an approved race registration and no existing primary jockey assignment before you can invite a jockey."}</span>
           </div>
         )}
 
-        {existingAssignment && (
+        {!isBackupInvitation && existingAssignment && (
           <div className="owner-assignment-conflict" role="status">
             <ShieldCheck size={16} />
-            <span><strong>Assignment already exists.</strong> {selectedHorse?.name} already has a {existingAssignment.status || "current"} jockey assignment for {selectedRace?.name}.</span>
+            <span><strong>Primary assignment already exists.</strong> {selectedHorse?.name} already has a {existingAssignment.status || "current"} primary jockey assignment for {selectedRace?.name}.</span>
+          </div>
+        )}
+
+        {selectedJockeyDuplicate && (
+          <div className="owner-assignment-conflict" role="status">
+            <ShieldCheck size={16} />
+            <span><strong>Jockey already selected.</strong> {selectedJockey?.name} already has an active assignment for this horse and race.</span>
           </div>
         )}
 
@@ -1543,7 +1706,7 @@ function OwnerJockeys() {
           <div className="owner-invitation-feedback" aria-live="polite">
             {assignmentSaved && <span className="owner-success"><CheckCircle2 size={16} /> Invitation sent.</span>}
             {assignmentError && <span className="owner-success owner-success--error">{assignmentError}</span>}
-            {!assignmentSaved && !assignmentError && <span>Send the Meet invitation first. Terms and contract unlock after the jockey accepts.</span>}
+            {!assignmentSaved && !assignmentError && <span>Send the offline appointment invitation first. Terms and contract unlock after the jockey accepts.</span>}
           </div>
           <button className="owner-button owner-button--primary owner-invitation-submit" disabled={isAssigning || assignmentsLoading || invitationLocked || detailLoadingId === selectedJockeyId} type="submit">
             <Send size={17} />
@@ -1613,14 +1776,18 @@ function OwnerJockeys() {
 function OwnerSchedule() {
   const [filter, setFilter] = useState("All");
   const { registrations, isLoading, error } = useOwnerRegistrations();
-  const ownerSchedule = registrations.map(toOwnerScheduleEntry);
+  const { assignments, isLoading: assignmentsLoading, error: assignmentsError } = useOwnerJockeyAssignments();
+  const ownerSchedule = registrations.map((registration) => toOwnerScheduleEntry(
+    registration,
+    findAcceptedPrimaryAssignment(assignments, registration)
+  ));
   const visibleRaces = ownerSchedule.filter((race) => filter === "All" || race.status === filter);
   const confirmedCount = ownerSchedule.filter((race) => race.status === "Confirmed").length;
   const pendingCount = ownerSchedule.filter((race) => race.status === "Pending").length;
   const closedCount = ownerSchedule.filter((race) => race.status === "Closed").length;
   const featuredRace = visibleRaces[0] ?? ownerSchedule[0];
 
-  if (isLoading) {
+  if (isLoading || assignmentsLoading) {
     return <div className="owner-schedule-page"><LoadingSkeleton ariaLabel="Loading owner schedule" rows={5} variant="cards" /></div>;
   }
 
@@ -1706,7 +1873,7 @@ function OwnerSchedule() {
               </div>
             );
           })}
-          {error && <div className="owner-empty owner-empty--compact owner-empty--error">{error}</div>}
+          {(error || assignmentsError) && <div className="owner-empty owner-empty--compact owner-empty--error">{error || assignmentsError}</div>}
           {!error && visibleRaces.length === 0 && <div className="owner-empty owner-empty--compact">No race slots match this filter.</div>}
         </div>
       </article>
@@ -1715,28 +1882,43 @@ function OwnerSchedule() {
 }
 
 function OwnerResults() {
+  const { awards, isLoading, error } = useOwnerPrizeAwards();
+  const totalOwnerAmount = awards.reduce((total, award) => total + Number(award.ownerAmount || 0), 0);
+  const paidOwnerAmount = awards
+    .filter((award) => award.awardStatus === "Paid")
+    .reduce((total, award) => total + Number(award.ownerAmount || 0), 0);
+  const podiumCount = awards.filter((award) => Number(award.position) > 0 && Number(award.position) <= 3).length;
+  const penaltyCount = awards.filter((award) => award.penaltyCount > 0 || award.isDisqualified).length;
+  const featuredAward = awards[0];
+
+  if (isLoading) {
+    return <div className="owner-results-page"><LoadingSkeleton ariaLabel="Loading owner results and prizes" rows={6} variant="cards" /></div>;
+  }
+
   return (
     <div className="owner-results-page">
+      {error && <section className="admin-live-state admin-live-state--warning" aria-live="polite">{error}</section>}
+
       <section className="owner-results-hero">
         <img src={resultsHeroImage} alt="Race trophy display for owner results and prizes" />
         <div className="owner-results-hero__copy">
           <p className="owner-eyebrow">Results and prizes</p>
-          <h1>Owner results need a backend contract.</h1>
-          <p>The current result endpoint does not permit Horse Owner access, so this page does not display sample outcomes.</p>
+          <h1>Stable results and prize ledger.</h1>
+          <p>Published race finishes, owner prize share, and penalty impact are shown from the official race result.</p>
         </div>
         <aside className="owner-results-hero__panel">
-          <span className="owner-badge"><Trophy size={14} /> Results unavailable</span>
-          <strong>No owner feed</strong>
-          <p>Published finishes and prize totals cannot be read by this role yet.</p>
+          <span className="owner-badge owner-badge--green"><Trophy size={14} /> Owner share</span>
+          <strong>{formatMoney(totalOwnerAmount, featuredAward?.currency || "VND")}</strong>
+          <p>{paidOwnerAmount > 0 ? `${formatMoney(paidOwnerAmount, featuredAward?.currency || "VND")} has been marked paid.` : "Awards appear after admin publishes race results."}</p>
         </aside>
       </section>
 
       <section className="owner-results-stats" aria-label="Results summary">
         {[
-          { label: "Season earnings", value: "Unavailable", note: "No owner prize aggregate", icon: Trophy },
-          { label: "Recent prizes", value: "Unavailable", note: "No prize field is exposed", icon: Award },
-          { label: "Published", value: "Unavailable", note: "Result access is role restricted", icon: Flag },
-          { label: "Podiums", value: "Unavailable", note: "Cannot derive owner finishes", icon: BadgeCheck },
+          { label: "Owner earnings", value: formatMoney(totalOwnerAmount, featuredAward?.currency || "VND"), note: "Owner share only", icon: Trophy },
+          { label: "Prize awards", value: awards.length, note: "Published result awards", icon: Award },
+          { label: "Penalty impact", value: penaltyCount, note: "Confirmed race penalties", icon: Flag },
+          { label: "Podiums", value: podiumCount, note: "Top-three finishes", icon: BadgeCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -1753,14 +1935,14 @@ function OwnerResults() {
       <section className="owner-results-layout">
         <article className="owner-results-feature">
           <div>
-            <span className="owner-kicker">Contract status</span>
-            <h2>Sample prize values have been removed.</h2>
-            <p>A future owner-scoped published-results endpoint must provide horse results and settled prizes before these summaries can be calculated.</p>
+            <span className="owner-kicker">Latest published award</span>
+            <h2>{featuredAward ? `${featuredAward.horseName} finished ${featuredAward.finalPositionLabel}.` : "No published award yet."}</h2>
+            <p>{featuredAward ? `${featuredAward.raceName} uses the final official result after penalties are applied.` : "When a race is published, the owner's result and prize share will be listed here."}</p>
           </div>
           <div className="owner-results-feature__facts">
-            <div><span>Top horse</span><strong>Unavailable</strong></div>
-            <div><span>Top race</span><strong>Unavailable</strong></div>
-            <div><span>Winning time</span><strong>Unavailable</strong></div>
+            <div><span>Horse</span><strong>{featuredAward?.horseName || "Unavailable"}</strong></div>
+            <div><span>Race</span><strong>{featuredAward?.raceName || "Unavailable"}</strong></div>
+            <div><span>Penalty</span><strong>{featuredAward?.penaltySummary || "Unavailable"}</strong></div>
           </div>
         </article>
 
@@ -1773,9 +1955,32 @@ function OwnerResults() {
             <Trophy size={20} />
           </div>
           <div className="owner-results-list">
-            <div className="owner-empty" role="status">
-              Published race results are unavailable for Horse Owner accounts in the current backend contract.
-            </div>
+            {awards.length === 0 && (
+              <div className="owner-empty" role="status">
+                No published prize awards yet. Awards appear after admin publishes race results.
+              </div>
+            )}
+            {awards.map((award) => (
+              <div className="owner-results-row" key={award.id}>
+                <div className="owner-results-row__date">{award.finalPositionLabel}</div>
+                <div className="owner-results-row__main">
+                  <h3>{award.horseName}</h3>
+                  <small>{award.raceName} / {award.tournamentName}</small>
+                  <small>{award.roundName} / {award.date} / {award.jockeyName}</small>
+                </div>
+                <div className="owner-results-row__metrics">
+                  <div><span>Raw</span><strong>{award.rawPositionLabel} / {award.rawTime}</strong></div>
+                  <div><span>Final</span><strong>{award.finalPositionLabel} / {award.finalTime}</strong></div>
+                  <div><span>Penalty</span><strong>{award.penaltySummary}</strong></div>
+                  <div><span>Owner prize</span><strong>{formatMoney(award.ownerAmount, award.currency)}</strong></div>
+                  <div><span>Gross prize</span><strong>{formatMoney(award.grossAmount, award.currency)}</strong></div>
+                  <div><span>Jockey share</span><strong>{formatMoney(award.jockeyAmount, award.currency)}</strong></div>
+                </div>
+                <span className={`owner-badge ${statusClass(award.isDisqualified ? "Disqualified" : award.awardStatus)}`}>
+                  {award.isDisqualified ? "Disqualified" : award.awardStatus}
+                </span>
+              </div>
+            ))}
           </div>
         </article>
       </section>

@@ -43,8 +43,7 @@ import HorseInspection from "./Referee/HorseInspection";
 import JockeyInspection from "./Referee/JockeyInspection";
 import RaceMonitor from "./Referee/RaceMonitor";
 import ViolationManagement from "./Referee/ViolationManagement";
-import RaceResult from "./Referee/RaceResult";
-import RaceReport from "./Referee/RaceReport";
+import RaceClosure from "./Referee/RaceClosure";
 import AuthRecovery from "./auth/AuthRecovery";
 import VerifyAccount from "./auth/VerifyAccount";
 
@@ -92,8 +91,7 @@ function App() {
       <Route path="/referee/races/:raceId/jockey-inspection" element={<ProtectedRoute role="race_referee"><JockeyInspection /></ProtectedRoute>} />
       <Route path="/referee/races/:raceId/monitor" element={<ProtectedRoute role="race_referee"><RaceMonitor /></ProtectedRoute>} />
       <Route path="/referee/races/:raceId/violations" element={<ProtectedRoute role="race_referee"><ViolationManagement /></ProtectedRoute>} />
-      <Route path="/referee/races/:raceId/result" element={<ProtectedRoute role="race_referee"><RaceResult /></ProtectedRoute>} />
-      <Route path="/referee/races/:raceId/report" element={<ProtectedRoute role="race_referee"><RaceReport /></ProtectedRoute>} />
+      <Route path="/referee/races/:raceId/closure" element={<ProtectedRoute role="race_referee"><RaceClosure /></ProtectedRoute>} />
 
       <Route element={<ProtectedRoute role="spectator"><MainLayout /></ProtectedRoute>}>
         <Route path="/spectator" element={<SpectatorHome />} />

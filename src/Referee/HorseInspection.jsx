@@ -52,6 +52,16 @@ const LABELS = {
   medical_follow_up_required: "Medical follow-up required",
 };
 
+const NOTE_REQUIRED_STATUSES = ["failed", "scratched", "injury_detected", "requires_vet_follow_up"];
+
+function getDefaultBulkNote(status) {
+  if (status === "failed") return "Marked failed during bulk inspection.";
+  if (status === "scratched") return "Scratched during bulk inspection.";
+  if (status === "injury_detected") return "Injury detected during bulk inspection.";
+  if (status === "requires_vet_follow_up") return "Requires veterinary follow-up after bulk inspection.";
+  return "";
+}
+
 function initialRows(race, phase, fields) {
   return Object.fromEntries(
     (race?.participants || []).map((participant) => {
@@ -155,51 +165,60 @@ function HorseInspection() {
   const handleSaveAll = async () => {
     setIsSavingAll(true);
     setMessage("Saving all checks...");
-    let successCount = 0;
-    let failCount = 0;
+    const checks = [];
+    let skippedCount = 0;
 
-    for (const p of participants) {
-      const row = rows[p.horseId];
-      if (!row || !row.status) continue;
+    for (const participant of participants) {
+      const row = rows[participant.horseId];
 
-      const requiresNote = ["failed", "scratched", "injury_detected", "requires_vet_follow_up"].includes(row.status);
-      if (requiresNote && !row.note.trim()) {
-        failCount++;
+      if (!row || !row.status) {
+        skippedCount++;
         continue;
       }
 
-      try {
-        const payload = {
-          race_id: race.id,
-          horse_id: p.horseId,
-          jockey_id: p.jockeyId || undefined,
-          status: row.status,
-          checklist: row.checklist,
-          check_note: row.note,
-          weight: p.weight ?? undefined,
-          is_eligible: phase === RACE_PHASES.PRE_RACE ? row.status === "passed" : undefined
-        };
+      const requiresNote = NOTE_REQUIRED_STATUSES.includes(row.status);
+      const note = row.note.trim() || (requiresNote ? getDefaultBulkNote(row.status) : "");
 
-        if (row.saved?.id) {
-          await refereeApi.updateHorseCheck(row.saved.id, payload);
-        } else {
-          await refereeApi.createHorseCheck(phase, payload);
-        }
-        successCount++;
-      } catch (err) {
-        console.error(err);
-        failCount++;
-      }
+      checks.push({
+        horse_id: participant.horseId,
+        jockey_id: participant.jockeyId || undefined,
+        status: row.status,
+        checklist: row.checklist,
+        check_note: note,
+        weight: participant.weight ?? undefined,
+        is_eligible: phase === RACE_PHASES.PRE_RACE ? row.status === "passed" : undefined
+      });
     }
 
-    await reload();
-    setIsSavingAll(false);
-    setMessage(`Bulk save complete. Successfully saved: ${successCount} horses. Failed/Skipped: ${failCount} (check for missing status/notes).`);
+    if (!checks.length) {
+      setIsSavingAll(false);
+      setMessage("No checks are ready to save. Select at least one status before saving.");
+      return;
+    }
+
+    try {
+      const response = await refereeApi.bulkSaveHorseChecks(phase, {
+        race_id: race.id,
+        checks
+      });
+      const summary = response.summary || {};
+      const failed = response.failed || [];
+
+      await reload();
+      setMessage(
+        `Bulk save complete. Created: ${summary.created_count || 0}. Updated: ${summary.updated_count || 0}. ` +
+        `Failed: ${summary.failed_count || failed.length || 0}. Skipped: ${skippedCount}.`
+      );
+    } catch (apiError) {
+      setMessage(apiError.message || "Unable to bulk save horse checks.");
+    } finally {
+      setIsSavingAll(false);
+    }
   };
 
   const save = async (participant) => {
     const row = rows[participant.horseId];
-    const requiresNote = ["failed", "scratched", "injury_detected", "requires_vet_follow_up"].includes(row.status);
+    const requiresNote = NOTE_REQUIRED_STATUSES.includes(row.status);
     if (!row.status) return setMessage("Select a check status before saving.");
     if (requiresNote && !row.note.trim()) return setMessage("This status requires a note or issue description.");
 

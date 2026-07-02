@@ -297,6 +297,31 @@
   transform: translateY(0) scale(0.98);
 }
 
+.referee-closure-tabs {
+  align-items: center;
+  background: rgba(238, 231, 212, 0.06);
+  border: 1px solid var(--referee-line);
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.35rem;
+}
+
+.referee-closure-tabs button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--referee-muted);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.65rem 0.95rem;
+}
+
+.referee-closure-tabs button.is-active {
+  background: #eee7d4;
+  color: #14241b;
+}
+
 .referee-page :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid #ff9b5e;
   outline-offset: 3px;
@@ -1423,4 +1448,30 @@
   background: rgba(255, 123, 43, 0.2);
   border-color: #ff9b5e;
   transform: translateY(-1px);
+}
+
+.referee-result-editor {
+  min-width: 760px;
+}
+
+.referee-result-editor input {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--referee-line);
+  border-radius: 5px;
+  background: #14241b;
+  color: var(--referee-ink);
+  font: inherit;
+  font-size: 0.76rem;
+}
+
+.referee-result-editor input:focus {
+  border-color: #ff9b5e;
+  outline: none;
+}
+
+.referee-result-editor input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
