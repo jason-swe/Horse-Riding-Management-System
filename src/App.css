@@ -35,7 +35,7 @@
   padding: 36px 80px 28px;
   border-radius: 0;
   overflow: visible;
-  background: #3E5B49;
+  background: var(--racing-green-muted);
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
   isolation: isolate;
 }
@@ -43,7 +43,7 @@
 .hero-background {
   position: absolute;
   inset: 0;
-  background: #3E5B49;
+  background: var(--racing-green-muted);
   z-index: -2;
 }
 
@@ -145,11 +145,11 @@
   min-height: 40px;
   padding: 0 18px;
   border-radius: 4px;
-  background: linear-gradient(180deg, #f0a15c, #c86a2b);
+  background: linear-gradient(180deg, var(--racing-accent), var(--racing-accent-strong));
   color: white;
   font-size: 0.92rem;
   font-weight: 600;
-  box-shadow: 0 16px 26px rgba(255, 109, 20, 0.24);
+  box-shadow: 0 16px 26px rgba(var(--racing-accent-rgb), 0.24);
 }
 
 .contact-btn {
@@ -175,8 +175,8 @@
   padding: 10px 22px;
   border-radius: 999px;
   background: transparent;
-  color: #EEE7D4;
-  border: 2px solid rgba(238, 231, 212, 0.9);
+  color: var(--racing-contrast);
+  border: 2px solid rgba(var(--racing-contrast-rgb), 0.9);
   font-weight: 700;
   text-decoration: none;
   box-shadow: none;
@@ -213,7 +213,7 @@
   letter-spacing: 0.42em;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #d97735;
+  color: var(--racing-accent-strong);
 }
 
 .hero-copy h1 {
@@ -426,7 +426,7 @@
   background: var(--accent);
   color: white;
   font-size: 0.85rem;
-  box-shadow: 0 12px 22px rgba(255, 111, 31, 0.35);
+  box-shadow: 0 12px 22px rgba(var(--racing-accent-rgb), 0.35);
 }
 
 .stats-row {
@@ -444,7 +444,7 @@
   margin: 0 -80px 0;
   /* reduce vertical padding so section fits one viewport */
   padding: 48px 40px 48px;
-  background: #EEE7D4;
+  background: var(--racing-contrast);
   color: #10161b;
   max-height: 100vh; /* constrain to viewport height */
   overflow: hidden;
@@ -456,7 +456,7 @@
   position: absolute;
   inset: -1px 0 auto;
   height: 70px;
-  background: #EEE7D4;
+  background: var(--racing-contrast);
   clip-path: polygon(
     0 54%,
     3% 64%,
@@ -582,7 +582,7 @@
   border: 1px solid rgba(233, 149, 84, 0.62);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.88);
-  color: #6e4d39;
+  color: var(--racing-muted-warm);
   box-shadow: 0 10px 18px rgba(55, 36, 19, 0.08);
   font-size: 0.92rem;
   font-weight: 500;
@@ -605,9 +605,9 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 14% 12%, rgba(255, 111, 31, 0.14), transparent 25%),
-    radial-gradient(circle at 84% 18%, rgba(238, 231, 212, 0.14), transparent 24%),
-    linear-gradient(180deg, #123022 0%, #20382c 46%, #10231b 100%);
+    radial-gradient(circle at 14% 12%, rgba(var(--racing-accent-rgb), 0.14), transparent 25%),
+    radial-gradient(circle at 84% 18%, rgba(var(--racing-contrast-rgb), 0.14), transparent 24%),
+    linear-gradient(180deg, var(--racing-green) 0%, var(--racing-green-2) 46%, var(--racing-ink) 100%);
 }
 
 .login-page__shell {
@@ -647,7 +647,7 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 111, 31, 0.24), transparent 68%);
+  background: radial-gradient(circle, rgba(var(--racing-accent-rgb), 0.24), transparent 68%);
   filter: blur(12px);
   pointer-events: none;
 }
@@ -668,7 +668,7 @@
   letter-spacing: 0.28em;
   font-size: 0.7rem;
   font-weight: 800;
-  color: rgba(255, 111, 31, 0.96);
+  color: rgba(var(--racing-accent-rgb), 0.96);
 }
 
 .login-page__title {
@@ -727,8 +727,8 @@
 }
 
 .login-field input:focus {
-  border-color: rgba(255, 111, 31, 0.78);
-  box-shadow: 0 0 0 4px rgba(255, 111, 31, 0.16);
+  border-color: rgba(var(--racing-accent-rgb), 0.78);
+  box-shadow: 0 0 0 4px rgba(var(--racing-accent-rgb), 0.16);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -755,15 +755,15 @@
 }
 
 .login-page__link {
-  color: #f6dcc2;
+  color: var(--racing-text-soft);
   font-size: 0.88rem;
   font-weight: 600;
   transition: color 160ms ease, text-shadow 160ms ease;
 }
 
 .login-page__link:hover {
-  color: #ff9a52;
-  text-shadow: 0 0 18px rgba(255, 111, 31, 0.28);
+  color: var(--racing-accent);
+  text-shadow: 0 0 18px rgba(var(--racing-accent-rgb), 0.28);
 }
 
 .auth-inline-action {
@@ -784,10 +784,10 @@
   min-height: 50px;
   border: 0;
   border-radius: 14px;
-  background: linear-gradient(180deg, #ff7b2b, #ff6d14);
+  background: linear-gradient(180deg, var(--racing-accent-strong), var(--racing-accent-strong));
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 16px 28px rgba(255, 109, 20, 0.28);
+  box-shadow: 0 16px 28px rgba(var(--racing-accent-rgb), 0.28);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
@@ -795,12 +795,12 @@
 .login-page__submit:hover {
   transform: translateY(-2px);
   filter: brightness(1.06);
-  box-shadow: 0 20px 36px rgba(255, 109, 20, 0.36);
+  box-shadow: 0 20px 36px rgba(var(--racing-accent-rgb), 0.36);
 }
 
 .login-page__submit:active {
   transform: translateY(0);
-  box-shadow: 0 12px 22px rgba(255, 109, 20, 0.26);
+  box-shadow: 0 12px 22px rgba(var(--racing-accent-rgb), 0.26);
 }
 
 .login-page__divider {
@@ -838,7 +838,7 @@
 
 .login-page__social:hover {
   transform: translateY(-2px);
-  border-color: rgba(238, 231, 212, 0.32);
+  border-color: rgba(var(--racing-contrast-rgb), 0.32);
   background: rgba(255, 255, 255, 0.09);
   box-shadow: 0 14px 26px rgba(0, 0, 0, 0.2);
 }
@@ -859,7 +859,7 @@
   flex-direction: column;
   justify-content: flex-start;
   background:
-    linear-gradient(160deg, rgba(238, 231, 212, 0.96), rgba(216, 201, 169, 0.96)),
+    linear-gradient(160deg, rgba(var(--racing-contrast-rgb), 0.96), rgba(216, 201, 169, 0.96)),
     linear-gradient(180deg, #f4ecd7, #e8dbb7);
   color: #1c271f;
 }
@@ -873,7 +873,7 @@
 }
 
 .login-page__intro .login-page__title span {
-  color: #6e4d39;
+  color: var(--racing-muted-warm);
 }
 
 .login-page__intro .login-page__description {
@@ -911,7 +911,7 @@
   display: grid;
   place-items: center;
   background: rgba(110, 77, 57, 0.12);
-  color: #6e4d39;
+  color: var(--racing-muted-warm);
   font-weight: 800;
 }
 
@@ -1015,15 +1015,15 @@
   place-items: center;
   padding: clamp(16px, 3vw, 32px);
   background:
-    radial-gradient(circle at 14% 12%, rgba(255, 111, 31, 0.14), transparent 25%),
-    radial-gradient(circle at 84% 18%, rgba(238, 231, 212, 0.14), transparent 24%),
-    linear-gradient(180deg, #123022 0%, #20382c 46%, #10231b 100%);
+    radial-gradient(circle at 14% 12%, rgba(var(--racing-accent-rgb), 0.14), transparent 25%),
+    radial-gradient(circle at 84% 18%, rgba(var(--racing-contrast-rgb), 0.14), transparent 24%),
+    linear-gradient(180deg, var(--racing-green) 0%, var(--racing-green-2) 46%, var(--racing-ink) 100%);
 }
 
 .auth-recovery__panel {
   width: min(560px, 100%);
   padding: clamp(24px, 5vw, 44px);
-  border: 1px solid rgba(238, 231, 212, 0.2);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
   border-radius: 8px;
   background: rgba(8, 20, 16, 0.92);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.3);
@@ -1046,10 +1046,10 @@
   display: grid;
   place-items: center;
   margin-bottom: 18px;
-  border: 1px solid rgba(255, 111, 31, 0.34);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.34);
   border-radius: 8px;
-  color: #ff9a52;
-  background: rgba(255, 111, 31, 0.1);
+  color: var(--racing-accent);
+  background: rgba(var(--racing-accent-rgb), 0.1);
 }
 
 .auth-recovery__title {
@@ -1088,7 +1088,7 @@
 .auth-recovery__back {
   padding: 0;
   border: 0;
-  color: #f6dcc2;
+  color: var(--racing-text-soft);
   background: transparent;
   font: inherit;
   font-size: 0.88rem;
@@ -1142,7 +1142,7 @@
 
 .auth-password-field button:hover,
 .auth-password-field button:focus-visible {
-  color: #ff9a52;
+  color: var(--racing-accent);
 }
 
 .auth-recovery__primary-link {
@@ -1156,7 +1156,7 @@
   display: inline-flex;
   align-items: flex-start;
   gap: 8px;
-  color: #a9efb6;
+  color: var(--racing-success-soft);
 }
 
 @media (max-width: 520px) {
@@ -1176,9 +1176,9 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 14% 12%, rgba(255, 111, 31, 0.14), transparent 25%),
-    radial-gradient(circle at 84% 18%, rgba(238, 231, 212, 0.14), transparent 24%),
-    linear-gradient(180deg, #123022 0%, #20382c 46%, #10231b 100%);
+    radial-gradient(circle at 14% 12%, rgba(var(--racing-accent-rgb), 0.14), transparent 25%),
+    radial-gradient(circle at 84% 18%, rgba(var(--racing-contrast-rgb), 0.14), transparent 24%),
+    linear-gradient(180deg, var(--racing-green) 0%, var(--racing-green-2) 46%, var(--racing-ink) 100%);
 }
 
 .signup-page__shell {
@@ -1218,7 +1218,7 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 111, 31, 0.24), transparent 68%);
+  background: radial-gradient(circle, rgba(var(--racing-accent-rgb), 0.24), transparent 68%);
   filter: blur(12px);
   pointer-events: none;
 }
@@ -1239,7 +1239,7 @@
   letter-spacing: 0.28em;
   font-size: 0.7rem;
   font-weight: 800;
-  color: rgba(255, 111, 31, 0.96);
+  color: rgba(var(--racing-accent-rgb), 0.96);
 }
 
 .signup-page__title {
@@ -1304,8 +1304,8 @@
 }
 
 .signup-field input:focus {
-  border-color: rgba(255, 111, 31, 0.78);
-  box-shadow: 0 0 0 4px rgba(255, 111, 31, 0.16);
+  border-color: rgba(var(--racing-accent-rgb), 0.78);
+  box-shadow: 0 0 0 4px rgba(var(--racing-accent-rgb), 0.16);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -1335,15 +1335,15 @@
 }
 
 .signup-role-picker__button:hover {
-  border-color: rgba(255, 111, 31, 0.5);
+  border-color: rgba(var(--racing-accent-rgb), 0.5);
   background: rgba(255, 255, 255, 0.08);
   transform: translateY(-1px);
 }
 
 .signup-role-picker__button:focus-visible,
 .signup-role-picker--open .signup-role-picker__button {
-  border-color: rgba(255, 111, 31, 0.78);
-  box-shadow: 0 0 0 4px rgba(255, 111, 31, 0.16);
+  border-color: rgba(var(--racing-accent-rgb), 0.78);
+  box-shadow: 0 0 0 4px rgba(var(--racing-accent-rgb), 0.16);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -1362,7 +1362,7 @@
 }
 
 .signup-role-picker--open .signup-role-picker__chevron {
-  border-color: #ff9a52;
+  border-color: var(--racing-accent);
   transform: rotate(225deg) translateY(-2px);
 }
 
@@ -1374,7 +1374,7 @@
   max-height: 0;
   overflow-y: auto;
   padding: 0 6px;
-  border: 1px solid rgba(238, 231, 212, 0);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0);
   border-radius: 14px;
   background: rgba(11, 25, 18, 0.98);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
@@ -1389,7 +1389,7 @@
 .signup-role-picker--open .signup-role-picker__menu {
   max-height: 176px;
   padding: 6px;
-  border-color: rgba(238, 231, 212, 0.18);
+  border-color: rgba(var(--racing-contrast-rgb), 0.18);
   opacity: 1;
   transform: translateY(0) scaleY(1);
   pointer-events: auto;
@@ -1415,7 +1415,7 @@
 .signup-role-picker__option:hover,
 .signup-role-picker__option--active {
   color: #fff;
-  background: rgba(255, 111, 31, 0.16);
+  background: rgba(var(--racing-accent-rgb), 0.16);
   transform: translateX(2px);
 }
 
@@ -1437,10 +1437,10 @@
   min-height: 50px;
   border: 0;
   border-radius: 14px;
-  background: linear-gradient(180deg, #ff7b2b, #ff6d14);
+  background: linear-gradient(180deg, var(--racing-accent-strong), var(--racing-accent-strong));
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 16px 28px rgba(255, 109, 20, 0.28);
+  box-shadow: 0 16px 28px rgba(var(--racing-accent-rgb), 0.28);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
@@ -1448,12 +1448,12 @@
 .signup-page__submit:hover {
   transform: translateY(-2px);
   filter: brightness(1.06);
-  box-shadow: 0 20px 36px rgba(255, 109, 20, 0.36);
+  box-shadow: 0 20px 36px rgba(var(--racing-accent-rgb), 0.36);
 }
 
 .signup-page__submit:active {
   transform: translateY(0);
-  box-shadow: 0 12px 22px rgba(255, 109, 20, 0.26);
+  box-shadow: 0 12px 22px rgba(var(--racing-accent-rgb), 0.26);
 }
 
 .signup-page__divider {
@@ -1491,7 +1491,7 @@
 
 .signup-page__social:hover {
   transform: translateY(-2px);
-  border-color: rgba(238, 231, 212, 0.32);
+  border-color: rgba(var(--racing-contrast-rgb), 0.32);
   background: rgba(255, 255, 255, 0.09);
   box-shadow: 0 14px 26px rgba(0, 0, 0, 0.2);
 }
@@ -1508,20 +1508,20 @@
 }
 
 .signup-page__link {
-  color: #f6dcc2;
+  color: var(--racing-text-soft);
   font-size: 0.88rem;
   font-weight: 600;
   transition: color 160ms ease, text-shadow 160ms ease;
 }
 
 .signup-page__link:hover {
-  color: #ff9a52;
-  text-shadow: 0 0 18px rgba(255, 111, 31, 0.28);
+  color: var(--racing-accent);
+  text-shadow: 0 0 18px rgba(var(--racing-accent-rgb), 0.28);
 }
 
 .signup-page__intro {
   background:
-    linear-gradient(160deg, rgba(238, 231, 212, 0.96), rgba(216, 201, 169, 0.96)),
+    linear-gradient(160deg, rgba(var(--racing-contrast-rgb), 0.96), rgba(216, 201, 169, 0.96)),
     linear-gradient(180deg, #f4ecd7, #e8dbb7);
   color: #1c271f;
 }
@@ -1535,7 +1535,7 @@
 }
 
 .signup-page__intro .signup-page__title span {
-  color: #6e4d39;
+  color: var(--racing-muted-warm);
 }
 
 .signup-page__intro .signup-page__description {
@@ -1573,7 +1573,7 @@
   display: grid;
   place-items: center;
   background: rgba(110, 77, 57, 0.12);
-  color: #6e4d39;
+  color: var(--racing-muted-warm);
   font-weight: 800;
 }
 
@@ -1682,8 +1682,8 @@
   margin: 0;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(238, 231, 212, 0.24);
-  color: #f7f3e8;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  color: var(--racing-text);
   font-size: 0.9rem;
   line-height: 1.45;
 }
@@ -1718,8 +1718,8 @@ button.admin-logout-btn {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: #3e5b49;
-  color: #fff8ea;
+  background: var(--racing-green-muted);
+  color: var(--racing-text-strong);
   font-weight: 700;
 }
 
@@ -1728,14 +1728,14 @@ button.admin-logout-btn {
   display: grid;
   place-items: center;
   padding: 32px 18px;
-  background: #3e5b49;
-  color: #f7f3e8;
+  background: var(--racing-green-muted);
+  color: var(--racing-text);
 }
 
 .workspace-panel {
   width: min(760px, 100%);
   padding: 34px;
-  border: 1px solid rgba(238, 231, 212, 0.24);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 24px;
   background: rgba(29, 48, 36, 0.58);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
@@ -1749,7 +1749,7 @@ button.admin-logout-btn {
 
 .workspace-eyebrow {
   margin: 0;
-  color: #f0a15c;
+  color: var(--racing-accent);
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -1757,13 +1757,13 @@ button.admin-logout-btn {
 
 .workspace-panel h1 {
   margin: 0;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-size: clamp(2rem, 4vw, 3rem);
 }
 
 .workspace-panel p {
   margin: 0;
-  color: #e6ddc8;
+  color: var(--racing-text-soft);
   line-height: 1.6;
 }
 
@@ -1778,10 +1778,10 @@ button.admin-logout-btn {
   gap: 10px;
   min-height: 144px;
   padding: 18px;
-  border: 1px solid rgba(238, 231, 212, 0.24);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 16px;
-  background: rgba(238, 231, 212, 0.1);
-  color: #f7f3e8;
+  background: rgba(var(--racing-contrast-rgb), 0.1);
+  color: var(--racing-text);
   text-align: left;
   cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
@@ -1789,8 +1789,8 @@ button.admin-logout-btn {
 
 .workspace-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(240, 161, 92, 0.62);
-  background: rgba(238, 231, 212, 0.15);
+  border-color: rgba(var(--racing-accent-rgb), 0.62);
+  background: rgba(var(--racing-contrast-rgb), 0.15);
 }
 
 .workspace-card span {
@@ -1799,8 +1799,8 @@ button.admin-logout-btn {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #eee7d4;
-  color: #3e5b49;
+  background: var(--racing-contrast);
+  color: var(--racing-green-muted);
 }
 
 .workspace-card strong {
@@ -1808,7 +1808,7 @@ button.admin-logout-btn {
 }
 
 .workspace-card small {
-  color: #d4c8b3;
+  color: var(--racing-text-muted);
 }
 
 .workspace-card--disabled {
@@ -1818,8 +1818,8 @@ button.admin-logout-btn {
 
 .workspace-card--disabled:hover {
   transform: none;
-  border-color: rgba(238, 231, 212, 0.24);
-  background: rgba(238, 231, 212, 0.1);
+  border-color: rgba(var(--racing-contrast-rgb), 0.24);
+  background: rgba(var(--racing-contrast-rgb), 0.1);
 }
 
 .horse-fact__connector::after {
@@ -2276,7 +2276,7 @@ button.admin-logout-btn {
 /* Testimonials carousel */
 .testimonials {
   margin: 56px 0 72px;
-  background: #3E5B49;
+  background: var(--racing-green-muted);
   color: rgba(245, 247, 243, 0.95);
 }
 
@@ -2306,7 +2306,7 @@ button.admin-logout-btn {
   min-width: 96px;
   min-height: 42px;
   padding: 0 16px;
-  border: 1px solid rgba(238, 231, 212, 0.25);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.25);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: rgba(245, 247, 243, 0.95);
@@ -2319,7 +2319,7 @@ button.admin-logout-btn {
 .testimonials__button:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(238, 231, 212, 0.4);
+  border-color: rgba(var(--racing-contrast-rgb), 0.4);
 }
 
 .testimonials__stage {
@@ -2340,7 +2340,7 @@ button.admin-logout-btn {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(238, 231, 212, 0.25);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.25);
   background: rgba(255, 255, 255, 0.06);
   color: rgba(245, 247, 243, 0.95);
   cursor: pointer;
@@ -2673,9 +2673,9 @@ button.admin-logout-btn {
   width: 100vw;
   margin-top: 0;
   overflow: hidden;
-  color: #eee7d4;
+  color: var(--racing-contrast);
   background:
-    radial-gradient(circle at 82% 12%, rgba(255, 111, 31, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 12%, rgba(var(--racing-accent-rgb), 0.12), transparent 24%),
     linear-gradient(135deg, #0b2017 0%, #163225 58%, #0d251b 100%);
 }
 
@@ -2687,8 +2687,8 @@ button.admin-logout-btn {
   gap: 24px;
   padding: 0 max(24px, calc((100vw - 1200px) / 2));
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #17261d;
-  background: #ef762f;
+  color: var(--racing-green-2);
+  background: var(--racing-accent-strong);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -2720,7 +2720,7 @@ button.admin-logout-btn {
 .footer-brand h2 {
   max-width: 10ch;
   margin: 34px 0 0;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-family: "Sora", sans-serif;
   font-size: clamp(2.35rem, 4.5vw, 4.8rem);
   line-height: 0.94;
@@ -2731,13 +2731,13 @@ button.admin-logout-btn {
 .footer-copy {
   max-width: 34ch;
   margin: 22px 0 0;
-  color: rgba(238, 231, 212, 0.7);
+  color: rgba(var(--racing-contrast-rgb), 0.7);
   line-height: 1.6;
 }
 
 .footer-label {
   margin: 4px 0 24px;
-  color: #ff9a52;
+  color: var(--racing-accent);
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -2757,7 +2757,7 @@ button.admin-logout-btn {
   display: grid;
   grid-template-columns: 30px 1fr;
   align-items: center;
-  border-bottom: 1px solid rgba(238, 231, 212, 0.12);
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.12);
   color: rgba(255, 248, 234, 0.88);
   font-weight: 650;
   text-decoration: none;
@@ -2781,15 +2781,15 @@ button.admin-logout-btn {
 .footer-race-call {
   align-self: start;
   padding: 28px;
-  border: 1px solid rgba(238, 231, 212, 0.16);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   border-radius: 8px;
-  background: rgba(238, 231, 212, 0.055);
+  background: rgba(var(--racing-contrast-rgb), 0.055);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .footer-race-call h3 {
   margin: 0;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-family: "Sora", sans-serif;
   font-size: clamp(1.55rem, 2.4vw, 2.15rem);
   line-height: 1.05;
@@ -2798,7 +2798,7 @@ button.admin-logout-btn {
 
 .footer-race-call > p:not(.footer-label) {
   margin: 16px 0 24px;
-  color: rgba(238, 231, 212, 0.68);
+  color: rgba(var(--racing-contrast-rgb), 0.68);
   line-height: 1.55;
 }
 
@@ -2811,7 +2811,7 @@ button.admin-logout-btn {
   padding: 0 16px;
   border-radius: 6px;
   color: #18271e;
-  background: #ef762f;
+  background: var(--racing-accent-strong);
   font-weight: 800;
   text-decoration: none;
   transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
@@ -2837,11 +2837,11 @@ button.admin-logout-btn {
   align-items: center;
   gap: 24px;
   padding: 22px 24px 26px;
-  border-top: 1px solid rgba(238, 231, 212, 0.12);
+  border-top: 1px solid rgba(var(--racing-contrast-rgb), 0.12);
 }
 
 .footer-copyright {
-  color: rgba(238, 231, 212, 0.48) !important;
+  color: rgba(var(--racing-contrast-rgb), 0.48) !important;
   font-size: 0.78rem !important;
 }
 
@@ -2850,7 +2850,7 @@ button.admin-logout-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: rgba(238, 231, 212, 0.58);
+  color: rgba(var(--racing-contrast-rgb), 0.58);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -2859,7 +2859,7 @@ button.admin-logout-btn {
 .footer-finish-line > span {
   width: 42px;
   height: 2px;
-  background: #ef762f;
+  background: var(--racing-accent-strong);
 }
 
 @media (max-width: 980px) {
@@ -2907,7 +2907,7 @@ button.admin-logout-btn {
 .role-application-page {
   display: grid;
   gap: 24px;
-  color: #F7F3E8;
+  color: var(--racing-text);
 }
 
 .role-application-page * {
@@ -2915,7 +2915,7 @@ button.admin-logout-btn {
 }
 
 .role-application-page :focus-visible {
-  outline: 3px solid rgba(255, 109, 20, 0.72);
+  outline: 3px solid rgba(var(--racing-accent-rgb), 0.72);
   outline-offset: 3px;
 }
 
@@ -2925,17 +2925,17 @@ button.admin-logout-btn {
   gap: 22px;
   align-items: stretch;
   padding: 28px;
-  border: 1px solid rgba(238, 231, 212, 0.24);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(238, 231, 212, 0.16), rgba(238, 231, 212, 0.06)),
+    linear-gradient(135deg, rgba(var(--racing-contrast-rgb), 0.16), rgba(var(--racing-contrast-rgb), 0.06)),
     rgba(255, 255, 255, 0.05);
   box-shadow: 0 22px 52px rgba(0, 0, 0, 0.18);
 }
 
 .role-application-eyebrow {
   margin: 0 0 10px;
-  color: #f0a15c;
+  color: var(--racing-accent);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -2945,7 +2945,7 @@ button.admin-logout-btn {
 .role-application-hero h1 {
   max-width: 760px;
   margin: 0;
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: clamp(2rem, 4vw, 3.8rem);
   line-height: 1;
   letter-spacing: 0;
@@ -2954,7 +2954,7 @@ button.admin-logout-btn {
 .role-application-hero p {
   max-width: 680px;
   margin: 14px 0 0;
-  color: #E6DDC8;
+  color: var(--racing-text-soft);
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -2965,22 +2965,22 @@ button.admin-logout-btn {
   gap: 8px;
   min-height: 170px;
   padding: 22px;
-  border: 1px solid rgba(238, 231, 212, 0.26);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.26);
   border-radius: 8px;
   background: rgba(29, 48, 36, 0.5);
 }
 
 .role-application-hero__panel svg {
-  color: #f0a15c;
+  color: var(--racing-accent);
 }
 
 .role-application-hero__panel strong {
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: 1.05rem;
 }
 
 .role-application-hero__panel span {
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.9rem;
   overflow-wrap: anywhere;
 }
@@ -2993,9 +2993,9 @@ button.admin-logout-btn {
 
 .role-application-stats article,
 .role-application-panel {
-  border: 1px solid rgba(238, 231, 212, 0.24);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 8px;
-  background: rgba(238, 231, 212, 0.11);
+  background: rgba(var(--racing-contrast-rgb), 0.11);
 }
 
 .role-application-stats article {
@@ -3005,13 +3005,13 @@ button.admin-logout-btn {
 }
 
 .role-application-stats strong {
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: 1.9rem;
   line-height: 1;
 }
 
 .role-application-stats span {
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.86rem;
   font-weight: 700;
 }
@@ -3036,13 +3036,13 @@ button.admin-logout-btn {
 
 .role-application-panel__header h2 {
   margin: 0;
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: 1.05rem;
 }
 
 .role-application-panel__header p {
   margin: 0;
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.88rem;
   line-height: 1.55;
 }
@@ -3060,10 +3060,10 @@ button.admin-logout-btn {
   width: 100%;
   min-height: 78px;
   padding: 12px;
-  border: 1px solid rgba(238, 231, 212, 0.18);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
-  color: #E6DDC8;
+  color: var(--racing-text-soft);
   cursor: pointer;
   text-align: left;
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
@@ -3071,8 +3071,8 @@ button.admin-logout-btn {
 
 .role-application-role:hover,
 .role-application-role.is-active {
-  border-color: rgba(255, 109, 20, 0.5);
-  background: rgba(255, 109, 20, 0.13);
+  border-color: rgba(var(--racing-accent-rgb), 0.5);
+  background: rgba(var(--racing-accent-rgb), 0.13);
   transform: translateY(-1px);
 }
 
@@ -3082,22 +3082,22 @@ button.admin-logout-btn {
   width: 38px;
   height: 38px;
   place-items: center;
-  border: 1px solid rgba(255, 109, 20, 0.28);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.28);
   border-radius: 8px;
-  background: rgba(255, 109, 20, 0.14);
-  color: #f0a15c;
+  background: rgba(var(--racing-accent-rgb), 0.14);
+  color: var(--racing-accent);
 }
 
 .role-application-role strong {
   display: block;
   margin-bottom: 3px;
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: 0.94rem;
 }
 
 .role-application-role small {
   display: block;
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.78rem;
   line-height: 1.45;
 }
@@ -3128,7 +3128,7 @@ button.admin-logout-btn {
   display: grid;
   gap: 7px;
   min-width: 0;
-  color: #E6DDC8;
+  color: var(--racing-text-soft);
   font-size: 0.86rem;
   font-weight: 800;
 }
@@ -3137,10 +3137,10 @@ button.admin-logout-btn {
 .role-application-field select {
   width: 100%;
   min-height: 46px;
-  border: 1px solid rgba(238, 231, 212, 0.24);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 8px;
   background: rgba(29, 48, 36, 0.52);
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font: inherit;
   font-weight: 650;
   padding: 0 12px;
@@ -3149,11 +3149,11 @@ button.admin-logout-btn {
 .role-application-field input[type="file"] {
   min-height: 52px;
   padding: 12px;
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
 }
 
 .role-application-field input::placeholder {
-  color: #B8AA93;
+  color: var(--racing-muted-warm);
 }
 
 .role-application-field select {
@@ -3161,7 +3161,7 @@ button.admin-logout-btn {
 }
 
 .role-application-field small {
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.76rem;
   font-weight: 600;
   line-height: 1.45;
@@ -3170,9 +3170,9 @@ button.admin-logout-btn {
 .role-application-note {
   margin-bottom: 16px;
   padding: 12px 14px;
-  border: 1px solid rgba(240, 161, 92, 0.34);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.34);
   border-radius: 8px;
-  background: rgba(240, 161, 92, 0.12);
+  background: rgba(var(--racing-accent-rgb), 0.12);
   color: #FFE0B8;
   font-size: 0.9rem;
   font-weight: 700;
@@ -3202,15 +3202,15 @@ button.admin-logout-btn {
 }
 
 .role-application-submit {
-  border: 1px solid rgba(255, 109, 20, 0.55);
-  background: #ff6d14;
-  color: #1D3024;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.55);
+  background: var(--racing-accent-strong);
+  color: var(--racing-green);
   cursor: pointer;
 }
 
 .role-application-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: #ff7b2b;
+  background: var(--racing-accent-strong);
 }
 
 .role-application-submit:active:not(:disabled),
@@ -3233,35 +3233,35 @@ button.admin-logout-btn {
 }
 
 .role-application-secondary {
-  border: 1px solid rgba(238, 231, 212, 0.26);
-  background: rgba(238, 231, 212, 0.08);
-  color: #EEE7D4;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.26);
+  background: rgba(var(--racing-contrast-rgb), 0.08);
+  color: var(--racing-contrast);
 }
 
 .role-application-secondary:hover {
-  border-color: rgba(238, 231, 212, 0.46);
-  background: rgba(238, 231, 212, 0.14);
+  border-color: rgba(var(--racing-contrast-rgb), 0.46);
+  background: rgba(var(--racing-contrast-rgb), 0.14);
 }
 
 .role-application-row {
   display: grid;
   gap: 8px;
   padding: 12px;
-  border: 1px solid rgba(238, 231, 212, 0.18);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
 }
 
 .role-application-row strong {
   display: block;
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
   font-size: 0.92rem;
 }
 
 .role-application-row small,
 .role-application-row p {
   margin: 0;
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -3278,8 +3278,8 @@ button.admin-logout-btn {
 }
 
 .role-application-status--pending {
-  border: 1px solid rgba(240, 161, 92, 0.44);
-  background: rgba(240, 161, 92, 0.14);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.44);
+  background: rgba(var(--racing-accent-rgb), 0.14);
   color: #FFD6A3;
 }
 
@@ -3301,18 +3301,18 @@ button.admin-logout-btn {
   justify-items: start;
   gap: 8px;
   padding: 18px;
-  border: 1px dashed rgba(238, 231, 212, 0.28);
+  border: 1px dashed rgba(var(--racing-contrast-rgb), 0.28);
   border-radius: 8px;
-  color: #D4C8B3;
+  color: var(--racing-text-muted);
 }
 
 .role-application-empty svg,
 .role-application-state svg {
-  color: #f0a15c;
+  color: var(--racing-accent);
 }
 
 .role-application-empty strong {
-  color: #FFF8EA;
+  color: var(--racing-text-strong);
 }
 
 .role-application-empty span,
@@ -3396,7 +3396,7 @@ button.admin-logout-btn {
 /* Referee module */
 .referee-badge {
   background: rgba(59, 158, 103, 0.18);
-  color: #6fcf97;
+  color: var(--racing-success);
   border: 1px solid rgba(59, 158, 103, 0.28);
 }
 
@@ -3462,7 +3462,7 @@ button.admin-logout-btn {
 .referee-status-badge--published {
   background: rgba(59, 158, 103, 0.15);
   border: 1px solid rgba(59, 158, 103, 0.25);
-  color: #6fcf97;
+  color: var(--racing-success);
 }
 
 .referee-status-badge--amber,
@@ -3484,7 +3484,7 @@ button.admin-logout-btn {
 .referee-status-badge--disqualification {
   background: rgba(232, 85, 85, 0.15);
   border: 1px solid rgba(232, 85, 85, 0.25);
-  color: #f06c6c;
+  color: var(--racing-danger);
 }
 
 .referee-status-badge--finished {
@@ -3509,7 +3509,7 @@ button.admin-logout-btn {
 }
 
 .referee-metric--green {
-  color: #6fcf97;
+  color: var(--racing-success);
 }
 
 .referee-activity-list {
@@ -3548,7 +3548,7 @@ button.admin-logout-btn {
 }
 
 .referee-activity-label {
-  color: #f5f7f3;
+  color: var(--racing-text);
   font-size: 0.88rem;
   font-weight: 600;
 }
@@ -3641,7 +3641,7 @@ button.admin-logout-btn {
 .referee-insp-badge--done {
   background: rgba(59, 158, 103, 0.15);
   border: 1px solid rgba(59, 158, 103, 0.25);
-  color: #6fcf97;
+  color: var(--racing-success);
 }
 
 .referee-insp-badge--pending {
@@ -3680,7 +3680,7 @@ button.admin-logout-btn {
 }
 
 .referee-action-card strong {
-  color: #f5f7f3;
+  color: var(--racing-text);
   display: block;
   font-size: 0.95rem;
   margin-bottom: 4px;
@@ -3727,13 +3727,13 @@ button.admin-logout-btn {
 .referee-saved-banner--approved {
   background: rgba(59, 158, 103, 0.12);
   border: 1px solid rgba(59, 158, 103, 0.22);
-  color: #6fcf97;
+  color: var(--racing-success);
 }
 
 .referee-saved-banner--rejected {
   background: rgba(232, 85, 85, 0.12);
   border: 1px solid rgba(232, 85, 85, 0.22);
-  color: #f06c6c;
+  color: var(--racing-danger);
 }
 
 .referee-checklist {
@@ -3796,7 +3796,7 @@ button.admin-logout-btn {
 .referee-radio-option--approve {
   background: rgba(59, 158, 103, 0.12);
   border: 1px solid rgba(59, 158, 103, 0.24);
-  color: #6fcf97;
+  color: var(--racing-success);
 }
 
 .referee-radio-option--approve:hover {
@@ -3806,7 +3806,7 @@ button.admin-logout-btn {
 .referee-radio-option--reject {
   background: rgba(232, 85, 85, 0.1);
   border: 1px solid rgba(232, 85, 85, 0.2);
-  color: #f06c6c;
+  color: var(--racing-danger);
 }
 
 .referee-radio-option--reject:hover {
@@ -3828,7 +3828,7 @@ button.admin-logout-btn {
 }
 
 .referee-timer {
-  color: #f5f7f3;
+  color: var(--racing-text);
   font-family: "Sora", sans-serif;
   font-size: clamp(2.8rem, 5vw, 4.2rem);
   font-variant-numeric: tabular-nums;
@@ -3894,7 +3894,7 @@ button.admin-logout-btn {
   align-items: center;
   background: rgba(59, 158, 103, 0.15);
   border-radius: 50%;
-  color: #6fcf97;
+  color: var(--racing-success);
   display: inline-flex;
   font-size: 0.85rem;
   font-weight: 800;
@@ -3935,7 +3935,7 @@ button.admin-logout-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  color: #f5f7f3;
+  color: var(--racing-text);
   font-size: 0.9rem;
   padding: 4px 8px;
   width: 80px;
@@ -4008,7 +4008,7 @@ button.admin-logout-btn {
 }
 
 .referee-report-seal strong {
-  color: #6fcf97;
+  color: var(--racing-success);
   display: block;
   font-family: "Sora", sans-serif;
   font-size: 1rem;
@@ -4064,8 +4064,8 @@ button.admin-logout-btn {
 .app-skeleton__field,
 .app-skeleton__button,
 .app-skeleton__detail-media {
-  background: rgba(238, 231, 212, 0.13);
-  border: 1px solid rgba(238, 231, 212, 0.08);
+  background: rgba(var(--racing-contrast-rgb), 0.13);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.08);
   border-radius: 6px;
   display: block;
   overflow: hidden;
@@ -4126,7 +4126,7 @@ button.admin-logout-btn {
 .app-skeleton__detail,
 .app-skeleton__auth-card {
   background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(238, 231, 212, 0.16);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   border-radius: 8px;
 }
 
@@ -4257,7 +4257,7 @@ button.admin-logout-btn {
 .landing-page {
   padding: 0;
   overflow: hidden;
-  background: #3e5b49;
+  background: var(--racing-green-muted);
 }
 
 .landing-page .hero-layout {
@@ -4265,8 +4265,8 @@ button.admin-logout-btn {
   padding: 20px clamp(22px, 4vw, 72px) 0;
   background:
     radial-gradient(circle at 70% 28%, rgba(255, 151, 83, 0.09), transparent 24%),
-    radial-gradient(circle at 12% 18%, rgba(238, 231, 212, 0.07), transparent 30%),
-    #3e5b49;
+    radial-gradient(circle at 12% 18%, rgba(var(--racing-contrast-rgb), 0.07), transparent 30%),
+    var(--racing-green-muted);
   box-shadow: none;
 }
 
@@ -4275,7 +4275,7 @@ button.admin-logout-btn {
   min-height: 68px;
   margin: 0 auto;
   padding: 8px 10px 8px 18px;
-  border: 1px solid rgba(238, 231, 212, 0.16);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   border-radius: 16px;
   background: rgba(18, 44, 32, 0.34);
   box-shadow: 0 12px 36px rgba(14, 36, 26, 0.14);
@@ -4300,9 +4300,9 @@ button.admin-logout-btn {
 .landing-page .nav {
   gap: 4px;
   padding: 4px;
-  border: 1px solid rgba(238, 231, 212, 0.1);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.1);
   border-radius: 12px;
-  background: rgba(238, 231, 212, 0.055);
+  background: rgba(var(--racing-contrast-rgb), 0.055);
 }
 
 .landing-page .nav a {
@@ -4311,7 +4311,7 @@ button.admin-logout-btn {
   align-items: center;
   padding: 0 15px;
   border-radius: 9px;
-  color: rgba(238, 231, 212, 0.76);
+  color: rgba(var(--racing-contrast-rgb), 0.76);
   transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
@@ -4320,15 +4320,15 @@ button.admin-logout-btn {
 }
 
 .landing-page .nav a:hover {
-  color: #fff8ea;
-  background: rgba(238, 231, 212, 0.09);
+  color: var(--racing-text-strong);
+  background: rgba(var(--racing-contrast-rgb), 0.09);
   transform: translateY(-1px);
 }
 
 .landing-page .nav a.active,
 .landing-page .nav a.active:hover {
-  color: #17271e;
-  background: #eee7d4;
+  color: var(--racing-green-2);
+  background: var(--racing-contrast);
   transform: none;
 }
 
@@ -4345,26 +4345,26 @@ button.admin-logout-btn {
 }
 
 .landing-page .header-actions .signup-btn {
-  color: #eee7d4;
+  color: var(--racing-contrast);
   background: transparent;
 }
 
 .landing-page .header-actions .contact-btn {
   gap: 8px;
   color: #1b3025;
-  background: #eee7d4;
+  background: var(--racing-contrast);
   box-shadow: 0 10px 24px rgba(10, 30, 21, 0.18);
 }
 
 .landing-page .header-actions .signup-btn:hover {
-  color: #fff8ea;
-  background: rgba(238, 231, 212, 0.09);
+  color: var(--racing-text-strong);
+  background: rgba(var(--racing-contrast-rgb), 0.09);
   transform: none;
 }
 
 .landing-page .header-actions .contact-btn:hover {
-  color: #17271e;
-  background: #fff8ea;
+  color: var(--racing-green-2);
+  background: var(--racing-text-strong);
   box-shadow: 0 14px 28px rgba(10, 30, 21, 0.24);
   transform: translateY(-2px);
 }
@@ -4388,7 +4388,7 @@ button.admin-logout-btn {
 
 .landing-page .hero-description {
   max-width: 49ch;
-  color: rgba(238, 231, 212, 0.78);
+  color: rgba(var(--racing-contrast-rgb), 0.78);
   line-height: 1.65;
 }
 
@@ -4404,7 +4404,7 @@ button.admin-logout-btn {
 }
 
 .landing-page .trainer-card {
-  border-color: rgba(238, 231, 212, 0.15);
+  border-color: rgba(var(--racing-contrast-rgb), 0.15);
   background: rgba(20, 47, 35, 0.22);
 }
 
@@ -4412,7 +4412,7 @@ button.admin-logout-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
 }
 
 .landing-page .stats-row {
@@ -4423,7 +4423,7 @@ button.admin-logout-btn {
 
 .landing-page .stat-card {
   min-height: 160px;
-  border: 1px solid rgba(238, 231, 212, 0.13);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.13);
   border-radius: 12px;
   box-shadow: none;
 }
@@ -4457,7 +4457,7 @@ button.admin-logout-btn {
 .landing-page .horse-details::before {
   height: 3px;
   clip-path: none;
-  background: #ef762f;
+  background: var(--racing-accent-strong);
 }
 
 .landing-page .horse-details__header,
@@ -4490,7 +4490,7 @@ button.admin-logout-btn {
 }
 
 .landing-page .testimonial-card {
-  border-color: rgba(238, 231, 212, 0.16);
+  border-color: rgba(var(--racing-contrast-rgb), 0.16);
   box-shadow: 0 24px 55px rgba(13, 37, 26, 0.2);
 }
 
@@ -4499,8 +4499,8 @@ button.admin-logout-btn {
 }
 
 .landing-page .testimonials__nav:hover {
-  color: #17271e;
-  background: #fff8ea;
+  color: var(--racing-green-2);
+  background: var(--racing-text-strong);
   transform: translateY(-50%) scale(1.05);
 }
 
@@ -4602,9 +4602,9 @@ button.admin-logout-btn {
   --slide-step: 334px;
   width: 360px;
   height: 430px;
-  border: 1px solid rgba(238, 231, 212, 0.2);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
   border-radius: 14px;
-  background: rgba(238, 231, 212, 0.08);
+  background: rgba(var(--racing-contrast-rgb), 0.08);
   box-shadow: 0 24px 52px rgba(13, 37, 26, 0.26);
   filter: saturate(0.88);
   transform: translateX(calc(-50% + (var(--offset) * var(--slide-step)))) translateY(18px) scale(0.9);
@@ -4614,7 +4614,7 @@ button.admin-logout-btn {
   border-color: rgba(110, 77, 57, 0.14);
   background:
     radial-gradient(circle at 88% 8%, rgba(239, 118, 47, 0.13), transparent 28%),
-    #eee7d4;
+    var(--racing-contrast);
   box-shadow: 0 32px 72px rgba(13, 37, 26, 0.34);
   transform: translateX(-50%) translateY(0) scale(1);
 }
@@ -4850,8 +4850,8 @@ button.admin-logout-btn {
 .landing-page .topbar--minimal .contact-btn {
   min-height: 44px;
   padding: 0 18px;
-  border: 1px solid rgba(238, 231, 212, 0.22);
-  background: rgba(238, 231, 212, 0.94);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.22);
+  background: rgba(var(--racing-contrast-rgb), 0.94);
 }
 
 .landing-page .hero-grid {
@@ -4898,7 +4898,7 @@ button.admin-logout-btn {
 
 .landing-page .trainer-kicker {
   margin: 0 0 20px;
-  color: #ff9a52;
+  color: var(--racing-accent);
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.19em;
@@ -4917,7 +4917,7 @@ button.admin-logout-btn {
   height: 46px;
   display: grid;
   place-items: center;
-  border: 2px solid #3e5b49;
+  border: 2px solid var(--racing-green-muted);
   color: rgba(255, 248, 234, 0.9);
   font-family: "Sora", sans-serif;
   font-size: 0.68rem;
@@ -4953,7 +4953,7 @@ button.admin-logout-btn {
 }
 
 .landing-page .trainer-count {
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-size: 1.32rem;
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -4961,7 +4961,7 @@ button.admin-logout-btn {
 
 .landing-page .trainer-label {
   margin-top: 5px;
-  color: rgba(238, 231, 212, 0.62);
+  color: rgba(var(--racing-contrast-rgb), 0.62);
   font-size: 0.82rem;
 }
 
@@ -4972,8 +4972,8 @@ button.admin-logout-btn {
   align-items: center;
   gap: 12px;
   padding: 18px 0;
-  border-top: 1px solid rgba(238, 231, 212, 0.16);
-  border-bottom: 1px solid rgba(238, 231, 212, 0.16);
+  border-top: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   color: inherit;
   text-decoration: none;
   transition: border-color 180ms ease, transform 180ms ease;
@@ -4998,19 +4998,19 @@ button.admin-logout-btn {
   bottom: 50%;
   width: 6px;
   height: 6px;
-  background: #ff9a52;
+  background: var(--racing-accent);
   transform: translateY(50%);
 }
 
 .landing-page .explore-copy {
   display: grid;
   gap: 3px;
-  color: rgba(238, 231, 212, 0.62);
+  color: rgba(var(--racing-contrast-rgb), 0.62);
   font-size: 0.68rem;
 }
 
 .landing-page .explore-copy strong {
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-size: 0.86rem;
   font-weight: 750;
 }
@@ -5023,7 +5023,7 @@ button.admin-logout-btn {
 
 .landing-page .explore-rail:hover .play-btn {
   color: #263a2e;
-  background: #fff8ea;
+  background: var(--racing-text-strong);
   transform: rotate(-12deg);
 }
 
@@ -5127,14 +5127,14 @@ button.admin-logout-btn {
   min-height: 42px;
   padding: 0 2px;
   border-radius: 0;
-  color: rgba(238, 231, 212, 0.66);
+  color: rgba(var(--racing-contrast-rgb), 0.66);
   background: transparent;
   font-size: 0.84rem;
   font-weight: 680;
 }
 
 .landing-page .topbar--minimal .landing-nav a:hover {
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   background: transparent;
   transform: none;
 }
@@ -5142,7 +5142,7 @@ button.admin-logout-btn {
 .landing-page .topbar--minimal .landing-nav a.active,
 .landing-page .topbar--minimal .landing-nav a.active:hover {
   position: relative;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   background: transparent;
 }
 
@@ -5154,7 +5154,7 @@ button.admin-logout-btn {
   bottom: 2px;
   height: 2px;
   display: block;
-  background: #ef762f;
+  background: var(--racing-accent-strong);
 }
 
 @media (max-width: 1024px) {
@@ -5180,7 +5180,7 @@ button.admin-logout-btn {
     width: 100%;
     justify-content: center;
     padding-top: 8px;
-    border-top: 1px solid rgba(238, 231, 212, 0.12);
+    border-top: 1px solid rgba(var(--racing-contrast-rgb), 0.12);
     transform: none;
   }
 }
@@ -5215,7 +5215,7 @@ button.admin-logout-btn {
   align-items: center;
   gap: 9px;
   padding: 0 10px;
-  border-bottom: 1px solid rgba(238, 231, 212, 0.16);
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
@@ -5235,7 +5235,7 @@ button.admin-logout-btn {
 }
 
 .landing-page .landing-nav__label {
-  color: rgba(238, 231, 212, 0.72);
+  color: rgba(var(--racing-contrast-rgb), 0.72);
   font-size: 0.82rem;
   font-weight: 680;
   transition: color 180ms ease;
@@ -5243,12 +5243,12 @@ button.admin-logout-btn {
 
 .landing-page .topbar--minimal .landing-nav a:hover .landing-nav__index,
 .landing-page .topbar--minimal .landing-nav a.active .landing-nav__index {
-  color: #ff9a52;
+  color: var(--racing-accent);
 }
 
 .landing-page .topbar--minimal .landing-nav a:hover .landing-nav__label,
 .landing-page .topbar--minimal .landing-nav a.active .landing-nav__label {
-  color: #fff8ea;
+  color: var(--racing-text-strong);
 }
 
 .landing-page .topbar--minimal .landing-nav a.active {
@@ -5261,7 +5261,7 @@ button.admin-logout-btn {
   bottom: 0;
   width: auto;
   border-radius: 0;
-  background: linear-gradient(90deg, #ef762f 0 24%, rgba(239, 118, 47, 0.18) 24% 100%);
+  background: linear-gradient(90deg, var(--racing-accent-strong) 0 24%, rgba(239, 118, 47, 0.18) 24% 100%);
   transform: none;
 }
 
@@ -5292,7 +5292,7 @@ button.admin-logout-btn {
 .landing-page {
   background:
     radial-gradient(circle at 78% 18%, rgba(239, 118, 47, 0.18), transparent 28%),
-    radial-gradient(circle at 14% 24%, rgba(238, 231, 212, 0.08), transparent 32%),
+    radial-gradient(circle at 14% 24%, rgba(var(--racing-contrast-rgb), 0.08), transparent 32%),
     linear-gradient(135deg, #17281f 0%, #365744 54%, #22382d 100%);
 }
 
@@ -5303,7 +5303,7 @@ button.admin-logout-btn {
     linear-gradient(90deg, rgba(16, 30, 23, 0.68) 0%, rgba(16, 30, 23, 0.12) 46%, rgba(16, 30, 23, 0.28) 100%),
     radial-gradient(circle at 62% 52%, rgba(255, 248, 234, 0.13), transparent 21%),
     radial-gradient(circle at 80% 12%, rgba(239, 118, 47, 0.2), transparent 26%),
-    linear-gradient(135deg, #17291f 0%, #3e5b49 58%, #20372c 100%);
+    linear-gradient(135deg, #17291f 0%, var(--racing-green-muted) 58%, #20372c 100%);
   overflow: hidden;
 }
 
@@ -5312,7 +5312,7 @@ button.admin-logout-btn {
   position: absolute;
   inset: 90px 0 auto;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(238, 231, 212, 0.24), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--racing-contrast-rgb), 0.24), transparent);
   pointer-events: none;
 }
 
@@ -5326,7 +5326,7 @@ button.admin-logout-btn {
   border-radius: 50%;
   background:
     radial-gradient(ellipse at center, rgba(10, 25, 18, 0.56), rgba(10, 25, 18, 0.08) 58%, transparent 72%),
-    repeating-linear-gradient(90deg, rgba(238, 231, 212, 0.1) 0 1px, transparent 1px 26px);
+    repeating-linear-gradient(90deg, rgba(var(--racing-contrast-rgb), 0.1) 0 1px, transparent 1px 26px);
   filter: blur(1px);
   opacity: 0.78;
   transform: rotate(-6deg);
@@ -5340,7 +5340,7 @@ button.admin-logout-btn {
 
 .landing-page .brand-mark {
   font-size: 2.18rem;
-  color: #ff8f43;
+  color: var(--racing-accent-hover);
 }
 
 .landing-page .brand-text strong,
@@ -5358,7 +5358,7 @@ button.admin-logout-btn {
   min-height: 38px;
   display: inline-flex;
   padding: 0 0 7px;
-  border-bottom: 1px solid rgba(238, 231, 212, 0.15);
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.15);
 }
 
 .landing-page .landing-nav__index {
@@ -5366,7 +5366,7 @@ button.admin-logout-btn {
 }
 
 .landing-page .landing-nav__label {
-  color: rgba(238, 231, 212, 0.68);
+  color: rgba(var(--racing-contrast-rgb), 0.68);
   font-size: 0.88rem;
   font-weight: 760;
 }
@@ -5413,14 +5413,14 @@ button.admin-logout-btn {
 
 .landing-page .eyebrow {
   margin-bottom: 18px;
-  color: #ff8f43;
+  color: var(--racing-accent-hover);
   font-size: 0.76rem;
   letter-spacing: 0.38em;
 }
 
 .landing-page .hero-copy h1 {
   max-width: 650px;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-size: clamp(3.85rem, 4.85vw, 5.9rem);
   line-height: 0.94;
   letter-spacing: -0.072em;
@@ -5429,14 +5429,14 @@ button.admin-logout-btn {
 .landing-page .hero-copy h1 .hero-title-accent {
   display: block;
   width: max-content;
-  color: #ff8f43;
+  color: var(--racing-accent-hover);
   white-space: nowrap;
 }
 
 .landing-page .hero-description {
   max-width: 45ch;
   margin-top: 24px;
-  color: rgba(238, 231, 212, 0.74);
+  color: rgba(var(--racing-contrast-rgb), 0.74);
   font-size: clamp(1rem, 1.08vw, 1.15rem);
   line-height: 1.62;
 }
@@ -5476,12 +5476,12 @@ button.admin-logout-btn {
   top: 50%;
   width: min(45vw, 650px);
   height: min(45vw, 650px);
-  border: 1px solid rgba(238, 231, 212, 0.13);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.13);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 46%, rgba(238, 231, 212, 0.12), transparent 44%),
-    linear-gradient(160deg, rgba(238, 231, 212, 0.06), rgba(238, 231, 212, 0.015));
-  box-shadow: inset 0 0 80px rgba(238, 231, 212, 0.04);
+    radial-gradient(circle at 50% 46%, rgba(var(--racing-contrast-rgb), 0.12), transparent 44%),
+    linear-gradient(160deg, rgba(var(--racing-contrast-rgb), 0.06), rgba(var(--racing-contrast-rgb), 0.015));
+  box-shadow: inset 0 0 80px rgba(var(--racing-contrast-rgb), 0.04);
   transform: translate(-49%, -46%) rotate(-8deg);
   z-index: -2;
 }
@@ -5513,10 +5513,10 @@ button.admin-logout-btn {
   width: 100%;
   min-height: 245px;
   padding: 24px;
-  border: 1px solid rgba(238, 231, 212, 0.16);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(238, 231, 212, 0.105), rgba(238, 231, 212, 0.035)),
+    linear-gradient(180deg, rgba(var(--racing-contrast-rgb), 0.105), rgba(var(--racing-contrast-rgb), 0.035)),
     rgba(13, 35, 25, 0.3);
   box-shadow:
     inset 0 1px 0 rgba(255, 248, 234, 0.16),
@@ -5526,7 +5526,7 @@ button.admin-logout-btn {
 
 .landing-page .trainer-kicker {
   margin-bottom: auto;
-  color: #ff8f43;
+  color: var(--racing-accent-hover);
   letter-spacing: 0.16em;
 }
 
@@ -5540,13 +5540,13 @@ button.admin-logout-btn {
 
 .landing-page .trainer-count {
   margin-top: 4px;
-  color: #fff8ea;
+  color: var(--racing-text-strong);
   font-size: 1.85rem;
 }
 
 .landing-page .trainer-label {
   max-width: 18ch;
-  color: rgba(238, 231, 212, 0.66);
+  color: rgba(var(--racing-contrast-rgb), 0.66);
   line-height: 1.4;
 }
 
@@ -5555,7 +5555,7 @@ button.admin-logout-btn {
   grid-template-columns: minmax(0, 1fr) 46px;
   gap: 16px;
   padding: 18px 18px 18px 20px;
-  border: 1px solid rgba(238, 231, 212, 0.16);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
   border-radius: 18px;
   background: rgba(13, 35, 25, 0.2);
   backdrop-filter: blur(10px);
@@ -5577,7 +5577,7 @@ button.admin-logout-btn {
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: #ff8f43;
+  background: var(--racing-accent-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,14 +1,14 @@
 .referee-page {
-  --referee-ink: #fff8ea;
-  --referee-copy: #e6ddc8;
-  --referee-muted: #c8bba4;
-  --referee-line: rgba(238, 231, 212, 0.18);
-  --referee-surface: rgba(238, 231, 212, 0.065);
-  --referee-orange: #ff7b2b;
+  --referee-ink: var(--racing-text-strong);
+  --referee-copy: var(--racing-text-soft);
+  --referee-muted: var(--racing-text-muted);
+  --referee-line: rgba(var(--racing-contrast-rgb), 0.18);
+  --referee-surface: rgba(var(--racing-contrast-rgb), 0.065);
+  --referee-orange: var(--racing-accent-strong);
   background:
-    radial-gradient(circle at 78% 4%, rgba(255, 123, 43, 0.11), transparent 24rem),
-    linear-gradient(135deg, rgba(238, 231, 212, 0.025) 25%, transparent 25%) 0 0 / 2.4rem 2.4rem,
-    #14241b;
+    radial-gradient(circle at 78% 4%, rgba(var(--racing-accent-rgb), 0.11), transparent 24rem),
+    linear-gradient(135deg, rgba(var(--racing-contrast-rgb), 0.025) 25%, transparent 25%) 0 0 / 2.4rem 2.4rem,
+    var(--racing-green);
   color: var(--referee-ink);
   min-height: 100dvh;
   padding: 0;
@@ -25,9 +25,9 @@
 }
 
 .referee-skip-link {
-  background: #eee7d4;
+  background: var(--racing-contrast);
   border-radius: 0 0 6px 0;
-  color: #14241b;
+  color: var(--racing-green);
   font-weight: 800;
   left: 0;
   padding: 0.7rem 1rem;
@@ -109,7 +109,7 @@
 .referee-focus-card__pulse {
   background: var(--referee-orange);
   border-radius: 50%;
-  box-shadow: 0 0 0 0.3rem rgba(255, 123, 43, 0.12);
+  box-shadow: 0 0 0 0.3rem rgba(var(--racing-accent-rgb), 0.12);
   flex: 0 0 auto;
   height: 0.5rem;
   width: 0.5rem;
@@ -147,15 +147,15 @@
 }
 
 .referee-page .referee-nav a:hover {
-  background: rgba(238, 231, 212, 0.06);
+  background: rgba(var(--racing-contrast-rgb), 0.06);
   color: var(--referee-ink);
   transform: translateX(2px);
 }
 
 .referee-page .referee-nav a.active {
-  background: rgba(255, 123, 43, 0.1);
+  background: rgba(var(--racing-accent-rgb), 0.1);
   border-color: var(--referee-orange);
-  color: #ffd2b7;
+  color: var(--racing-accent-soft);
 }
 
 .referee-authority {
@@ -175,7 +175,7 @@
 }
 
 .referee-authority__heading {
-  color: #ffd2b7;
+  color: var(--racing-accent-soft);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -204,9 +204,9 @@
 }
 
 .referee-page .referee-avatar {
-  background: #ff7b2b;
+  background: var(--racing-accent-strong);
   border-radius: 6px;
-  color: #17261d;
+  color: var(--racing-green-2);
   font-weight: 900;
 }
 
@@ -241,7 +241,7 @@
 
 .referee-page .admin-header__eyebrow,
 .referee-page .admin-panel__eyebrow {
-  color: #ff9b5e;
+  color: var(--racing-accent);
   font-size: 0.68rem;
   letter-spacing: 0.2em;
 }
@@ -275,7 +275,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   box-shadow: 0 0.75rem 2rem rgba(5, 16, 10, 0.25);
-  color: #17261d;
+  color: var(--racing-green-2);
   gap: 0.5rem;
   min-height: 2.65rem;
   padding-inline: 1rem;
@@ -283,7 +283,7 @@
 
 .referee-page .admin-header__button--ghost {
   background: transparent;
-  border-color: rgba(238, 231, 212, 0.3);
+  border-color: rgba(var(--racing-contrast-rgb), 0.3);
   box-shadow: none;
   color: var(--referee-ink);
 }
@@ -299,7 +299,7 @@
 
 .referee-closure-tabs {
   align-items: center;
-  background: rgba(238, 231, 212, 0.06);
+  background: rgba(var(--racing-contrast-rgb), 0.06);
   border: 1px solid var(--referee-line);
   border-radius: 8px;
   display: inline-flex;
@@ -318,12 +318,12 @@
 }
 
 .referee-closure-tabs button.is-active {
-  background: #eee7d4;
-  color: #14241b;
+  background: var(--racing-contrast);
+  color: var(--racing-green);
 }
 
 .referee-page :is(a, button, input, select, textarea):focus-visible {
-  outline: 2px solid #ff9b5e;
+  outline: 2px solid var(--racing-accent);
   outline-offset: 3px;
 }
 
@@ -349,9 +349,9 @@
 }
 
 .referee-command-card--primary {
-  background: #eee7d4;
+  background: var(--racing-contrast);
   border-radius: 8px;
-  color: #17261d;
+  color: var(--racing-green-2);
   display: flex;
   flex-direction: column;
   min-height: 18rem;
@@ -381,7 +381,7 @@
 }
 
 .referee-command-card--primary > p {
-  color: #3b4d42;
+  color: var(--racing-green-muted);
   font-size: 0.86rem;
   margin: 0.7rem 0 1.25rem;
 }
@@ -402,7 +402,7 @@
 
 .referee-command-stack article {
   align-items: end;
-  background: rgba(238, 231, 212, 0.07);
+  background: rgba(var(--racing-contrast-rgb), 0.07);
   border: 1px solid var(--referee-line);
   border-radius: 8px;
   display: flex;
@@ -411,7 +411,7 @@
 }
 
 .referee-command-stack article > svg {
-  color: #ff9b5e;
+  color: var(--racing-accent);
   align-self: start;
 }
 
@@ -434,7 +434,7 @@
 
 .referee-focus-card {
   background: rgba(7, 20, 13, 0.55);
-  border: 1px solid rgba(255, 123, 43, 0.35);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.35);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -445,7 +445,7 @@
 
 .referee-focus-card__label {
   align-items: center;
-  color: #ffb181;
+  color: var(--racing-accent-soft);
   display: flex;
   font-size: 0.67rem;
   font-weight: 800;
@@ -496,7 +496,7 @@
 .referee-section-heading > a,
 .referee-race-card__footer a {
   align-items: center;
-  color: #ffb181;
+  color: var(--racing-accent-soft);
   display: inline-flex;
   font-size: 0.78rem;
   font-weight: 700;
@@ -524,7 +524,7 @@
 }
 
 .referee-phase-rail__index {
-  color: #ff9b5e;
+  color: var(--racing-accent);
   font-family: "Sora", sans-serif;
   font-size: 0.66rem;
 }
@@ -582,7 +582,7 @@
 }
 
 .referee-page .admin-data-table tbody tr:hover {
-  background: rgba(238, 231, 212, 0.055);
+  background: rgba(var(--racing-contrast-rgb), 0.055);
 }
 
 .referee-page .referee-table-link {
@@ -625,7 +625,7 @@
 
 .referee-search-field,
 .referee-select-field {
-  background: rgba(238, 231, 212, 0.06);
+  background: rgba(var(--racing-contrast-rgb), 0.06);
   border: 1px solid var(--referee-line);
   border-radius: 6px;
   min-height: 2.8rem;
@@ -660,13 +660,13 @@
 }
 
 .referee-select-field option {
-  background: #14241b;
+  background: var(--racing-green);
 }
 
 .referee-search-field:focus-within,
 .referee-select-field:focus-within {
-  border-color: #ff9b5e;
-  box-shadow: 0 0 0 3px rgba(255, 123, 43, 0.14);
+  border-color: var(--racing-accent);
+  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.14);
 }
 
 .referee-page .referee-race-grid {
@@ -684,7 +684,7 @@
 
 .referee-race-card__rail {
   align-items: center;
-  background: rgba(238, 231, 212, 0.055);
+  background: rgba(var(--racing-contrast-rgb), 0.055);
   border-right: 1px solid var(--referee-line);
   display: flex;
   flex-direction: column;
@@ -701,7 +701,7 @@
 }
 
 .referee-race-card__rail strong {
-  color: #ff9b5e;
+  color: var(--racing-accent);
   font-family: "Sora", sans-serif;
   font-size: 1.6rem;
 }
@@ -738,7 +738,7 @@
 }
 
 .referee-page .referee-race-card__meta svg {
-  color: #ff9b5e;
+  color: var(--racing-accent);
   flex: 0 0 auto;
 }
 
@@ -766,7 +766,7 @@
 }
 
 .referee-empty-state svg {
-  color: #ff9b5e;
+  color: var(--racing-accent);
 }
 
 .referee-empty-state h2,
@@ -824,9 +824,9 @@
 }
 
 .referee-row-actions button:hover {
-  background: rgba(255, 123, 43, 0.1);
-  border-color: rgba(255, 123, 43, 0.45);
-  color: #ffb181;
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  border-color: rgba(var(--racing-accent-rgb), 0.45);
+  color: var(--racing-accent-soft);
 }
 
 .referee-page .referee-violation-modal {
@@ -841,8 +841,8 @@
 }
 
 .referee-policy-preview {
-  background: rgba(238, 231, 212, 0.055);
-  border-left: 2px solid #ff9b5e;
+  background: rgba(var(--racing-contrast-rgb), 0.055);
+  border-left: 2px solid var(--racing-accent);
   border-radius: 0 6px 6px 0;
   display: grid;
   gap: 0.5rem;
@@ -855,7 +855,7 @@
 
 .referee-policy-preview > div {
   align-items: center;
-  color: #ffb181;
+  color: var(--racing-accent-soft);
   display: flex;
   font-size: 0.68rem;
   font-weight: 800;
@@ -903,8 +903,8 @@
 }
 
 .referee-evidence-links a {
-  border-bottom: 1px solid rgba(255, 123, 43, 0.55);
-  color: #ffb181;
+  border-bottom: 1px solid rgba(var(--racing-accent-rgb), 0.55);
+  color: var(--racing-accent-soft);
   font-size: 0.76rem;
   padding-bottom: 0.12rem;
 }
@@ -918,7 +918,7 @@
 
 .referee-admin-review-note {
   align-items: center;
-  color: #f6c659;
+  color: var(--racing-accent-soft);
   display: inline-flex;
   font-size: 0.78rem;
   font-weight: 700;
@@ -1174,7 +1174,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  background: rgba(238, 231, 212, 0.08);
+  background: rgba(var(--racing-contrast-rgb), 0.08);
   border: 1px solid var(--referee-line);
   border-radius: 8px;
   padding: 14px 20px;
@@ -1211,25 +1211,25 @@
 }
 
 .referee-global-btn--pass {
-  background: rgba(255, 123, 43, 0.15);
-  color: #ff9b5e;
-  border-color: rgba(255, 123, 43, 0.4);
+  background: rgba(var(--racing-accent-rgb), 0.15);
+  color: var(--racing-accent);
+  border-color: rgba(var(--racing-accent-rgb), 0.4);
 }
 
 .referee-global-btn--pass:hover:not(:disabled) {
-  background: rgba(255, 123, 43, 0.25);
+  background: rgba(var(--racing-accent-rgb), 0.25);
   transform: translateY(-1px);
 }
 
 .referee-global-btn--save {
-  background: #ff7b2b;
-  color: #14241b;
+  background: var(--racing-accent-strong);
+  color: var(--racing-green);
 }
 
 .referee-global-btn--save:hover:not(:disabled) {
-  background: #ff904d;
+  background: var(--racing-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 123, 43, 0.25);
+  box-shadow: 0 4px 12px rgba(var(--racing-accent-rgb), 0.25);
 }
 
 .referee-global-btn:disabled {
@@ -1256,14 +1256,14 @@
   display: flex;
   flex-direction: column;
   border: 1px solid var(--referee-line);
-  background: rgba(238, 231, 212, 0.05);
+  background: rgba(var(--racing-contrast-rgb), 0.05);
   border-radius: 8px;
   padding: 18px !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .referee-inspection-card:hover {
-  border-color: rgba(255, 123, 43, 0.35);
+  border-color: rgba(var(--racing-accent-rgb), 0.35);
   box-shadow: 0 8px 24px rgba(8, 24, 14, 0.25);
 }
 
@@ -1299,7 +1299,7 @@
 .referee-info-grid-compact > div {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px dashed rgba(238, 231, 212, 0.08);
+  border-bottom: 1px dashed rgba(var(--racing-contrast-rgb), 0.08);
   padding-bottom: 4px;
 }
 
@@ -1327,14 +1327,14 @@
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #ff9b5e;
+  color: var(--racing-accent);
   letter-spacing: 0.05em;
 }
 
 .referee-single-pass-btn {
   background: transparent;
-  border: 1px solid rgba(255, 123, 43, 0.35);
-  color: #ff9b5e;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.35);
+  color: var(--racing-accent);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -1344,8 +1344,8 @@
 }
 
 .referee-single-pass-btn:hover {
-  background: rgba(255, 123, 43, 0.15);
-  border-color: #ff9b5e;
+  background: rgba(var(--racing-accent-rgb), 0.15);
+  border-color: var(--racing-accent);
 }
 
 .referee-checklist-grid-compact {
@@ -1355,7 +1355,7 @@
   background: rgba(255, 255, 255, 0.02);
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid rgba(238, 231, 212, 0.08);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.08);
 }
 
 .referee-check-item-compact {
@@ -1369,7 +1369,7 @@
 }
 
 .referee-check-item-compact input[type="checkbox"] {
-  accent-color: #ff7b2b;
+  accent-color: var(--racing-accent-strong);
   cursor: pointer;
 }
 
@@ -1395,7 +1395,7 @@
 }
 
 .referee-card-form-grid select {
-  background: #14241b;
+  background: var(--racing-green);
   color: var(--referee-ink);
   border: 1px solid var(--referee-line);
   border-radius: 6px;
@@ -1405,11 +1405,11 @@
 }
 
 .referee-card-form-grid select:focus {
-  border-color: #ff9b5e;
+  border-color: var(--racing-accent);
 }
 
 .referee-card-form-grid textarea {
-  background: #14241b;
+  background: var(--racing-green);
   color: var(--referee-ink);
   border: 1px solid var(--referee-line);
   border-radius: 6px;
@@ -1420,7 +1420,7 @@
 }
 
 .referee-card-form-grid textarea:focus {
-  border-color: #ff9b5e;
+  border-color: var(--racing-accent);
 }
 
 .referee-card-footer {
@@ -1433,9 +1433,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 123, 43, 0.1);
-  color: #ff9b5e;
-  border: 1px solid rgba(255, 123, 43, 0.4);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  color: var(--racing-accent);
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.4);
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -1445,8 +1445,8 @@
 }
 
 .referee-save-btn:hover:not(:disabled) {
-  background: rgba(255, 123, 43, 0.2);
-  border-color: #ff9b5e;
+  background: rgba(var(--racing-accent-rgb), 0.2);
+  border-color: var(--racing-accent);
   transform: translateY(-1px);
 }
 
@@ -1460,14 +1460,14 @@
   padding: 0 8px;
   border: 1px solid var(--referee-line);
   border-radius: 5px;
-  background: #14241b;
+  background: var(--racing-green);
   color: var(--referee-ink);
   font: inherit;
   font-size: 0.76rem;
 }
 
 .referee-result-editor input:focus {
-  border-color: #ff9b5e;
+  border-color: var(--racing-accent);
   outline: none;
 }
 

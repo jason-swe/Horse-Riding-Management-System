@@ -13,6 +13,8 @@ import RaceDetail from "./pages/spectator/RaceDetail";
 import Predictions from "./pages/spectator/Predictions";
 import PredictionDetail from "./pages/spectator/PredictionDetail";
 import Profile from "./pages/spectator/Profile";
+import Deposit from "./pages/spectator/Deposit";
+import PaymentReturn from "./pages/spectator/PaymentReturn";
 import Results from "./pages/spectator/Results";
 import RoleApplications from "./pages/applications/RoleApplications";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
@@ -94,6 +96,7 @@ function App() {
       <Route path="/referee/races/:raceId/closure" element={<ProtectedRoute role="race_referee"><RaceClosure /></ProtectedRoute>} />
 
       <Route element={<ProtectedRoute role="spectator"><MainLayout /></ProtectedRoute>}>
+        <Route path="/payment-success" element={<PaymentReturn />} />
         <Route path="/spectator" element={<SpectatorHome />} />
         <Route path="/spectator/tournaments" element={<TournamentList />} />
         <Route path="/spectator/tournaments/:tournamentId" element={<TournamentDetail />} />
@@ -102,6 +105,8 @@ function App() {
         <Route path="/spectator/predictions/races/:raceId" element={<PredictionDetail />} />
         <Route path="/spectator/predictions/:tournamentId" element={<Navigate to="/spectator/predictions" replace />} />
         <Route path="/spectator/profile" element={<Profile />} />
+        <Route path="/spectator/deposit" element={<Deposit />} />
+        <Route path="/spectator/payment-success" element={<PaymentReturn />} />
         <Route path="/spectator/results" element={<Results />} />
         <Route path="/spectator/role-applications" element={<RoleApplications />} />
       </Route>

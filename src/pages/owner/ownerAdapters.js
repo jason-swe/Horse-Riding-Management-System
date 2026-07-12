@@ -35,6 +35,18 @@ function getAgeFromBirthDate(dateOfBirth) {
   return age > 0 ? age : "Not set";
 }
 
+function getDateInputValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
+}
+
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== "";
+}
+
 function getNumberFromWeight(value) {
   if (value === undefined || value === null || value === "") return undefined;
   const parsed = Number(String(value).replace(/[^\d.]/g, ""));
@@ -43,24 +55,32 @@ function getNumberFromWeight(value) {
 
 export function toOwnerHorse(apiHorse) {
   const displayStatus = getDisplayStatus(apiHorse.status);
-  const weightValue = apiHorse.weight ? `${apiHorse.weight} kg` : "Not set";
-  const registrationNumber = apiHorse.registration_number || apiHorse._id?.slice(-6) || "No registration";
+  const weightValue = hasValue(apiHorse.weight) ? `${apiHorse.weight} kg` : "";
+  const registrationNumber = apiHorse.registration_number || "";
+  const dateOfBirth = getDateInputValue(apiHorse.date_of_birth);
+  const age = getAgeFromBirthDate(apiHorse.date_of_birth);
+  const healthNote = apiHorse.health_status || "";
 
   return {
     id: apiHorse._id,
     registrationNumber,
     name: apiHorse.name || "Unnamed horse",
-    breed: apiHorse.breed || "Unknown breed",
-    age: getAgeFromBirthDate(apiHorse.date_of_birth),
-    height: "Not set",
+    breed: apiHorse.breed || "",
+    gender: apiHorse.gender || "",
+    color: apiHorse.color || "",
+    dateOfBirth,
+    age,
     weight: weightValue,
     status: displayStatus,
-    readiness: displayStatus === "Ready" ? 90 : 60,
-    jockey: "Unassigned",
-    nextRace: "Unassigned",
-    healthNote: apiHorse.health_status || "No health status recorded yet.",
-    record: "No race record",
+    healthNote,
     imageUrl: apiHorse.image_url,
+    facts: [
+      apiHorse.breed ? { label: "Breed", value: apiHorse.breed } : null,
+      apiHorse.gender ? { label: "Gender", value: apiHorse.gender } : null,
+      apiHorse.color ? { label: "Color", value: apiHorse.color } : null,
+      age !== "Not set" ? { label: "Age", value: `${age} yrs` } : null,
+      weightValue ? { label: "Weight", value: weightValue } : null,
+    ].filter(Boolean),
     raw: apiHorse,
   };
 }
@@ -103,6 +123,10 @@ export function toHorsePayload(form) {
   const weight = getNumberFromWeight(form.weight);
   if (weight !== undefined) {
     payload.weight = weight;
+  }
+
+  if (form.dateOfBirth) {
+    payload.date_of_birth = form.dateOfBirth;
   }
 
   return payload;
@@ -165,13 +189,53 @@ export function toOwnerJockey(apiJockey, index = 0) {
 }
 
 export function toOwnerTournament(apiTournament, index = 0) {
+  const startDate = getDisplayDate(apiTournament.start_date, "");
+  const endDate = getDisplayDate(apiTournament.end_date, "");
+  const entryFee = Number(apiTournament.entry_fee || 0);
+  const entryFeeShare = Number(apiTournament.entry_fee_share ?? entryFee);
+
   return {
     id: apiTournament._id || apiTournament.id || `T-${index + 1}`,
     name: apiTournament.name || `Tournament ${index + 1}`,
-    location: apiTournament.location || "Location TBD",
+    description: apiTournament.description || "",
+    location: apiTournament.location || "",
     status: getDisplayStatus(apiTournament.status || "active"),
-    date: apiTournament.start_date ? new Date(apiTournament.start_date).toISOString().slice(0, 10) : "TBD",
+    date: startDate && endDate ? `${startDate} to ${endDate}` : startDate || endDate || "",
+    prizePool: Number(apiTournament.prize_pool || 0),
+    prizeCurrency: apiTournament.prize_currency || apiTournament.entry_fee_currency || "VND",
+    entryFee,
+    entryFeeCurrency: apiTournament.entry_fee_currency || apiTournament.prize_currency || "VND",
+    entryFeeShare,
+    raceCount: Number(apiTournament.race_count || 0),
+    expectedParticipants: Number(apiTournament.expected_participants || 0),
     raw: apiTournament,
+  };
+}
+
+export function toOwnerRaceOption(apiRace, index = 0) {
+  const round = apiRace.round_id || apiRace.round || {};
+  const raceDate = apiRace.race_date ? new Date(apiRace.race_date) : null;
+  const hasRaceDate = raceDate && !Number.isNaN(raceDate.getTime());
+  const lockDate = apiRace.registration_lock_at ? new Date(apiRace.registration_lock_at) : null;
+  const hasLockDate = lockDate && !Number.isNaN(lockDate.getTime());
+
+  return {
+    id: apiRace._id || apiRace.id || `R-${index + 1}`,
+    name: apiRace.name || `Race ${index + 1}`,
+    round: getName(round, ""),
+    roundOrder: round.round_order || "",
+    status: getDisplayStatus(apiRace.status || "scheduled"),
+    date: hasRaceDate ? raceDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "",
+    clock: hasRaceDate ? raceDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "",
+    location: apiRace.location || "",
+    distance: hasValue(apiRace.distance) ? `${apiRace.distance}m` : "",
+    maxParticipants: hasValue(apiRace.max_participants) ? String(apiRace.max_participants) : "",
+    prizePool: Number(apiRace.prize_pool || 0),
+    prizeCurrency: apiRace.prize_currency || "VND",
+    registrationLock: hasLockDate
+      ? `${lockDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}, ${lockDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
+      : "",
+    raw: apiRace,
   };
 }
 
@@ -213,6 +277,11 @@ export function toOwnerRegistration(apiRegistration, index = 0) {
     submitted: date,
     note: apiRegistration.note || apiRegistration.admin_note || "No note recorded.",
     status: getRegistrationStatus(apiRegistration.status),
+    entryFeeVnd: Number(apiRegistration.entry_fee_vnd || 0),
+    entryFeeToken: Number(apiRegistration.entry_fee_token || 0),
+    paymentStatus: titleCaseStatus(apiRegistration.payment_status || "not_required", "Not Required"),
+    paymentPaidAt: apiRegistration.payment_paid_at || null,
+    paymentRefundedAt: apiRegistration.payment_refunded_at || null,
     raceDate: race.race_date || null,
     venue: race.location || "Venue unavailable",
     round: getName(race.round_id || race.round, "Round unavailable"),

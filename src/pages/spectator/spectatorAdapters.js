@@ -63,6 +63,17 @@ function formatDateDisplay(value) {
   });
 }
 
+function formatLocalDateDisplay(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function formatTimeDisplay(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -172,7 +183,7 @@ export function toSpectatorRace(apiRace) {
     roundName: apiRace.round_id?.name || apiRace.round?.name || apiRace.round_name || null,
     roundOrder: apiRace.round_id?.round_order ?? null,
     raceDate: hasValidDate ? date.toISOString() : null,
-    raceDateDisplay: hasValidDate ? formatDateDisplay(raceDate) : null,
+    raceDateDisplay: hasValidDate ? formatLocalDateDisplay(raceDate) : null,
     time: hasValidDate
       ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       : null,

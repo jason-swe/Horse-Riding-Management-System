@@ -14,12 +14,13 @@ export function useJockeyApiData() {
     setError("");
 
     try {
-      const [me, approvalStatus, assignments, schedule, results, stats, violations] = await Promise.all([
+      const [me, approvalStatus, assignments, schedule, results, prizeAwards, stats, violations] = await Promise.all([
         jockeyApi.getMe(),
         jockeyApi.getApprovalStatus(),
         jockeyApi.getAssignments(),
         jockeyApi.getSchedule(),
         jockeyApi.getResults(),
+        jockeyApi.getPrizeAwards(),
         jockeyApi.getStats(),
         jockeyApi.getViolations(),
       ]);
@@ -30,12 +31,13 @@ export function useJockeyApiData() {
         assignments,
         schedule,
         results,
+        prizeAwards,
         stats,
         violations,
         user,
       }));
     } catch (apiError) {
-      setError(apiError.message || "Unable to load live jockey data. Showing sample workspace data.");
+      setError(apiError.message || "Unable to load live jockey data.");
       setState(adaptJockeyApiData({ user }));
     } finally {
       setIsLoading(false);

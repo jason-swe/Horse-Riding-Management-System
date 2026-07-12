@@ -1,11 +1,3 @@
-import {
-  jockeyAssignments,
-  jockeyInvitations,
-  jockeyProfile,
-  jockeyResults,
-  jockeySchedule,
-} from "./jockeyData";
-
 const monthFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
   day: "2-digit",
@@ -69,6 +61,18 @@ function normalizeStatus(status, fallback = "Pending") {
   };
 
   return map[value] || value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatMoney(value, currency = "VND") {
+  const amount = Number(value || 0);
+
+  if (!amount) return "-";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: currency === "VND" ? 0 : 2,
+  }).format(amount);
 }
 
 function mapAssignment(item, index = 0) {
@@ -139,6 +143,29 @@ function mapResult(item, index = 0) {
   };
 }
 
+function mapPrizeAward(item, index = 0) {
+  const result = item.race_result_id || item.race_result || {};
+  const prize = item.prize_id || item.prize || {};
+  const race = result.race_id || result.race || prize.race_id || prize.race || {};
+  const horse = item.horse_id || result.horse_id || result.horse || {};
+  const position = Number(result.final_position ?? result.position ?? item.position ?? index + 1);
+  const finishTime = result.final_finish_time ?? result.finish_time ?? result.raw_finish_time;
+
+  return {
+    id: getId(item) || `AWARD-${index + 1}`,
+    date: formatRaceTime(race.race_date || result.created_at || item.awarded_at || item.calculated_at).split(", ")[0],
+    race: getName(race, `Race ${index + 1}`),
+    horse: getName(horse, `Horse ${index + 1}`),
+    position,
+    time: finishTime !== null && finishTime !== undefined && finishTime !== "" && !Number.isNaN(Number(finishTime))
+      ? `${Number(finishTime).toFixed(2)}s`
+      : "TBA",
+    prize: formatMoney(item.jockey_amount ?? 0, item.currency || prize.currency || "VND"),
+    grossPrize: formatMoney(item.gross_amount ?? item.amount ?? 0, item.currency || prize.currency || "VND"),
+    status: normalizeStatus(item.status, "Published"),
+  };
+}
+
 function mapProfile(data, user, stats, approvalStatus) {
   const profile = data?.jockey || data?.profile || data?.jockey_profile || data || {};
   const account = data?.user || user || {};
@@ -150,23 +177,24 @@ function mapProfile(data, user, stats, approvalStatus) {
   const status = approved.is_approved || profile.status === "active" ? "Available" : normalizeStatus(profile.status, "Review");
 
   return {
-    ...jockeyProfile,
-    id: profile._id || approved.jockey_id || jockeyProfile.id,
-    name: account.full_name || profile.full_name || jockeyProfile.name,
-    email: account.email || jockeyProfile.email,
-    phone: account.phone_number || jockeyProfile.phone,
-    location: profile.location || profile.address || jockeyProfile.location,
-    license: profile.license_number ? `License ${profile.license_number}` : jockeyProfile.license,
+    id: profile._id || approved.jockey_id || "Jockey profile",
+    name: account.full_name || profile.full_name || "Jockey profile",
+    email: account.email || "Email not recorded",
+    phone: account.phone_number || "Phone not recorded",
+    location: profile.location || profile.address || "Location not recorded",
+    license: profile.license_number ? `License ${profile.license_number}` : "License not recorded",
     status,
-    stableConnection: profile.stable_name || jockeyProfile.stableConnection,
-    weightClass: profile.weight ? `${profile.weight} kg class` : jockeyProfile.weightClass,
+    season: "Season 2026",
+    stableConnection: profile.stable_name || "Stable not recorded",
+    weightClass: profile.weight ? `${profile.weight} kg class` : "Weight class not recorded",
+    availability: "Availability pending",
     height: profile.height || "",
     weight: profile.weight || "",
     experienceYears: profile.experience_years || 0,
     licenseNumber: profile.license_number || "",
     apiStatus: profile.status || "active",
-    winRate: totalRaces ? `${Math.round(winRate)}%` : jockeyProfile.winRate,
-    podiumRate: totalRaces ? `${podiumRate}%` : jockeyProfile.podiumRate,
+    winRate: totalRaces ? `${Math.round(winRate)}%` : "0%",
+    podiumRate: totalRaces ? `${podiumRate}%` : "0%",
   };
 }
 
@@ -189,7 +217,7 @@ function mapViolation(item, index = 0) {
   };
 }
 
-export function adaptJockeyApiData({ me, assignments, schedule, results, stats, violations, approvalStatus, user }) {
+export function adaptJockeyApiData({ me, assignments, schedule, results, prizeAwards, stats, violations, approvalStatus, user }) {
   const assignmentItems = asArray(assignments, "assignments").map(mapAssignment);
   const scheduleItems = asArray(schedule, "schedule").map((item, index) => {
     const mapped = item.race_id || item.horse_id ? mapAssignment(item, index) : mapAssignment({ ...item, status: item.status || "accepted" }, index);
@@ -205,21 +233,27 @@ export function adaptJockeyApiData({ me, assignments, schedule, results, stats, 
     };
   });
   const resultItems = asArray(results, "results").map(mapResult);
+  const rawPrizeAwards = asArray(prizeAwards, "awards");
+  const prizeAwardItems = rawPrizeAwards.map(mapPrizeAward);
   const violationItems = asArray(violations, "violations").map(mapViolation);
   const normalizedStats = stats?.stats || stats || {};
-  const profile = mapProfile(me, user, normalizedStats, approvalStatus);
-  const sourceAssignments = assignmentItems.length ? assignmentItems : jockeyAssignments;
-  const sourceSchedule = scheduleItems.length ? scheduleItems : jockeySchedule;
-  const sourceResults = resultItems.length ? resultItems : jockeyResults;
+  const prizeAwardTotal = rawPrizeAwards.reduce((total, award) => total + Number(award?.jockey_amount || 0), 0);
+  const prizeAwardCurrency = rawPrizeAwards[0]?.currency || rawPrizeAwards[0]?.prize_id?.currency || "VND";
+  const baseProfile = mapProfile(me, user, normalizedStats, approvalStatus);
+  const profile = {
+    ...baseProfile,
+    earnings: prizeAwardItems.length ? formatMoney(prizeAwardTotal, prizeAwardCurrency) : formatMoney(0, prizeAwardCurrency),
+  };
+  const sourceResults = prizeAwardItems.length ? prizeAwardItems : resultItems;
 
   return {
     profile,
-    assignments: sourceAssignments,
-    invitations: sourceAssignments.length ? sourceAssignments : jockeyInvitations,
-    schedule: sourceSchedule,
+    assignments: assignmentItems,
+    invitations: assignmentItems,
+    schedule: scheduleItems,
     results: sourceResults,
     stats: normalizedStats,
     violations: violationItems,
-    usedFallback: !assignmentItems.length && !scheduleItems.length && !resultItems.length,
+    usedFallback: false,
   };
 }

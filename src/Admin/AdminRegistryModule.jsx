@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, RefreshCw, Search, ShieldCheck, UserRoundCheck, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../api/adminApi";
@@ -55,7 +55,7 @@ function profileFields(moduleName, profile) {
     ["Races", String(profile.total_races || 0)],
     ["Wins", String(profile.total_wins || 0)],
     ["Discipline", statusLabel(profile.disciplinary_status)],
-    ["Suspended until", profile.suspended_until ? new Date(profile.suspended_until).toLocaleDateString() : "—"],
+    ["Suspended until", profile.suspended_until ? new Date(profile.suspended_until).toLocaleDateString() : "-"],
   ];
   return [
     ["Licence", profile.license_number || "Not set"],
@@ -124,7 +124,7 @@ function AdminRegistryModule({ moduleName }) {
       {loading ? <LoadingSkeleton ariaLabel={`Loading ${config.title}`} rows={7} variant="table" /> : (
         <section className={`admin-registry-workspace${selected ? " admin-registry-workspace--detail" : ""}`}>
           <article className="admin-registry-ledger">
-            <header><div><Icon size={19} aria-hidden="true" /><span><strong>{config.title}</strong><small>{pagination.total || 0} records</small></span></div><span>20 rows per page</span></header>
+            <header><div><Icon size={19} aria-hidden="true" /><span><strong>{config.title}</strong><small>{pagination.total || 0} records</small></span></div><span>Pending first - 20 rows per page</span></header>
             {rows.length ? <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Name</th><th>Email</th><th>Licence</th><th>Experience</th><th>Status</th><th><span className="sr-only">Review</span></th></tr></thead><tbody>{rows.map((row) => <tr className={selected?.id === row.id ? "admin-command-row--selected" : ""} key={row.id}><td><strong>{row.user.full_name || "Unnamed user"}</strong><small className="admin-competition__id">{row.id}</small></td><td>{row.user.email || "Not set"}</td><td>{row.profile.license_number || "Not set"}</td><td>{row.profile.experience_years || 0} years</td><td><StatusBadge value={row.user.status} /></td><td><button className="admin-command-review" type="button" onClick={() => setSelected(row)}>Review<ArrowRight size={15} aria-hidden="true" /></button></td></tr>)}</tbody></table></div> : <div className="admin-command-empty"><Icon size={28} aria-hidden="true" /><div><h3>No profiles found</h3><p>Change the filters to view more records.</p></div></div>}
             {totalPages > 1 && <nav className="admin-command-pagination" aria-label={`${config.title} pages`}><span>Page {page} of {totalPages}</span><div><button disabled={page === 1} type="button" onClick={() => setPage(page - 1)}>Previous</button>{Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => <button key={number} className={number === page ? "active" : ""} aria-current={number === page ? "page" : undefined} type="button" onClick={() => setPage(number)}>{number}</button>)}<button disabled={page === totalPages} type="button" onClick={() => setPage(page + 1)}>Next</button></div></nav>}
           </article>

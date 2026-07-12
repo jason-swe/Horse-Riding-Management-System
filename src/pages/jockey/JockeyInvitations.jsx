@@ -105,9 +105,19 @@ function JockeyInvitations() {
           <p>Review owner requests, horse context, venue, and race timing before locking your availability.</p>
         </div>
         <aside className="jockey-invitations-hero__panel">
-          <span className={`jockey-badge ${statusClass(featuredInvite.status)}`}>{featuredInvite.status}</span>
-          <strong>{featuredInvite.horse}</strong>
-          <p>{featuredInvite.assignmentTypeLabel} / {featuredInvite.race} / {featuredInvite.date}</p>
+          {featuredInvite ? (
+            <>
+              <span className={`jockey-badge ${statusClass(featuredInvite.status)}`}>{featuredInvite.status}</span>
+              <strong>{featuredInvite.horse}</strong>
+              <p>{featuredInvite.assignmentTypeLabel} / {featuredInvite.race} / {featuredInvite.date}</p>
+            </>
+          ) : (
+            <>
+              <span className="jockey-badge jockey-badge--muted">Clear</span>
+              <strong>No invitations</strong>
+              <p>Owner requests will appear here when a horse is assigned to you.</p>
+            </>
+          )}
         </aside>
       </section>
 

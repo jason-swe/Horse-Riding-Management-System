@@ -97,6 +97,10 @@ export const jockeyApi = {
     return apiRequest("/jockeys/me/results");
   },
 
+  getPrizeAwards(params = {}) {
+    return apiRequest(withQuery("/prizes", params));
+  },
+
   getStats() {
     return apiRequest("/jockeys/me/stats");
   },

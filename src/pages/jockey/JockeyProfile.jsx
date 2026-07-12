@@ -16,7 +16,6 @@ import {
 import { useEffect, useState } from "react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import {
-  jockeyNotifications,
   jockeyPortraits,
 } from "./jockeyData";
 import { useJockeyApiData } from "./useJockeyApiData";
@@ -40,6 +39,20 @@ function JockeyProfile() {
   const nextRace = schedule[0];
   const latestResult = results[0];
   const confirmedAssignments = assignments.filter((assignment) => assignment.status === "Accepted").length;
+  const activityItems = [
+    ...assignments.slice(0, 3).map((assignment) => ({
+      title: `${assignment.horse} is ${assignment.status.toLowerCase()}.`,
+      meta: assignment.race,
+    })),
+    ...(latestResult ? [{
+      title: `${latestResult.race} result was published.`,
+      meta: latestResult.prize,
+    }] : []),
+    ...(nextRace ? [{
+      title: `${nextRace.race} is on your schedule.`,
+      meta: nextRace.time,
+    }] : []),
+  ].slice(0, 4);
 
   useEffect(() => {
     setForm({
@@ -111,7 +124,7 @@ function JockeyProfile() {
         <aside className="jockey-profile-hero__panel">
           <span className="jockey-kicker">Next availability</span>
           <strong>{profile.availability}</strong>
-          <p>{nextRace.race} / {nextRace.horse}</p>
+          <p>{nextRace ? `${nextRace.race} / ${nextRace.horse}` : "No scheduled race"}</p>
         </aside>
       </section>
 
@@ -173,38 +186,46 @@ function JockeyProfile() {
           <div className="jockey-profile-card__header">
             <div>
               <span className="jockey-kicker">Next race</span>
-              <h2>{nextRace.race}</h2>
+              <h2>{nextRace?.race || "No scheduled race"}</h2>
             </div>
-            <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>
+            {nextRace && <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>}
           </div>
 
-          <div className="jockey-profile-next__body">
-            <div className="jockey-date-block">
-              <span>{nextRace.time.split(", ")[0]}</span>
-              <strong>{nextRace.time.split(", ")[1]}</strong>
+          {nextRace ? (
+            <div className="jockey-profile-next__body">
+              <div className="jockey-date-block">
+                <span>{nextRace.time.split(", ")[0]}</span>
+                <strong>{nextRace.time.split(", ")[1] || "TBA"}</strong>
+              </div>
+              <div>
+                <strong>{nextRace.horse}</strong>
+                <span>{nextRace.tournament} / {nextRace.round}</span>
+                <small><MapPin size={13} /> {nextRace.venue}</small>
+              </div>
             </div>
-            <div>
-              <strong>{nextRace.horse}</strong>
-              <span>{nextRace.tournament} / {nextRace.round}</span>
-              <small><MapPin size={13} /> {nextRace.venue}</small>
-            </div>
-          </div>
+          ) : (
+            <div className="jockey-profile-empty">Accepted assignments will create your next race card.</div>
+          )}
         </article>
 
         <article className="jockey-profile-card jockey-profile-result">
           <div className="jockey-profile-card__header">
             <div>
               <span className="jockey-kicker">Latest result</span>
-              <h2>{latestResult.race}</h2>
+              <h2>{latestResult?.race || "No published result"}</h2>
             </div>
             <Trophy size={20} />
           </div>
 
-          <div className="jockey-profile-result__metrics">
-            <div><span>Finish</span><strong>#{latestResult.position}</strong></div>
-            <div><span>Time</span><strong>{latestResult.time}</strong></div>
-            <div><span>Prize</span><strong>{latestResult.prize}</strong></div>
-          </div>
+          {latestResult ? (
+            <div className="jockey-profile-result__metrics">
+              <div><span>Finish</span><strong>#{latestResult.position}</strong></div>
+              <div><span>Time</span><strong>{latestResult.time}</strong></div>
+              <div><span>Prize</span><strong>{latestResult.prize}</strong></div>
+            </div>
+          ) : (
+            <div className="jockey-profile-empty">Results will appear after race publication.</div>
+          )}
         </article>
 
         <article className="jockey-profile-card jockey-profile-activity">
@@ -217,15 +238,16 @@ function JockeyProfile() {
           </div>
 
           <div className="jockey-profile-activity__list">
-            {jockeyNotifications.map((item, index) => (
-              <div className="jockey-profile-activity__item" key={item}>
+            {activityItems.map((item, index) => (
+              <div className="jockey-profile-activity__item" key={`${item.title}-${index}`}>
                 <span>{index + 1}</span>
                 <div>
-                  <strong>{item}</strong>
-                  <small>{index === 0 ? "Just now" : index === 1 ? "18 min ago" : "Today"}</small>
+                  <strong>{item.title}</strong>
+                  <small>{item.meta}</small>
                 </div>
               </div>
             ))}
+            {!activityItems.length && <div className="jockey-profile-empty">No current profile activity.</div>}
           </div>
         </article>
 

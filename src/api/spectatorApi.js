@@ -26,6 +26,10 @@ export const spectatorApi = {
     return apiRequest(withQuery("/races", params));
   },
 
+  getRaceOdds(raceId) {
+    return apiRequest(`/races/${raceId}/odds`);
+  },
+
   listRaceResults(params = {}) {
     return apiRequest(withQuery("/race-results", params));
   },

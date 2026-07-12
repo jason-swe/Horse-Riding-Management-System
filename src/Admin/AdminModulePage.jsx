@@ -1,6 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 import AdminCommandModule from "./AdminCommandModule";
 import AdminCompetitionModule from "./AdminCompetitionModule";
+import AdminDepositModule from "./AdminDepositModule";
+import AdminIncidentModule from "./AdminIncidentModule";
 import AdminLayout from "./AdminLayout";
 import AdminRegistryModule from "./AdminRegistryModule";
 
@@ -11,6 +13,8 @@ const registryModules = new Set(["jockeys", "referees"]);
 function AdminModulePage() {
   const { module: moduleName } = useParams();
 
+  if (moduleName === "incidents") return <AdminIncidentModule />;
+  if (moduleName === "deposits") return <AdminDepositModule />;
   if (commandModules.has(moduleName)) return <AdminCommandModule moduleName={moduleName} />;
   if (competitionModules.has(moduleName)) return <AdminCompetitionModule moduleName={moduleName} />;
   if (registryModules.has(moduleName)) return <AdminRegistryModule moduleName={moduleName} />;

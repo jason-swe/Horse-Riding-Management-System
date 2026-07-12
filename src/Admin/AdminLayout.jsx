@@ -2,9 +2,11 @@ import { Link, NavLink } from "react-router-dom";
 import {
   CalendarRange,
   ClipboardCheck,
+  CircleDollarSign,
   Flag,
   Gauge,
   LogOut,
+  ShieldAlert,
   ShieldCheck,
   Trophy,
   UserRoundCheck,
@@ -19,7 +21,9 @@ const navigationGroups = [
     items: [
       { to: "/admin", label: "Overview", icon: Gauge, end: true },
       { to: "/admin/registrations", label: "Approvals", icon: ClipboardCheck },
+      { to: "/admin/incidents", label: "Incidents", icon: ShieldAlert },
       { to: "/admin/results", label: "Results", icon: Trophy },
+      { to: "/admin/deposits", label: "Deposits", icon: CircleDollarSign },
     ],
   },
   {
@@ -73,9 +77,9 @@ function AdminLayout({ title, eyebrow, description, children, actions }) {
 
           <div className="admin-sidebar__brief">
             <span>Priority queue</span>
-            <strong>Registration review</strong>
-            <p>Clear pending race entries before building the final starting field.</p>
-            <Link to="/admin/registrations">Open approvals <ClipboardCheck size={15} aria-hidden="true" /></Link>
+            <strong>Incident review</strong>
+            <p>Resolve race incidents before the official result is published.</p>
+            <Link to="/admin/incidents">Open incident desk <ShieldAlert size={15} aria-hidden="true" /></Link>
           </div>
 
           <div className="admin-user-row">

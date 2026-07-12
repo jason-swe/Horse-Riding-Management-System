@@ -52,7 +52,7 @@ export function normalizeBettingMarketStatus(status) {
   const value = String(status || "").trim().toLowerCase();
 
   if (["open", "active"].includes(value)) return BETTING_STATUS.OPEN;
-  if (["scheduled", "upcoming", "pending"].includes(value)) return BETTING_STATUS.SCHEDULED;
+  if (["scheduled", "upcoming", "pending", "generated"].includes(value)) return BETTING_STATUS.SCHEDULED;
   if (["suspended", "paused"].includes(value)) return BETTING_STATUS.SUSPENDED;
   if (["closed", "locked", "stopped"].includes(value)) return BETTING_STATUS.CLOSED;
   if (["settled", "completed"].includes(value)) return BETTING_STATUS.SETTLED;

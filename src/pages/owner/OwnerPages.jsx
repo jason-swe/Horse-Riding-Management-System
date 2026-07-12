@@ -8,6 +8,7 @@ import {
   Check,
   ChevronDown,
   ClipboardCheck,
+  CreditCard,
   Edit3,
   FileText,
   Filter,
@@ -30,8 +31,9 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
+import { walletApi } from "../../api/walletApi.js";
 import { readFileAsDataUri } from "../../utils/fileData";
-import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerScheduleEntry } from "./ownerAdapters";
+import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
 
 const statusClass = (status) => {
@@ -56,6 +58,25 @@ const formatMoney = (value, currency = "VND") => {
   } catch {
     return `${amount.toLocaleString("en-US")} ${currency}`;
   }
+};
+
+const formatToken = (value) => `${Number(value || 0).toLocaleString("en-US")} TOKEN`;
+
+const FactPills = ({ facts, emptyText = "No optional profile data recorded yet." }) => {
+  if (!facts?.length) {
+    return <div className="owner-fact-empty">{emptyText}</div>;
+  }
+
+  return (
+    <div className="owner-roster-card__facts">
+      {facts.map((fact) => (
+        <span key={fact.label}>
+          <small>{fact.label}</small>
+          <strong>{fact.value}</strong>
+        </span>
+      ))}
+    </div>
+  );
 };
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
@@ -130,6 +151,7 @@ const FormSelect = ({ label, value, options, onChange }) => {
       <span>{label}</span>
       <button
         aria-expanded={open}
+        aria-haspopup="listbox"
         className="owner-form-select__trigger"
         onClick={() => setOpen((current) => !current)}
         type="button"
@@ -189,7 +211,7 @@ function OwnerHorses() {
   const statusOptions = ["All", ...Array.from(new Set(horses.map((horse) => horse.status)))];
 
   const filteredHorses = horses.filter((horse) => {
-    const text = `${horse.name} ${horse.breed} ${horse.jockey} ${horse.status}`.toLowerCase();
+    const text = `${horse.name} ${horse.registrationNumber} ${horse.breed} ${horse.gender} ${horse.color} ${horse.status}`.toLowerCase();
     return text.includes(query.toLowerCase()) && (status === "All" || horse.status === status);
   });
 
@@ -211,7 +233,7 @@ function OwnerHorses() {
           </div>
         </div>
         <aside className="owner-horses-hero__panel">
-          <span className="owner-badge owner-badge--green"><BadgeCheck size={14} /> {horses.filter((horse) => horse.status === "Ready").length} race-ready</span>
+          <span className="owner-badge owner-badge--green"><BadgeCheck size={14} /> {horses.filter((horse) => horse.status === "Ready").length} active profiles</span>
           <strong>{firstHorse?.name || "No horses yet"}</strong>
           <p>{firstHorse?.healthNote || "Create the first horse profile to begin owner API tracking."}</p>
         </aside>
@@ -220,9 +242,9 @@ function OwnerHorses() {
       <StatStrip
         items={[
           { label: "Stable horses", value: horses.length, note: "Registered profiles", icon: HeartPulse },
-          { label: "Race-ready", value: horses.filter((horse) => horse.status === "Ready").length, note: "Cleared for schedule", icon: BadgeCheck },
-          { label: "Assigned jockeys", value: horses.filter((horse) => horse.jockey !== "Unassigned").length, note: "Confirmed relationships", icon: UsersRound },
-          { label: "Next entries", value: horses.filter((horse) => horse.nextRace !== "Unassigned").length, note: "Upcoming race windows", icon: CalendarDays },
+          { label: "Active profiles", value: horses.filter((horse) => horse.status === "Ready").length, note: "Horse status from API", icon: BadgeCheck },
+          { label: "Health notes", value: horses.filter((horse) => horse.healthNote).length, note: "Profiles with vet context", icon: ClipboardCheck },
+          { label: "Images", value: horses.filter((horse) => horse.imageUrl).length, note: "Uploaded horse media", icon: FileText },
         ]}
       />
 
@@ -231,7 +253,7 @@ function OwnerHorses() {
       <div className="owner-toolbar">
         <label className="owner-search">
           <Search size={17} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search horse, breed, jockey..." />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search horse, code, breed..." />
         </label>
         <label className="owner-select">
           <Filter size={17} />
@@ -245,35 +267,28 @@ function OwnerHorses() {
         {filteredHorses.map((horse, index) => (
           <article className="owner-roster-card" key={horse.id}>
             <Link className="owner-roster-card__media" to={`/owner/horses/${horse.id}`}>
-              <img src={horseRosterImages[index % horseRosterImages.length]} alt={`${horse.name} profile`} />
+              <img src={horse.imageUrl || horseRosterImages[index % horseRosterImages.length]} alt={`${horse.name} profile`} />
               <span className={`owner-badge ${statusClass(horse.status)}`}>{horse.status}</span>
             </Link>
             <div className="owner-roster-card__body">
               <div className="owner-roster-card__title">
                 <div>
-                  <span className="owner-kicker">{compactRecordCode("Horse", horse.registrationNumber || horse.id)}</span>
+                  <span className="owner-kicker">{horse.registrationNumber || compactRecordCode("Horse", horse.id)}</span>
                   <h2>{horse.name}</h2>
                 </div>
-                <strong>{horse.record}</strong>
+                <span className={`owner-roster-card__status ${statusClass(horse.status)}`}>{horse.status}</span>
               </div>
 
-              <div className="owner-roster-card__facts">
-                <span>{horse.breed}</span>
-                <span>{horse.age === "Not set" ? horse.age : `${horse.age} yrs`}</span>
-                <span>{horse.height}</span>
-                <span>{horse.weight}</span>
-              </div>
+              <FactPills facts={horse.facts} />
 
-              <p>{horse.healthNote}</p>
-
-              <div className="owner-roster-card__assignment">
-                <span><UsersRound size={15} /> {horse.jockey}</span>
-                <span><CalendarDays size={15} /> {horse.nextRace}</span>
-              </div>
+              {horse.healthNote
+                ? <p className="owner-roster-card__note"><HeartPulse size={15} /> {horse.healthNote}</p>
+                : <div className="owner-fact-empty owner-fact-empty--note"><HeartPulse size={15} /> No health status recorded.</div>}
 
               <div className="owner-roster-card__actions">
-                <Link className="owner-badge" to={`/owner/horses/${horse.id}`}>View</Link>
-                <Link className="owner-badge" to={`/owner/horses/${horse.id}/edit`}>Edit</Link>
+                <Link className="owner-roster-action owner-roster-action--primary" to={`/owner/horses/${horse.id}`}>View</Link>
+                <Link className="owner-roster-action" to={`/owner/horses/${horse.id}/edit`}>Edit</Link>
+                <Link className="owner-roster-action" to="/owner/registrations">Register</Link>
               </div>
             </div>
           </article>
@@ -299,12 +314,10 @@ function OwnerHorseForm({ mode = "new" }) {
     name: "",
     registrationNumber: "",
     breed: "Thoroughbred",
-    age: 5,
-    height: "Not set",
+    dateOfBirth: "",
     weight: "",
     status: "Ready",
     healthNote: "",
-    nextRace: "Unassigned",
     imageFile: null,
     imageFileName: "",
   });
@@ -315,13 +328,11 @@ function OwnerHorseForm({ mode = "new" }) {
     setForm({
       name: existingHorse.name,
       registrationNumber: existingHorse.registrationNumber,
-      breed: existingHorse.breed,
-      age: existingHorse.age,
-      height: existingHorse.height,
+      breed: existingHorse.breed || "Other",
+      dateOfBirth: existingHorse.dateOfBirth,
       weight: existingHorse.weight,
       status: existingHorse.status,
       healthNote: existingHorse.healthNote,
-      nextRace: existingHorse.nextRace,
       imageFile: null,
       imageFileName: "",
     });
@@ -401,7 +412,7 @@ function OwnerHorseForm({ mode = "new" }) {
           <Link className="owner-detail-back" to={actionPath}>Back to {isEdit ? "profile" : "horses"}</Link>
           <p className="owner-eyebrow">{isEdit ? `${existingHorse?.registrationNumber} profile` : "New horse profile"}</p>
           <h1>{isEdit ? `Edit ${existingHorse?.name}` : "Create a race-ready horse file"}</h1>
-          <p>Update the details owners, admins, and referees need before approving a tournament entry.</p>
+          <p>Update the details owners, admins, and referees can read from the horse profile contract.</p>
         </div>
         <aside className="owner-horse-form-preview" aria-label="Horse profile preview">
           <img src={existingHorse?.imageUrl || horseImage} alt={`${isEdit ? existingHorse?.name : "New horse"} profile preview`} />
@@ -424,8 +435,7 @@ function OwnerHorseForm({ mode = "new" }) {
               <label>Name<input value={form.name} onChange={(event) => updateField("name", event.target.value)} required /></label>
               <label>Registration number<input value={form.registrationNumber} onChange={(event) => updateField("registrationNumber", event.target.value)} required /></label>
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
-              <label>Age<input type="number" min="1" value={form.age} onChange={(event) => updateField("age", event.target.value)} /></label>
-              <label>Height<input value={form.height} onChange={(event) => updateField("height", event.target.value)} /></label>
+              <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
               <label className="owner-form-span">
                 Profile image
@@ -437,12 +447,11 @@ function OwnerHorseForm({ mode = "new" }) {
 
           <section className="owner-form-section">
             <div className="owner-form-section__header">
-              <span className="owner-kicker">Race context</span>
-              <h2>Approval state</h2>
+              <span className="owner-kicker">Profile state</span>
+              <h2>Owner visibility</h2>
             </div>
             <div className="owner-form-grid">
               <FormSelect label="Status" value={form.status} options={["Ready", "Needs review", "Closed"]} onChange={(value) => updateField("status", value)} />
-              <label className="owner-form-span">Next race<input value={form.nextRace} onChange={(event) => updateField("nextRace", event.target.value)} /></label>
             </div>
           </section>
 
@@ -487,6 +496,12 @@ function OwnerHorseDetail() {
   const horseImage = horseRosterImages[imageIndexForId(horse.id, horseRosterImages.length)];
   const registrations = approvalStatus?.registrations || [];
   const schedule = registrations.map(toOwnerScheduleEntry);
+  const summaryFacts = [
+    horse.age !== "Not set" ? { label: "Age", value: `${horse.age} yrs`, icon: HeartPulse } : null,
+    horse.breed ? { label: "Breed", value: horse.breed, icon: Flag } : null,
+    horse.weight ? { label: "Weight", value: horse.weight, icon: Award } : null,
+    registrations.length ? { label: "Registrations", value: registrations.length, icon: ClipboardCheck } : null,
+  ].filter(Boolean);
 
   const handleDeactivate = async () => {
     if (!window.confirm(`Deactivate ${horse.name}?`)) return;
@@ -509,9 +524,9 @@ function OwnerHorseDetail() {
       <section className="owner-detail-hero">
         <div className="owner-detail-hero__copy">
           <Link className="owner-detail-back" to="/owner/horses">Back to horses</Link>
-          <p className="owner-eyebrow">{horse.registrationNumber} / {horse.breed}</p>
+          <p className="owner-eyebrow">{horse.registrationNumber || compactRecordCode("Horse", horse.id)}{horse.breed ? ` / ${horse.breed}` : ""}</p>
           <h1>{horse.name}</h1>
-          <p>{horse.healthNote}</p>
+          <p>{horse.healthNote || "No health status recorded for this horse yet."}</p>
           <div className="owner-hero__actions">
             <Link className="owner-button owner-button--primary" to={`/owner/horses/${horse.id}/edit`}><Edit3 size={18} /> Edit Profile</Link>
             <Link className="owner-button" to="/owner/registrations">Register Tournament</Link>
@@ -526,19 +541,14 @@ function OwnerHorseDetail() {
           <img src={horse.imageUrl || horseImage} alt={`${horse.name} horse profile`} />
           <div className="owner-detail-photo-card">
             <span className={`owner-badge ${statusClass(horse.status)}`}>{horse.status}</span>
-            <strong>{horse.record}</strong>
-            <small>{horse.jockey === "Unassigned" ? "Jockey not assigned" : `Ridden by ${horse.jockey}`}</small>
+            <strong>{horse.registrationNumber || compactRecordCode("Horse", horse.id)}</strong>
+            <small>{horse.facts.length ? horse.facts.map((fact) => fact.value).join(" / ") : "Optional profile details not recorded."}</small>
           </div>
         </aside>
       </section>
 
       <section className="owner-detail-summary" aria-label="Horse summary">
-        {[
-          { label: "Age", value: horse.age === "Not set" ? horse.age : `${horse.age} yrs`, icon: HeartPulse },
-          { label: "Height", value: horse.height, icon: Flag },
-          { label: "Weight", value: horse.weight, icon: Award },
-          { label: "Next race", value: schedule[0]?.date || "Unavailable", icon: CalendarDays },
-        ].map((item) => {
+        {summaryFacts.map((item) => {
           const Icon = item.icon;
           return (
             <article className="owner-detail-summary__item" key={item.label}>
@@ -548,6 +558,7 @@ function OwnerHorseDetail() {
             </article>
           );
         })}
+        {summaryFacts.length === 0 && <div className="owner-empty owner-empty--compact">No optional horse profile facts have been recorded yet.</div>}
       </section>
 
       <section className="owner-detail-main">
@@ -561,9 +572,9 @@ function OwnerHorseDetail() {
           </div>
           <div className="owner-detail-decision-grid">
             <div>
-              <span>Assigned jockey</span>
-              <strong>{horse.jockey}</strong>
-              <small>{horse.jockey === "Unassigned" ? "Invite a rider before approval." : "Relationship active for race planning."}</small>
+              <span>Profile status</span>
+              <strong>{horse.status}</strong>
+              <small>Status comes from the horse record.</small>
             </div>
             <div>
               <span>Registration state</span>
@@ -571,9 +582,9 @@ function OwnerHorseDetail() {
               <small>{registrations[0]?.note ?? "Create a tournament entry when ready."}</small>
             </div>
             <div>
-              <span>Latest finish</span>
-              <strong>Unavailable</strong>
-              <small>The result API does not allow Horse Owner access.</small>
+              <span>Next race</span>
+              <strong>{schedule[0]?.race || "Not scheduled"}</strong>
+              <small>{schedule[0] ? `${schedule[0].date} / ${schedule[0].tournament}` : "Approved registrations create schedule context."}</small>
             </div>
           </div>
         </article>
@@ -690,10 +701,16 @@ function OwnerRegistrations() {
   const pendingCount = registrations.filter((item) => item.status === "Pending" || item.status === "Review").length;
   const approvedCount = registrations.filter((item) => item.status === "Approved").length;
   const [races, setRaces] = useState([]);
+  const [racesLoading, setRacesLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState("");
+  const [walletState, setWalletState] = useState({
+    balance: 0,
+    isLoading: true,
+    error: "",
+  });
   const [entry, setEntry] = useState({
     horse: horses[0]?.name || "",
     tournament: tournaments[0]?.name || "",
@@ -702,7 +719,15 @@ function OwnerRegistrations() {
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
   const selectedTournament = tournaments.find((tournament) => tournament.name === entry.tournament) ?? tournaments[0];
-  const selectedRace = races.find((race) => race.name === entry.race) ?? races[0];
+  const selectedRace = races.find((race) => race.id === entry.race) ?? races[0];
+  const tournamentPrizePool = selectedTournament?.prizePool || races.reduce((total, race) => total + Number(race.prizePool || 0), 0);
+  const tournamentPrizeCurrency = selectedTournament?.prizeCurrency || selectedRace?.prizeCurrency || "VND";
+  const tournamentEntryFee = selectedTournament?.entryFee || 0;
+  const registrationFeeToken = tournamentEntryFee > 0 ? Math.ceil(tournamentEntryFee / 1000) : 0;
+  const walletBalance = Number(walletState.balance || 0);
+  const remainingBalance = walletBalance - registrationFeeToken;
+  const hasEnoughToken = registrationFeeToken === 0 || walletBalance >= registrationFeeToken;
+  const tournamentEntryFeeCurrency = selectedTournament?.entryFeeCurrency || tournamentPrizeCurrency;
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
@@ -723,23 +748,27 @@ function OwnerRegistrations() {
         return;
       }
 
+      setRacesLoading(true);
+      setError("");
+
       try {
         const data = await ownerApi.getTournamentRaces(selectedTournament.id);
         if (!cancelled) {
-          const nextRaces = (data.races || []).map((race) => ({
-            id: race._id || race.id,
-            name: race.name || "Race",
-          }));
+          const nextRaces = (data.races || []).map(toOwnerRaceOption);
           setRaces(nextRaces);
           setEntry((current) => ({
             ...current,
-            race: nextRaces[0]?.name || "",
+            race: nextRaces[0]?.id || "",
           }));
         }
       } catch (apiError) {
         if (!cancelled) {
           setRaces([]);
           setError(apiError.message || "Unable to load races for tournament.");
+        }
+      } finally {
+        if (!cancelled) {
+          setRacesLoading(false);
         }
       }
     }
@@ -750,6 +779,29 @@ function OwnerRegistrations() {
       cancelled = true;
     };
   }, [selectedTournament?.id]);
+
+  const loadWallet = async () => {
+    setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
+
+    try {
+      const payload = await walletApi.getMyWallet();
+      setWalletState({
+        balance: Number(payload?.wallet?.token_balance || 0),
+        isLoading: false,
+        error: "",
+      });
+    } catch (apiError) {
+      setWalletState({
+        balance: 0,
+        isLoading: false,
+        error: apiError.message || "Unable to load wallet balance.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadWallet();
+  }, []);
 
   const updateEntry = (field, value) => {
     setSaved(false);
@@ -780,7 +832,7 @@ function OwnerRegistrations() {
         race_id: selectedRace.id,
         note: entry.note,
       });
-      await reloadRegistrations();
+      await Promise.all([reloadRegistrations(), loadWallet()]);
       setSaved(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to submit race registration.");
@@ -804,7 +856,7 @@ function OwnerRegistrations() {
         horse_id: registration.horseId,
         race_id: registration.raceId,
       });
-      await reloadRegistrations();
+      await Promise.all([reloadRegistrations(), loadWallet()]);
       setSaved(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to cancel registration.");
@@ -860,21 +912,115 @@ function OwnerRegistrations() {
           <div className="owner-form-grid owner-form-grid--single">
             <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
             <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
-            <FormSelect label="Race" value={entry.race || "No race available"} options={races.length ? races.map((race) => race.name) : ["No race available"]} onChange={(value) => updateEntry("race", value)} />
             <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
 
+          <section className="owner-race-picker" aria-label="Race choices">
+            <div className="owner-race-picker__header">
+              <div>
+                <span className="owner-kicker">Race selection</span>
+                <h3>{selectedTournament?.name || "No tournament selected"}</h3>
+                {selectedTournament?.description && <p>{selectedTournament.description}</p>}
+              </div>
+              <span className={`owner-badge ${statusClass(selectedTournament?.status)}`}>{selectedTournament?.status || "Unavailable"}</span>
+            </div>
+
+            <div className="owner-tournament-context">
+              {selectedTournament?.location && <div><span>Tournament location</span><strong>{selectedTournament.location}</strong></div>}
+              {selectedTournament?.date && <div><span>Tournament dates</span><strong>{selectedTournament.date}</strong></div>}
+            <div><span>Tournament prize pool</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
+              <div><span>Registration fee</span><strong>{tournamentEntryFee > 0 ? formatMoney(tournamentEntryFee, tournamentEntryFeeCurrency) : "No fee recorded"}</strong></div>
+              <div><span>Token charge</span><strong>{registrationFeeToken > 0 ? formatToken(registrationFeeToken) : "No payment required"}</strong></div>
+              <div><span>Race options</span><strong>{racesLoading ? "Loading" : races.length}</strong></div>
+            </div>
+
+            {racesLoading && <LoadingSkeleton ariaLabel="Loading tournament races" variant="inline" />}
+            {!racesLoading && races.length === 0 && <div className="owner-empty owner-empty--compact">No races are available for this tournament.</div>}
+            {!racesLoading && races.length > 0 && (
+              <div className="owner-race-choice-list">
+                {races.map((race) => (
+                  <button
+                    aria-pressed={selectedRace?.id === race.id}
+                    className={`owner-race-choice${selectedRace?.id === race.id ? " is-selected" : ""}`}
+                    key={race.id}
+                    onClick={() => updateEntry("race", race.id)}
+                    type="button"
+                  >
+                    <div className="owner-race-choice__main">
+                      <span className="owner-registration__id">{compactRecordCode("RACE", race.id)}</span>
+                      <strong>{race.name}</strong>
+                      <small>{[race.round, race.date, race.clock].filter(Boolean).join(" / ") || "Schedule unavailable"}</small>
+                    </div>
+                    <div className="owner-race-choice__facts">
+                      {race.location && <span><MapPin size={13} /> {race.location}</span>}
+                      {race.distance && <span><Flag size={13} /> {race.distance}</span>}
+                      {race.maxParticipants && <span><UsersRound size={13} /> {race.maxParticipants} slots</span>}
+                      {race.prizePool > 0 && <span><Trophy size={13} /> {formatMoney(race.prizePool, race.prizeCurrency)}</span>}
+                      {race.registrationLock && <span><CalendarDays size={13} /> Locks {race.registrationLock}</span>}
+                    </div>
+                    <div className="owner-race-choice__awards" aria-label={`${race.name} prize split`}>
+                      {race.prizePool > 0 ? (
+                        <>
+                          <span>Winner {formatMoney(race.prizePool * 0.6, race.prizeCurrency)}</span>
+                          <span>2nd {formatMoney(race.prizePool * 0.2, race.prizeCurrency)}</span>
+                          <span>3rd {formatMoney(race.prizePool * 0.11, race.prizeCurrency)}</span>
+                        </>
+                      ) : (
+                        <span>Prize not configured</span>
+                      )}
+                    </div>
+                    <span className={`owner-badge ${statusClass(race.status)}`}>{race.status}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
           <div className="owner-registration-preview">
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
-            <div><span>Assigned jockey</span><strong>{selectedHorse?.jockey || "Unassigned"}</strong></div>
-            <div><span>Race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
+            <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
+            <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
+            <div><span>Payment due</span><strong>{registrationFeeToken > 0 ? formatToken(registrationFeeToken) : "No fee required"}</strong></div>
           </div>
+
+          <section className={`owner-registration-payment${hasEnoughToken ? "" : " is-insufficient"}`} aria-label="Registration payment">
+            <div className="owner-registration-payment__header">
+              <div>
+                <span className="owner-kicker">Wallet payment</span>
+                <h3>{registrationFeeToken > 0 ? "Pay registration fee with TOKEN" : "No payment required"}</h3>
+              </div>
+              <CreditCard size={20} />
+            </div>
+            <div className="owner-registration-payment__grid">
+              <div>
+                <span>Current balance</span>
+                <strong>{walletState.isLoading ? "Loading" : formatToken(walletBalance)}</strong>
+              </div>
+              <div>
+                <span>Registration charge</span>
+                <strong>{formatToken(registrationFeeToken)}</strong>
+              </div>
+              <div>
+                <span>After submit</span>
+                <strong>{walletState.isLoading ? "Pending" : formatToken(Math.max(remainingBalance, 0))}</strong>
+              </div>
+            </div>
+            {walletState.error && <p className="owner-registration-payment__note is-error">{walletState.error}</p>}
+            {!walletState.error && registrationFeeToken > 0 && !hasEnoughToken && (
+              <p className="owner-registration-payment__note is-error">
+                You need {formatToken(registrationFeeToken - walletBalance)} more before submitting this entry.
+              </p>
+            )}
+            {!walletState.error && registrationFeeToken > 0 && hasEnoughToken && (
+              <p className="owner-registration-payment__note">Fee is deducted immediately, then refunded automatically if you cancel before the race locks.</p>
+            )}
+          </section>
 
           <div className="owner-form-actions">
             {saved && <span className="owner-success"><CheckCircle2 size={16} /> Registration submitted.</span>}
             {error && <span className="owner-success owner-success--error">{error}</span>}
-            <button className="owner-button owner-button--primary" disabled={isSubmitting || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
-              {isSubmitting ? "Submitting..." : "Submit Entry"}
+            <button className="owner-button owner-button--primary" disabled={isSubmitting || walletState.isLoading || !hasEnoughToken || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
+              {isSubmitting ? "Submitting..." : registrationFeeToken > 0 ? `Pay ${formatToken(registrationFeeToken)} and submit` : "Submit Entry"}
             </button>
           </div>
         </form>
@@ -919,6 +1065,10 @@ function OwnerRegistrations() {
                   </div>
                 </div>
                 <small className="owner-registration__note">{item.race ? `${item.race} / ${item.note}` : item.note}</small>
+                <div className="owner-registration__payment">
+                  <CreditCard size={14} />
+                  <span>{item.entryFeeToken > 0 ? `${item.paymentStatus} / ${formatToken(item.entryFeeToken)}` : "No fee required"}</span>
+                </div>
               </div>
               <div className="owner-registration__actions">
                 <span className={`owner-badge ${statusClass(item.status)}`}>{item.status}</span>
@@ -1990,6 +2140,7 @@ function OwnerResults() {
 
 function OwnerProfile() {
   const { profile, isLoading, error, reload } = useOwnerProfile();
+  const { awards } = useOwnerPrizeAwards();
   const [form, setForm] = useState({ stable: "", location: "", licenseNumber: "", status: "Ready" });
   const [message, setMessage] = useState("");
   const [saveError, setSaveError] = useState(false);
@@ -2030,6 +2181,8 @@ function OwnerProfile() {
       status: profile.status,
     });
   };
+  const ownerPrizeTotal = awards.reduce((total, award) => total + Number(award.ownerAmount || 0), 0);
+  const ownerPrizeCurrency = awards[0]?.currency || "VND";
 
   const handleProfileSubmit = async (event) => {
     event.preventDefault();
@@ -2076,7 +2229,7 @@ function OwnerProfile() {
         {[
           { label: "Season", value: profile.season, note: "No season aggregate", icon: CalendarDays },
           { label: "Win rate", value: profile.winRate, note: "No owner result access", icon: Trophy },
-          { label: "Earnings", value: profile.earnings, note: "No owner prize aggregate", icon: Award },
+          { label: "Earnings", value: formatMoney(ownerPrizeTotal, ownerPrizeCurrency), note: `${awards.length} prize award${awards.length === 1 ? "" : "s"}`, icon: Award },
           { label: "Status", value: profile.status, note: "Account access", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
@@ -2121,7 +2274,7 @@ function OwnerProfile() {
           <div className="owner-profile-verify__body">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
             <strong>{profile.season}</strong>
-            <p>Account can submit horse registrations and manage jockey assignments. Prize outcomes require a future owner API.</p>
+            <p>Account can submit horse registrations, manage jockey assignments, and review prize awards after published race results.</p>
           </div>
         </aside>
       </section>
@@ -2171,35 +2324,6 @@ function OwnerProfile() {
         </article>
       </section>
 
-      <section className="owner-profile-lower">
-        <article className="owner-profile-notifications">
-          <div className="owner-card__header">
-            <div>
-              <span className="owner-kicker">Notifications</span>
-              <h2>Recent account signals</h2>
-            </div>
-            <BadgeCheck size={20} />
-          </div>
-          <div className="owner-empty owner-empty--compact" role="status">
-            Owner notifications are unavailable because the backend does not expose a notification feed yet.
-          </div>
-        </article>
-
-        <article className="owner-profile-preferences">
-          <div className="owner-card__header">
-            <div>
-              <span className="owner-kicker">Preferences</span>
-              <h2>Alert controls</h2>
-            </div>
-            <UsersRound size={20} />
-          </div>
-          <div className="owner-profile-preference-list" aria-disabled="true">
-            <label><input disabled type="checkbox" /><span>Race schedule updates</span></label>
-            <label><input disabled type="checkbox" /><span>Jockey invitation responses</span></label>
-            <label><input disabled type="checkbox" /><span>Registration approval alerts</span></label>
-          </div>
-        </article>
-      </section>
     </div>
   );
 }

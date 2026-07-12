@@ -7,7 +7,7 @@ import {
 import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
-  if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
+  if (["Accepted", "Confirmed", "Published", "Available", "Approved", "Paid"].includes(status)) {
     return "jockey-badge--green";
   }
   if (["Rejected", "Expired"].includes(status)) {
@@ -31,7 +31,7 @@ function JockeyResults() {
     return results.filter((result) => {
       if (filter === "Wins") return result.position === 1;
       if (filter === "Podiums") return result.position <= 3;
-      if (filter === "Published") return result.status === "Published";
+      if (filter === "Published") return ["Published", "Calculated", "Approved", "Paid"].includes(result.status);
       return true;
     });
   }, [filter, results]);
@@ -41,6 +41,7 @@ function JockeyResults() {
   ), results[0]);
   const podiumCount = results.filter((result) => result.position <= 3).length;
   const winCount = results.filter((result) => result.position === 1).length;
+  const latestResult = results[0];
 
   if (isLoading) {
     return <div className="jockey-results-page"><LoadingSkeleton ariaLabel="Loading jockey results" rows={5} variant="table" /></div>;
@@ -61,9 +62,19 @@ function JockeyResults() {
           <p>Review published race outcomes with clean finish ranking, horse context, official time, and earned prize money.</p>
         </div>
         <aside className="jockey-results-hero__panel">
-          <span className="jockey-badge jockey-badge--green"><Trophy size={14} /> Best finish</span>
-          <strong>#{bestResult.position}</strong>
-          <p>{bestResult.race} / {bestResult.horse}</p>
+          {bestResult ? (
+            <>
+              <span className="jockey-badge jockey-badge--green"><Trophy size={14} /> Best finish</span>
+              <strong>#{bestResult.position}</strong>
+              <p>{bestResult.race} / {bestResult.horse}</p>
+            </>
+          ) : (
+            <>
+              <span className="jockey-badge jockey-badge--muted">No results</span>
+              <strong>-</strong>
+              <p>Published race outcomes will appear after results are approved.</p>
+            </>
+          )}
         </aside>
       </section>
 
@@ -72,7 +83,7 @@ function JockeyResults() {
           { label: "Season earnings", value: profile.earnings, note: "Published purse", icon: Award },
           { label: "Win rate", value: profile.winRate, note: `${winCount} season win`, icon: Trophy },
           { label: "Podium rate", value: profile.podiumRate, note: `${podiumCount} top-three finishes`, icon: BadgeCheck },
-          { label: "Best time", value: bestResult.time, note: bestResult.horse, icon: Clock3 },
+          { label: "Best time", value: bestResult?.time || "-", note: bestResult?.horse || "No published time", icon: Clock3 },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -89,15 +100,25 @@ function JockeyResults() {
       <section className="jockey-results-layout">
         <aside className="jockey-results-feature">
           <img src={celebrationImages[0]} alt="Jockey after winning a race" />
-          <div>
-            <span className="jockey-kicker">Latest result</span>
-            <h2>{results[0].race}</h2>
-            <p>{results[0].horse} finished #{results[0].position} with an official time of {results[0].time}.</p>
-          </div>
-          <div className="jockey-results-feature__metrics">
-            <div><span>Finish</span><strong>#{results[0].position}</strong></div>
-            <div><span>Prize</span><strong>{results[0].prize}</strong></div>
-          </div>
+          {latestResult ? (
+            <>
+              <div>
+                <span className="jockey-kicker">Latest result</span>
+                <h2>{latestResult.race}</h2>
+                <p>{latestResult.horse} finished #{latestResult.position} with an official time of {latestResult.time}.</p>
+              </div>
+              <div className="jockey-results-feature__metrics">
+                <div><span>Finish</span><strong>#{latestResult.position}</strong></div>
+                <div><span>Prize</span><strong>{latestResult.prize}</strong></div>
+              </div>
+            </>
+          ) : (
+            <div>
+              <span className="jockey-kicker">Latest result</span>
+              <h2>No published result</h2>
+              <p>Race results and prize awards will appear here after publication.</p>
+            </div>
+          )}
         </aside>
 
         <article className="jockey-results-board">

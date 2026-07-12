@@ -1,37 +1,46 @@
 # Fixed-Odds Betting Backend Contract
 
-## 1. Audit snapshot
+Last updated: `2026-07-03`.
 
-Audit date: `2026-06-22`.
+## 1. Current Scope
 
-The current backend does not expose betting, wallet, fixed-odds market, payout, or realtime socket APIs.
+The current production betting contract is fixed-odds `win` betting only.
 
-Current backend evidence:
+Supported:
 
-- `models/Bet.js` supports one `predicted_horse_id`, one optional `predicted_position`, `status`, and `reward_amount`.
-- `models/Race.js` stores `status` as a free-form string with default `scheduled`.
-- `models/RaceResult.js` supports `draft`, `confirmed`, and `published` results.
-- `GET /api/race-results` now permits authenticated spectators. Backend also mounts a spectator-only published-result endpoint at `/users/spectator/races/:raceId/results`, outside the `/api` prefix used by the current frontend client.
-- Approved registrations and accepted jockey assignments exist, but there is no spectator-safe aggregate participant endpoint.
-- There is no wallet model or route in `app.js`.
+- Spectator selects exactly one horse to win.
+- Backend requires an odds market for the race.
+- Backend opens and closes betting through admin lifecycle endpoints.
+- Backend deducts `stake_amount` from the spectator wallet immediately.
+- Backend stores `odds_snapshot.game_odds` on the accepted bet.
+- Backend calculates `potential_payout = stake_amount * odds_snapshot.game_odds`.
+- Backend settles pending bets after official results are published.
 
-The Phase 3 frontend therefore remains a prototype and must fail closed when a production market snapshot is absent or invalid.
+Not supported yet:
 
-## 2. Decisions locked on the frontend
+- `place`
+- `show`
+- `quinella`
+- `exacta`
+- `trifecta`
+- `superfecta`
+- multi-race bets
+
+The frontend must keep unsupported bet types hidden or explicitly unavailable until backend odds generation and settlement rules exist for them.
+
+## 2. Frontend Contract Decisions
 
 | Contract item | Frontend decision |
 |---|---|
-| Contract version | Integer `1` |
-| Currency | `PTS` |
+| Contract version | Integer `1` for normalized fixed-odds market snapshots |
+| Currency | Backend `TOKEN`; development preview may use `PTS` |
 | Odds format | Decimal odds |
-| Odds precision | Two decimal places for display |
-| Payout preview | `round(stake * displayed_odds)` |
-| Accepted payout | Use `potential_return` from backend receipt |
-| Accepted odds | Use `accepted_odds` from backend receipt |
-| Odds change policy | `requote_required`; never silently accept changed odds |
-| Idempotency | Unique `client_request_id` per submission |
-| Form safety | Fail closed unless market status is exactly `open` |
-| Realtime safety | `stop_betting` immediately closes modal and disables all controls |
+| Display precision | Two decimal places for odds and payout preview |
+| Payout preview | `stake_amount * game_odds`, rounded to two decimals for display |
+| Accepted payout | Use backend `potential_payout` from the bet receipt |
+| Accepted odds | Use backend `odds_snapshot.game_odds` from the bet receipt |
+| Form safety | Fail closed unless race and market status are open and the user is a spectator |
+| Receipt safety | Existing bets display stored `odds_snapshot`, not current market odds |
 
 Frontend constants and validators live in:
 
@@ -39,146 +48,227 @@ Frontend constants and validators live in:
 src/pages/spectator/betting/fixedOddsContract.js
 ```
 
-## 3. Decisions still required from backend/product
+## 3. API Flow
 
-These items are not present in the current backend and are not considered confirmed:
+Admin lifecycle:
 
-1. Extended race lifecycle behavior beyond the implemented `scheduled -> running -> completed` referee flow, including cancel/postpone semantics.
-2. Canonical market enum and allowed transitions.
-3. Place settlement positions.
-4. Show settlement positions.
-5. Dead-heat settlement and fractional payout rules.
-6. Scratched-horse behavior before and after market close.
-7. Postponed, cancelled, and void race behavior.
-8. Minimum and maximum stake policy.
-9. Wallet ledger, currency ownership, and transaction consistency.
-10. Odds rounding, payout rounding, fees, and maximum return.
-11. Whether a changed quote requires explicit acceptance or rejects the request.
+```text
+POST /api/races/:id/odds/generate
+POST /api/races/:id/betting/open
+POST /api/races/:id/betting/close
+POST /api/race-results/races/:raceId/publish
+POST /api/bets/races/:raceId/settle
+GET  /api/races/:id/odds
+```
 
-## 4. Required market snapshot
+Spectator flow:
+
+```text
+GET  /api/races/:id/odds
+GET  /api/wallet/me
+POST /api/bets
+GET  /api/bets/me
+GET  /api/bets/me?race_id=:raceId
+GET  /users/spectator/races/:raceId/results
+GET  /users/spectator/races/:raceId/live-state
+```
+
+## 4. Odds Market Read
+
+Frontend reads:
+
+```text
+GET /api/races/:id/odds
+```
+
+Important fields accepted by the frontend:
 
 ```json
 {
-  "contract_version": 1,
-  "market_id": "market_id",
-  "race_id": "race_id",
-  "status": "open",
-  "opens_at": "2026-06-13T08:30:00.000Z",
-  "closes_at": "2026-06-13T08:59:30.000Z",
-  "server_time": "2026-06-13T08:45:00.000Z",
-  "currency": "PTS",
-  "min_stake": 10,
-  "max_stake": 1000,
-  "odds_change_policy": "requote_required",
-  "supported_bet_types": ["win", "place", "show", "quinella", "exacta", "trifecta"],
-  "place_terms": null,
-  "show_terms": null,
-  "runner_statuses": {
-    "horse_id": "active"
-  },
-  "selections": []
+  "data": {
+    "market": {
+      "_id": "market_id",
+      "race_id": "race_id",
+      "status": "open",
+      "currency": "TOKEN",
+      "min_stake": 5,
+      "max_stake": 500,
+      "closes_at": "2026-07-03T10:00:00.000Z",
+      "server_time": "2026-07-03T09:55:00.000Z",
+      "odds": [
+        {
+          "horse_id": "horse_id",
+          "horse_no": 1,
+          "horse_name": "Red Comet",
+          "jockey_name": "A. Rider",
+          "win_probability": 0.32,
+          "fair_odds": 3.13,
+          "game_odds": 2.85,
+          "probability_rank": 1
+        }
+      ]
+    }
+  }
 }
 ```
 
-Allowed runner status proposal:
+The frontend also tolerates equivalent top-level `market`, `data.odds`, and camelCase `serverTime` shapes where existing adapters already normalize them.
+
+Frontend normalization rules:
+
+- `generated` status maps to the locked `scheduled` UI state.
+- Entries without a horse id or numeric `game_odds` are ignored.
+- `game_odds` is the only odds value used for display, preview, and bet confirmation.
+- `currency`, `min_stake`, and `max_stake` are read from the odds market snapshot first, then from race-list betting market data.
+- `closes_at` plus optional `server_time` drives the countdown when available.
+- If `closes_at` is missing, status fields remain authoritative.
+
+## 5. Open Betting Payload
+
+Admin opens betting with:
 
 ```text
-active
-scratched
-suspended
+POST /api/races/:id/betting/open
 ```
-
-The frontend removes non-active runners from an unfinished slip and disables their selection control. Settlement or refund behavior for an already accepted bet remains a backend/product decision.
-
-Allowed market status proposal:
-
-```text
-scheduled
-open
-suspended
-closed
-settled
-void
-```
-
-## 5. Submit and accepted receipt
 
 Request:
 
 ```json
 {
-  "market_id": "market_id",
-  "race_id": "race_id",
-  "bet_type": "exacta",
-  "horse_ids": ["horse_1", "horse_2"],
-  "stake": 200,
-  "displayed_odds": 8.5,
-  "client_request_id": "uuid"
+  "min_stake": 5,
+  "max_stake": 500,
+  "currency": "TOKEN",
+  "closes_at": "2026-07-03T10:00:00.000Z"
 }
 ```
 
-Accepted receipt:
+Frontend omits `closes_at` when the admin leaves the field blank. It validates positive stake limits, requires `max_stake >= min_stake`, and blocks invalid date/time values before the request is sent.
+
+## 6. Place Bet
+
+Frontend submits:
+
+```text
+POST /api/bets
+```
+
+Preferred request:
 
 ```json
 {
-  "bet": {
-    "id": "bet_id",
-    "race_id": "race_id",
-    "market_id": "market_id",
-    "status": "accepted",
-    "stake": 200,
-    "accepted_odds": 8.5,
-    "potential_return": 1700,
-    "accepted_at": "2026-06-13T08:45:04.000Z"
-  },
-  "wallet": {
-    "balance": 1080,
-    "currency": "PTS"
-  },
-  "transaction_id": "transaction_id"
+  "race_id": "race_id",
+  "horse_id": "horse_id",
+  "stake_amount": 10
 }
 ```
 
-If odds changed, return a non-accepted response containing the current quote. The frontend must require a new explicit confirmation.
-
-## 6. Spectator-safe read endpoints required
-
-```text
-GET /api/spectator/races/:raceId
-GET /api/spectator/races/:raceId/participants
-GET /api/race-results?race_id=:raceId&status=published
-GET /users/spectator/races/:raceId/results (implemented backend mount, outside current `/api` proxy)
-GET /api/spectator/races/:raceId/market
-GET /api/spectator/wallet
-POST /api/spectator/bets
-```
-
-Participants should include only approved registrations, accepted jockey assignments, eligible horse checks, and lane assignment. Spectator published-result reads now exist; spectator-safe participants, race detail aggregate, market, wallet, and bet APIs remain required.
-
-## 7. Race script finish semantics
-
-- `duration_ms` represents the maximum script playback duration.
-- Every horse starts with `{ "time_ms": 0, "distance": 0 }`.
-- Every horse ends at `track_length`, but final checkpoint timestamps must be allowed to differ.
-- Final checkpoint order must agree with `race_finished.results`.
-- `race_finished.results[].finish_time_ms` remains authoritative when it arrives.
-- A script that forces every horse to finish at the same timestamp cannot express a meaningful finish order and should be rejected during contract review.
-
-Example:
+Alternative backend-compatible key:
 
 ```json
-[
-  { "horse_id": "horse_3", "final_checkpoint": { "time_ms": 56000, "distance": 1000 } },
-  { "horse_id": "horse_5", "final_checkpoint": { "time_ms": 59000, "distance": 1000 } },
-  { "horse_id": "horse_1", "final_checkpoint": { "time_ms": 61500, "distance": 1000 } }
-]
+{
+  "race_id": "race_id",
+  "predicted_horse_id": "horse_id",
+  "stake_amount": 10
+}
 ```
 
-## 8. Session Status - 2026-06-14
+Important response fields:
 
-- Frontend fixed-odds contract version remains `1` and mock-only.
-- Six betting types are implemented in the UI.
-- `stop_betting` immediately disables the complete form.
-- Accepted receipt validation, odds retention, wallet reconciliation boundaries, scratched runner handling, and idempotency expectations are documented.
-- No production market, wallet, bet, odds, settlement, or realtime endpoint is available yet.
-- Production integration must not replace the mock adapter until unresolved contract decisions are confirmed.
+```json
+{
+  "data": {
+    "bet": {
+      "_id": "bet_id",
+      "race_id": "race_id",
+      "predicted_horse_id": "horse_id",
+      "stake_amount": 10,
+      "odds_snapshot": {
+        "horse_id": "horse_id",
+        "horse_name": "Red Comet",
+        "game_odds": 2.85,
+        "currency": "TOKEN"
+      },
+      "potential_payout": 28.5,
+      "payout_amount": 0,
+      "status": "pending",
+      "submitted_at": "2026-07-03T09:56:00.000Z"
+    },
+    "wallet": {
+      "token_balance": 120
+    },
+    "transaction": {}
+  }
+}
+```
+
+Accepted statuses for backend receipts and history:
+
+```text
+pending
+won
+lost
+cancelled
+```
+
+## 7. My Bets
+
+Frontend reads:
+
+```text
+GET /api/bets/me
+GET /api/bets/me?race_id=:raceId
+```
+
+Rows should include:
+
+```text
+stake_amount
+odds_snapshot.game_odds
+odds_snapshot.horse_name
+potential_payout
+payout_amount
+status
+submitted_at
+settled_at
+```
+
+History rendering rules:
+
+- `won` uses backend `payout_amount`.
+- `lost` shows zero payout.
+- `pending` shows backend `potential_payout`.
+- Currency prefers `odds_snapshot.currency`, then race betting market currency or active market currency, then `TOKEN`.
+- Settled payout summaries are grouped by currency.
+
+## 8. Betting Form Gates
+
+Enable betting only when:
+
+```text
+user has spectator role
+race.status is scheduled
+race.betting_status is open
+market.status is open
+market close countdown has not expired
+stake is inside min/max limits
+wallet balance is sufficient
+```
+
+Disable betting when:
+
+```text
+market missing
+market generated but not open
+race running
+race completed
+wallet balance insufficient
+stake below min
+stake above max
+market countdown reaches zero
+```
+
+## 9. Still Pending
+
+- Run `scripts/verify-admin-betting-live-backend.mjs` with a disposable backend fixture, admin token, `BETTING_VERIFY_RACE_ID`, and `BETTING_VERIFY_MUTATE=1` when lifecycle mutation verification is safe.
+- Replace any remaining development-preview mock betting transport only after backend realtime betting state/socket contracts are finalized.
+- Add new frontend markets only after backend odds generation, request contracts, and settlement rules are confirmed for those bet types.

@@ -58,9 +58,19 @@ function JockeySchedule() {
           <p>Track accepted rides, pending slots, venue details, and horse pairings in a personal race-day calendar.</p>
         </div>
         <aside className="jockey-schedule-hero__panel">
-          <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>
-          <strong>{nextRace.race}</strong>
-          <p>{nextRace.time} / {nextRace.venue}</p>
+          {nextRace ? (
+            <>
+              <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>
+              <strong>{nextRace.race}</strong>
+              <p>{nextRace.time} / {nextRace.venue}</p>
+            </>
+          ) : (
+            <>
+              <span className="jockey-badge jockey-badge--muted">Clear</span>
+              <strong>No scheduled race</strong>
+              <p>Accepted assignments will appear on this board.</p>
+            </>
+          )}
         </aside>
       </section>
 

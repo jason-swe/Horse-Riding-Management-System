@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Activity,
   ArrowRight,
-  Bell,
   CalendarDays,
   CircleDollarSign,
   ClipboardCheck,
@@ -15,7 +14,7 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { findAcceptedPrimaryAssignment, toOwnerScheduleEntry } from "./ownerAdapters";
-import { useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
+import { useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations } from "./useOwnerData";
 
 const quickActions = [
   { label: "Add Horse", meta: "Create a new horse profile", to: "/owner/horses/new", icon: Plus },
@@ -44,6 +43,12 @@ const compactRecordCode = (prefix, value) => {
   return value;
 };
 
+const formatMoney = (value, currency = "VND") => new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency,
+  maximumFractionDigits: currency === "VND" ? 0 : 2,
+}).format(Number(value || 0));
+
 function OwnerDashboard() {
   const dashboardRef = useRef(null);
   const {
@@ -71,6 +76,11 @@ function OwnerDashboard() {
     isLoading: assignmentsLoading,
     error: assignmentsError,
   } = useOwnerJockeyAssignments();
+  const {
+    awards: liveAwards,
+    isLoading: awardsLoading,
+    error: awardsError,
+  } = useOwnerPrizeAwards();
 
   const horses = liveHorses;
   const jockeys = liveJockeys;
@@ -81,10 +91,12 @@ function OwnerDashboard() {
     findAcceptedPrimaryAssignment(liveAssignments, registration)
   ));
   const nextRace = schedule.find((race) => race.date !== "Date unavailable");
-  const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading || assignmentsLoading;
-  const liveError = horsesError || jockeysError || profileError || registrationsError || assignmentsError;
+  const isLoading = horsesLoading || jockeysLoading || profileLoading || registrationsLoading || assignmentsLoading || awardsLoading;
+  const liveError = horsesError || jockeysError || profileError || registrationsError || assignmentsError || awardsError;
   const raceReadyCount = horses.filter((horse) => horse.status === "Ready").length;
   const pendingRegistrationCount = registrations.filter((item) => item.status !== "Approved").length;
+  const ownerEarnings = liveAwards.reduce((total, award) => total + Number(award.ownerAmount || 0), 0);
+  const ownerEarningsCurrency = liveAwards[0]?.currency || "VND";
   const ownerStats = [
     {
       label: "Active Horses",
@@ -106,8 +118,8 @@ function OwnerDashboard() {
     },
     {
       label: "Season Earnings",
-      value: "Unavailable",
-      note: "Owner prize aggregate is not exposed",
+      value: formatMoney(ownerEarnings, ownerEarningsCurrency),
+      note: `${liveAwards.length} prize award${liveAwards.length === 1 ? "" : "s"}`,
       icon: CircleDollarSign,
     },
   ];
@@ -355,19 +367,6 @@ function OwnerDashboard() {
           </div>
         </article>
 
-        <article className="owner-card">
-          <div className="owner-card__header">
-            <div>
-              <p className="owner-eyebrow">Alerts</p>
-              <h2>Owner Notifications</h2>
-            </div>
-            <Bell size={20} />
-          </div>
-
-          <div className="owner-empty owner-empty--compact" role="status">
-            Owner notifications are unavailable because the backend does not expose a notification feed yet.
-          </div>
-        </article>
       </section>
     </div>
   );

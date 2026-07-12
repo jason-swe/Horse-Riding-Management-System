@@ -14,6 +14,22 @@ function withQuery(path, params = {}) {
 }
 
 export const adminApi = {
+  getDashboard(params = {}) {
+    return apiRequest(withQuery("/admin/dashboard", params));
+  },
+
+  getBettingSummary(params = {}) {
+    return apiRequest(withQuery("/admin/betting-summary", params));
+  },
+
+  getDepositRequests(params = {}) {
+    return apiRequest(withQuery("/admin/deposit-requests", params));
+  },
+
+  getPrizeAwardsSummary(params = {}) {
+    return apiRequest(withQuery("/admin/prize-awards/summary", params));
+  },
+
   listUsers(params = {}) {
     return apiRequest(withQuery("/admin/users", params));
   },
@@ -133,6 +149,34 @@ export const adminApi = {
     return apiRequest(withQuery("/violations", params));
   },
 
+  listJockeyAssignments(params = {}) {
+    return apiRequest(withQuery("/jockey-assignments", params));
+  },
+
+  getViolation(id) {
+    return apiRequest(`/violations/${id}`);
+  },
+
+  updateViolation(id, payload) {
+    return apiRequest(`/violations/${id}`, { method: "PATCH", body: payload });
+  },
+
+  confirmViolation(id, decision) {
+    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body: { decision } });
+  },
+
+  dismissViolation(id, decision) {
+    return apiRequest(`/violations/${id}/dismiss`, { method: "POST", body: { decision } });
+  },
+
+  listHorseChecks(params = {}) {
+    return apiRequest(withQuery("/horse-checks", params));
+  },
+
+  updateHorseCheck(id, payload) {
+    return apiRequest(`/horse-checks/${id}`, { method: "PATCH", body: payload });
+  },
+
   listTournaments(params = {}) {
     return apiRequest(withQuery("/tournaments", params));
   },
@@ -179,6 +223,22 @@ export const adminApi = {
 
   getRace(id) {
     return apiRequest(`/races/${id}`);
+  },
+
+  generateRaceOdds(id) {
+    return apiRequest(`/races/${id}/odds/generate`, { method: "POST" });
+  },
+
+  getRaceOdds(id) {
+    return apiRequest(`/races/${id}/odds`);
+  },
+
+  openRaceBetting(id, payload = {}) {
+    return apiRequest(`/races/${id}/betting/open`, { method: "POST", body: payload });
+  },
+
+  closeRaceBetting(id) {
+    return apiRequest(`/races/${id}/betting/close`, { method: "POST" });
   },
 
   createRace(payload) {

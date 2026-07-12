@@ -58,6 +58,29 @@ function getStatusLabel(status) {
   return statusLabels[status] || status || "-";
 }
 
+const adminStatusPriority = {
+  Pending: 0,
+  Draft: 0,
+  Unverified: 0,
+  Confirmed: 1,
+  Active: 1,
+  Approved: 1,
+  Verified: 1,
+  Mixed: 2,
+  Published: 3,
+  Rejected: 4,
+  Suspended: 4,
+};
+
+function statusPriority(status) {
+  return adminStatusPriority[getStatusLabel(status)] ?? adminStatusPriority[status] ?? 9;
+}
+
+function dateTime(value) {
+  const time = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(time) ? time : 0;
+}
+
 function getApplicationUser(application) {
   const user = application.user_id || application.user || {};
   return typeof user === "object" ? user : {};
@@ -235,7 +258,13 @@ export function adaptRoleApplicationDetail(data) {
 }
 
 export function adaptAdminUsers(data) {
-  const users = asArray(data, "users");
+  const users = asArray(data, "users").slice().sort((first, second) => {
+    const firstUser = getUserFromEnvelope(first);
+    const secondUser = getUserFromEnvelope(second);
+    return statusPriority(firstUser.email_verified ? "Verified" : "Unverified") - statusPriority(secondUser.email_verified ? "Verified" : "Unverified")
+      || statusPriority(firstUser.status) - statusPriority(secondUser.status)
+      || dateTime(secondUser.created_at) - dateTime(firstUser.created_at);
+  });
   const rows = users.map((item) => {
     const user = getUserFromEnvelope(item);
     const roles = asArray(item.roles || user.roles).map(getRoleLabel);
@@ -328,7 +357,10 @@ export function adaptRaceRegistrationDetail(data) {
 }
 
 export function adaptRaceRegistrations(data) {
-  const registrations = unwrapRegistrations(data);
+  const registrations = unwrapRegistrations(data).slice().sort((first, second) => (
+    statusPriority(first.status) - statusPriority(second.status)
+    || dateTime(second.registered_at || second.created_at || second.submitted_at) - dateTime(first.registered_at || first.created_at || first.submitted_at)
+  ));
   const rows = registrations.map((registration) => {
     const horse = getRegistrationHorse(registration);
     const race = getRegistrationRace(registration);
@@ -392,7 +424,13 @@ function getLeadingResult(results) {
 }
 
 export function adaptAdminRaceResults(data) {
-  const groups = [...groupRaceResults(data).entries()];
+  const groups = [...groupRaceResults(data).entries()].sort(([, firstGroup], [, secondGroup]) => {
+    const firstStatus = getGroupStatus(firstGroup.results);
+    const secondStatus = getGroupStatus(secondGroup.results);
+    const firstNewest = Math.max(...firstGroup.results.map((result) => dateTime(result.published_at || result.recorded_at || result.confirmed_at)));
+    const secondNewest = Math.max(...secondGroup.results.map((result) => dateTime(result.published_at || result.recorded_at || result.confirmed_at)));
+    return statusPriority(firstStatus) - statusPriority(secondStatus) || secondNewest - firstNewest;
+  });
   const rows = groups.map(([raceId, group]) => {
     const race = group.race;
     const leader = getLeadingResult(group.results);

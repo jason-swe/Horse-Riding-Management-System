@@ -1,14 +1,80 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Award, Clock3, Flag, History, Medal, Timer, Trophy } from "lucide-react";
 import DataTable from "../../components/DataTable.jsx";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
+import { betApi } from "../../api/betApi.js";
 import { useSpectatorRaceResults } from "./useSpectatorData.js";
 import "./spectator.css";
 
+function getEntityName(value, fallback = "") {
+  if (!value || typeof value === "string") return fallback;
+  return value.name || value.full_name || fallback;
+}
+
+function formatBetStatus(value) {
+  const normalized = String(value || "pending").toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function formatTokenAmount(value, currency = "TOKEN") {
+  const number = Number(value || 0);
+  return `${number.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${currency || "TOKEN"}`;
+}
+
+function formatBetDate(value) {
+  if (!value) return "Not settled";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not settled";
+  return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function toBetHistoryRow(bet) {
+  const status = String(bet?.status || "pending").toLowerCase();
+  const payoutAmount = Number(bet?.payout_amount ?? 0);
+  const potentialPayout = Number(bet?.potential_payout ?? 0);
+  const raceName = getEntityName(bet?.race_id, "Race");
+  const horseName =
+    bet?.odds_snapshot?.horse_name ||
+    getEntityName(bet?.predicted_horse_id, "Selected runner");
+  const currency =
+    bet?.odds_snapshot?.currency ||
+    bet?.race_id?.betting_market?.currency ||
+    "TOKEN";
+
+  return {
+    id: bet?._id || bet?.id,
+    submittedAt: bet?.submitted_at,
+    settledAt: bet?.settled_at,
+    race: raceName,
+    selection: horseName,
+    status,
+    statusLabel: formatBetStatus(status),
+    stake: Number(bet?.stake_amount ?? 0),
+    odds: Number(bet?.odds_snapshot?.game_odds ?? 0),
+    potentialPayout,
+    payoutAmount,
+    resultAmount: status === "won" ? payoutAmount : status === "lost" ? 0 : potentialPayout,
+    resultLabel: status === "won" ? "Paid out" : status === "lost" ? "No payout" : "Potential",
+    currency,
+  };
+}
+
+function summarizePaidBets(bets) {
+  const byCurrency = new Map();
+  bets.forEach((bet) => {
+    byCurrency.set(bet.currency, (byCurrency.get(bet.currency) || 0) + Number(bet.payoutAmount || 0));
+  });
+  return Array.from(byCurrency.entries())
+    .map(([currency, amount]) => formatTokenAmount(amount, currency))
+    .join(" / ");
+}
+
 const Results = () => {
   const [view, setView] = useState("results");
+  const [betHistory, setBetHistory] = useState({ bets: [], isLoading: true, error: "" });
   const { error, isLoading, results: liveResults } = useSpectatorRaceResults();
   const displayResults = liveResults;
+  const settledBets = useMemo(() => betHistory.bets.filter((bet) => ["won", "lost", "cancelled"].includes(bet.status)), [betHistory.bets]);
   const latestWinner = displayResults.find((result) => Number(result.position) === 1) || null;
   const publishedRaceCount = new Set(displayResults.map((result) => result.raceId || result.race)).size;
   const scoredResults = displayResults.filter((result) => Number.isFinite(Number(result.score)));
@@ -20,6 +86,27 @@ const Results = () => {
     { label: "Result entries", value: displayResults.length, detail: "Published by Admin", icon: Medal },
     { label: "Scored entries", value: scoredResults.length, detail: "Backend final score", icon: Award },
   ];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBetHistory() {
+      setBetHistory((current) => ({ ...current, isLoading: true, error: "" }));
+      try {
+        const payload = await betApi.getMyBets();
+        if (cancelled) return;
+        const bets = Array.isArray(payload.bets) ? payload.bets.map(toBetHistoryRow) : [];
+        setBetHistory({ bets, isLoading: false, error: "" });
+      } catch (apiError) {
+        if (!cancelled) {
+          setBetHistory({ bets: [], isLoading: false, error: apiError.message || "Unable to load betting history." });
+        }
+      }
+    }
+
+    loadBetHistory();
+    return () => { cancelled = true; };
+  }, []);
 
   const resultColumns = [
     { header: "Pos", field: "position", render: (row) => (
@@ -40,6 +127,33 @@ const Results = () => {
       </span>
     ) },
     { header: "Score", field: "score", render: (row) => <span className="results-reward">{row.score}</span> },
+  ];
+
+  const betColumns = [
+    { header: "Race", field: "race", render: (row) => (
+      <span className="results-competitor">
+        <strong>{row.race}</strong>
+        <small>{formatBetDate(row.settledAt || row.submittedAt)}</small>
+      </span>
+    ) },
+    { header: "Selection", field: "selection", render: (row) => (
+      <span className="results-competitor">
+        <strong>{row.selection}</strong>
+        <small>Win / {row.odds ? `${row.odds.toFixed(2)}x` : "odds snapshot"}</small>
+      </span>
+    ) },
+    { header: "Stake", field: "stake", render: (row) => <span className="results-time">{formatTokenAmount(row.stake, row.currency)}</span> },
+    { header: "Status", field: "status", render: (row) => (
+      <span className={`results-status results-status--${row.status}`}>
+        {row.statusLabel}
+      </span>
+    ) },
+    { header: "Return", field: "resultAmount", render: (row) => (
+      <span className={`results-bet-return results-bet-return--${row.status}`}>
+        <strong>{formatTokenAmount(row.resultAmount, row.currency)}</strong>
+        <small>{row.resultLabel}</small>
+      </span>
+    ) },
   ];
 
   if (isLoading) {
@@ -116,19 +230,30 @@ const Results = () => {
             <button className={`results-tab ${view === "history" ? "results-tab--active" : ""}`} type="button" onClick={() => setView("history")}>
               <History size={16} />
               Betting history
-              <span>Unavailable</span>
+              <span>{betHistory.isLoading ? "..." : betHistory.bets.length}</span>
             </button>
           </div>
         </div>
 
         {view === "results" ? (
           <DataTable columns={resultColumns} data={displayResults} emptyMessage="No published race results are available." />
-        ) : (
+        ) : betHistory.isLoading ? (
+          <LoadingSkeleton ariaLabel="Loading betting history" rows={4} variant="table" />
+        ) : betHistory.error ? (
           <div className="spectator-empty-state results-unavailable-state" role="status">
             <History size={22} />
             <strong>Betting history is unavailable</strong>
-            <span>The backend does not expose bet submission, settlement, wallet, or history routes yet.</span>
+            <span>{betHistory.error}</span>
           </div>
+        ) : (
+          <>
+            <div className="results-history-summary" aria-label="Betting history summary">
+              <span>{betHistory.bets.length} total bets</span>
+              <span>{settledBets.length} settled</span>
+              <span>{summarizePaidBets(settledBets) || formatTokenAmount(0, "TOKEN")} paid</span>
+            </div>
+            <DataTable columns={betColumns} data={betHistory.bets} emptyMessage="No betting history is available yet." />
+          </>
         )}
       </div>
     </section>

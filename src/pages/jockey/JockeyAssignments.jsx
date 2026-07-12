@@ -63,9 +63,19 @@ function JockeyAssignments() {
           <p>Track the horses tied to your invitations, owner context, race targets, and pairing status before you commit to the gate.</p>
         </div>
         <aside className="jockey-assignments-hero__panel">
-          <span className={`jockey-badge ${statusClass(featuredAssignment.status)}`}>{featuredAssignment.status}</span>
-          <strong>{featuredAssignment.horse}</strong>
-          <p>{featuredAssignment.race} / {featuredAssignment.owner}</p>
+          {featuredAssignment ? (
+            <>
+              <span className={`jockey-badge ${statusClass(featuredAssignment.status)}`}>{featuredAssignment.status}</span>
+              <strong>{featuredAssignment.horse}</strong>
+              <p>{featuredAssignment.race} / {featuredAssignment.owner}</p>
+            </>
+          ) : (
+            <>
+              <span className="jockey-badge jockey-badge--muted">Clear</span>
+              <strong>No pairings yet</strong>
+              <p>Accepted invitations will create horse pairings here.</p>
+            </>
+          )}
         </aside>
       </section>
 

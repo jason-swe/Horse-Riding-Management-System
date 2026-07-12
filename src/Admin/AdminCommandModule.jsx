@@ -25,6 +25,7 @@ const moduleConfig = {
     search: "Search name, role, status or verification...",
     emptyTitle: "No accounts match this view",
     emptyText: "Adjust the search or status filter to return account records.",
+    sortHint: "Pending verification first, newest first",
     icon: UsersRound,
   },
   registrations: {
@@ -35,6 +36,7 @@ const moduleConfig = {
     search: "Search horse, race, tournament or status...",
     emptyTitle: "The entry queue is clear",
     emptyText: "No registration records match the active filters.",
+    sortHint: "Pending entries first, newest first",
     icon: ClipboardCheck,
   },
   results: {
@@ -45,6 +47,7 @@ const moduleConfig = {
     search: "Search race, tournament, leader or status...",
     emptyTitle: "No result records found",
     emptyText: "Result drafts will appear after a referee finalizes an eligible race.",
+    sortHint: "Drafts first, newest first",
     icon: FileCheck2,
   },
 };
@@ -252,7 +255,7 @@ function AdminCommandModule({ moduleName }) {
 
       <section className="admin-command-workspace">
         <article className="admin-command-ledger">
-          <header><div><Icon size={19} aria-hidden="true" /><span><strong>{config.tableLabel}</strong><small>{filteredRows.length} records</small></span></div><span>20 rows per page</span></header>
+          <header><div><Icon size={19} aria-hidden="true" /><span><strong>{config.tableLabel}</strong><small>{filteredRows.length} records</small></span></div><span>{config.sortHint} - 20 rows per page</span></header>
           {filteredRows.length ? (
             <div className="admin-data-table__wrap" role="region" aria-label={config.tableLabel} tabIndex="0">
               <table className="admin-data-table">

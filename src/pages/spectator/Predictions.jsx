@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, ArrowRight, CalendarClock, CircleDollarSign, Flag, MapPin, RefreshCw, Timer, UsersRound, WalletCards } from "lucide-react";
+import { walletApi } from "../../api/walletApi.js";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { BETTING_STATUS, RACE_STATUS, bettingStatusMeta, raceStatusMeta } from "./race/raceStatus.js";
 import { useSpectatorRaceMarkets } from "./race/useSpectatorRaceMarkets.js";
@@ -23,6 +24,29 @@ function sortRaceMarkets(races) {
   return [...races].sort((a, b) => weight(a) - weight(b) || new Date(a.raceDate) - new Date(b.raceDate));
 }
 
+function getWalletBalance(payload) {
+  const value = payload?.wallet?.token_balance ?? payload?.token_balance ?? payload?.balance;
+  const balance = Number(value);
+  return Number.isFinite(balance) ? balance : null;
+}
+
+function formatWalletBalance(balance) {
+  if (!Number.isFinite(balance)) return "-- pts";
+  return `${balance.toLocaleString()} pts`;
+}
+
+function formatParticipantLabel(race) {
+  const runnerCount = Number(race.runnerCount);
+  const maxParticipants = Number(race.maxParticipants);
+  const hasRunnerCount = Number.isFinite(runnerCount);
+  const hasMaxParticipants = Number.isFinite(maxParticipants) && maxParticipants > 0;
+
+  if (hasRunnerCount && hasMaxParticipants) return `${runnerCount}/${maxParticipants} participants`;
+  if (hasRunnerCount) return `${runnerCount} participants`;
+  if (hasMaxParticipants) return `Capacity ${maxParticipants}`;
+  return "Participants TBA";
+}
+
 function RaceMarketRow({ race }) {
   const raceMeta = raceStatusMeta[race.raceStatus] || raceStatusMeta[RACE_STATUS.UNKNOWN];
   const marketMeta = bettingStatusMeta[race.bettingStatus] || bettingStatusMeta[BETTING_STATUS.UNAVAILABLE];
@@ -33,12 +57,16 @@ function RaceMarketRow({ race }) {
 
   return (
     <article className={`race-market-row race-market-row--${race.raceStatus}`}>
-      <div className="race-market-row__time"><strong>{race.time}</strong><span>{race.roundName}</span></div>
+      <div className="race-market-row__time">
+        <strong>{race.time || "TBD"}</strong>
+        <span>{race.raceDateDisplay || "Date TBD"}</span>
+        <small>{race.roundName}</small>
+      </div>
       <div className="race-market-row__identity">
         <div className="race-market-row__context"><span>{race.tournamentName}</span>{race.isPreview && <small>Preview</small>}</div>
         <h2>{race.name}</h2>
         <div className="race-market-row__meta">
-          <span><Flag size={14} /> {race.distance}</span><span><MapPin size={14} /> {race.location}</span><span><UsersRound size={14} /> {race.runnerCount}/{race.maxParticipants}</span>
+          <span><Flag size={14} /> {race.distance || "Distance TBA"}</span><span><MapPin size={14} /> {race.location || "Location TBA"}</span><span><UsersRound size={14} /> {formatParticipantLabel(race)}</span>
         </div>
       </div>
       <div className="race-market-row__states">
@@ -56,11 +84,35 @@ function RaceMarketRow({ race }) {
 export default function Predictions() {
   const { error, isLoading, isPreview, races, reload } = useSpectatorRaceMarkets();
   const [filter, setFilter] = useState("upcoming");
+  const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
   const sortedRaces = useMemo(() => sortRaceMarkets(races), [races]);
   const counts = useMemo(() => Object.fromEntries(filters.map((item) => [item.id, sortedRaces.filter(item.test).length])), [sortedRaces]);
   const visibleRaces = sortedRaces.filter(filters.find((item) => item.id === filter)?.test || (() => true));
   const openCount = counts.available || 0;
   const nextRace = sortedRaces.find((race) => race.raceStatus === RACE_STATUS.SCHEDULED);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWallet() {
+      setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
+      try {
+        const payload = await walletApi.getMyWallet();
+        if (!cancelled) setWalletState({ balance: getWalletBalance(payload), isLoading: false, error: "" });
+      } catch (error) {
+        if (!cancelled) {
+          setWalletState({
+            balance: null,
+            isLoading: false,
+            error: error.message || "Unable to load wallet balance.",
+          });
+        }
+      }
+    }
+
+    loadWallet();
+    return () => { cancelled = true; };
+  }, []);
 
   if (isLoading) return <section className="spectator-page"><LoadingSkeleton ariaLabel="Loading race markets" rows={4} variant="list" /></section>;
 
@@ -68,7 +120,7 @@ export default function Predictions() {
     <section className="spectator-page race-market-board">
       <header className="race-market-board__header">
         <div><p className="spectator-eyebrow">Race markets</p><h1>Choose a race, not a tournament.</h1><p>Open markets come first. Upcoming races stay visible without implying that betting is available.</p></div>
-        <aside className="race-market-board__wallet"><span><WalletCards size={15} /> Preview balance</span><strong>1,280 pts</strong><small>Live wallet API pending</small></aside>
+        <aside className="race-market-board__wallet"><span><WalletCards size={15} /> Wallet balance</span><strong>{walletState.isLoading ? "Loading..." : formatWalletBalance(walletState.balance)}</strong><small>{walletState.error || "Live wallet balance"}</small></aside>
       </header>
 
       <div className="race-market-board__summary">

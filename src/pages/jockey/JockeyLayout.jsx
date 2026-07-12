@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Bell, CheckCircle2, Trophy, UserRound } from "lucide-react";
+import { Bell, CalendarDays, CheckCircle2, FileText, Send, Trophy, UserRound } from "lucide-react";
 import LogoutButton from "../../auth/LogoutButton";
-import { jockeyNotifications } from "./jockeyData";
+import { useJockeyApiData } from "./useJockeyApiData";
 import "./jockey.css";
 
 const navItems = [
@@ -16,6 +16,37 @@ const navItems = [
 function JockeyLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef(null);
+  const { invitations, schedule, results } = useJockeyApiData();
+  const pendingInvitations = invitations.filter((item) => item.rawStatus === "meeting_invited");
+  const contractReviews = invitations.filter((item) => item.rawStatus === "contract_uploaded");
+  const nextRace = schedule[0];
+  const latestResult = results[0];
+  const notifications = [
+    ...pendingInvitations.slice(0, 2).map((item) => ({
+      icon: Send,
+      title: `${item.horse} invitation needs your response.`,
+      meta: item.race,
+      to: "/jockey/invitations",
+    })),
+    ...contractReviews.slice(0, 2).map((item) => ({
+      icon: FileText,
+      title: `${item.horse} contract is ready for review.`,
+      meta: item.contractTitle || item.race,
+      to: "/jockey/invitations",
+    })),
+    ...(nextRace ? [{
+      icon: CalendarDays,
+      title: `${nextRace.race} is next on your schedule.`,
+      meta: nextRace.time,
+      to: "/jockey/schedule",
+    }] : []),
+    ...(latestResult ? [{
+      icon: Trophy,
+      title: `${latestResult.race} result has been published.`,
+      meta: latestResult.prize,
+      to: "/jockey/results",
+    }] : []),
+  ].slice(0, 4);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -72,7 +103,7 @@ function JockeyLayout() {
               type="button"
             >
               <Bell size={18} />
-              <span>{jockeyNotifications.length}</span>
+              {notifications.length > 0 && <span>{notifications.length}</span>}
             </button>
 
             <aside className={`jockey-notification-popover ${notificationsOpen ? "is-open" : ""}`} aria-label="Jockey notification list">
@@ -81,19 +112,28 @@ function JockeyLayout() {
                   <span className="jockey-kicker">Notifications</span>
                   <h2>Race alerts</h2>
                 </div>
-                <span className="jockey-badge jockey-badge--amber">{jockeyNotifications.length} new</span>
+                <span className="jockey-badge jockey-badge--amber">{notifications.length} new</span>
               </div>
 
               <div className="jockey-notification-popover__list">
-                {jockeyNotifications.map((item, index) => (
-                  <Link className="jockey-notification-item" key={item} onClick={() => setNotificationsOpen(false)} to="/jockey/profile">
-                    <span className="jockey-notification-item__icon">{index === 1 ? <CheckCircle2 size={16} /> : <Trophy size={16} />}</span>
+                {notifications.map((item, index) => {
+                  const Icon = item.icon || CheckCircle2;
+                  return (
+                  <Link className="jockey-notification-item" key={`${item.title}-${index}`} onClick={() => setNotificationsOpen(false)} to={item.to}>
+                    <span className="jockey-notification-item__icon"><Icon size={16} /></span>
                     <span>
-                      <strong>{item}</strong>
-                      <small>{index === 0 ? "Just now" : index === 1 ? "18 min ago" : "Today"}</small>
+                      <strong>{item.title}</strong>
+                      <small>{item.meta || "Live workspace"}</small>
                     </span>
                   </Link>
-                ))}
+                  );
+                })}
+                {notifications.length === 0 && (
+                  <div className="jockey-notification-empty">
+                    <CheckCircle2 size={18} />
+                    <span>No current race alerts.</span>
+                  </div>
+                )}
               </div>
 
               <Link className="jockey-notification-popover__footer" onClick={() => setNotificationsOpen(false)} to="/jockey/profile">
