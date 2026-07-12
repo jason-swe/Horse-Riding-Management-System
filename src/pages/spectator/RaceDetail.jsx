@@ -167,7 +167,10 @@ export default function RaceDetail() {
   const hasRealResults = realResults && realResults.length > 0;
 
   useEffect(() => {
-    if (!raceId || hasRealResults) return;
+    if (!raceId || hasRealResults) {
+      setIsLoadingLiveState(false);
+      return;
+    }
 
     let active = true;
     async function fetchParticipants() {

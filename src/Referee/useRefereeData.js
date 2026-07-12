@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
 import { refereeApi } from "../api/refereeApi";
 import { adaptRefereeApiData } from "./refereeAdapters";
 
 export function useRefereeData() {
+  const { profiles } = useAuth();
+  const refereeId = profiles?.race_referee?._id || profiles?.race_referee?.id || "";
   const [races, setRaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,7 +27,7 @@ export function useRefereeData() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refereeId]);
 
   useEffect(() => { reload(); }, [reload]);
 

@@ -5,9 +5,23 @@ import { adminApi } from "../api/adminApi";
 import { betApi } from "../api/betApi";
 import AdminLayout from "./AdminLayout";
 
-const emptyTournament = { name: "", description: "", location: "", image_url: "", entry_fee: "", entry_fee_currency: "VND", start_date: "", end_date: "", status: "draft" };
+const emptyTournament = {
+  name: "",
+  description: "",
+  location: "",
+  image_url: "",
+  entry_fee: "",
+  entry_fee_currency: "VND",
+  start_date: "",
+  end_date: "",
+  status: "draft",
+  initial_round_name: "Round 1: Opening Card",
+  initial_round_order: "1",
+  initial_round_description: "Opening round for the tournament schedule.",
+  initial_round_status: "active",
+};
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
-const emptyRace = { tournament_id: "", round_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", prize_pool: "", prize_currency: "VND", status: "scheduled" };
+const emptyRace = { tournament_id: "", round_id: "", referee_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", prize_pool: "", prize_currency: "VND", status: "scheduled" };
 const defaultBettingConfig = { min_stake: "1", max_stake: "1000", currency: "TOKEN", closes_at: "" };
 const PAGE_SIZE = 20;
 
@@ -19,6 +33,22 @@ const entityConfig = {
 
 function idOf(value) {
   return String(value._id || value || "");
+}
+
+function getRaceRefereeProfile(userEnvelope) {
+  return userEnvelope?.profiles?.race_referee || null;
+}
+
+function getRefereeOptionId(userEnvelope) {
+  const profile = getRaceRefereeProfile(userEnvelope);
+  return idOf(profile);
+}
+
+function getRefereeOptionLabel(userEnvelope) {
+  const user = userEnvelope?.user || userEnvelope || {};
+  const profile = getRaceRefereeProfile(userEnvelope);
+  const license = profile?.license_number ? ` · ${profile.license_number}` : "";
+  return `${user.full_name || user.email || "Unnamed referee"}${license}`;
 }
 
 function dateValue(value, withTime = false) {
@@ -291,6 +321,17 @@ function TournamentForm({ value, onChange, onSubmit, onCancel, saving, mode }) {
       </div>
       {value.image_url && <div className="admin-competition__image-preview"><img src={value.image_url} alt="" /><span>Image preview</span></div>}
       <label className="admin-field"><span>Description</span><textarea value={value.description} onChange={(event) => onChange("description", event.target.value)} placeholder="Competition format and operating notes" /></label>
+      {mode === "create" && (
+        <section className="admin-live-state">
+          <strong>Initial round</strong>
+          <div className="admin-competition__form-columns">
+            <label className="admin-field"><span>Round name *</span><input required value={value.initial_round_name} onChange={(event) => onChange("initial_round_name", event.target.value)} placeholder="Round 1: Opening Card" /></label>
+            <label className="admin-field"><span>Order *</span><input required min="1" type="number" value={value.initial_round_order} onChange={(event) => onChange("initial_round_order", event.target.value)} /></label>
+            <label className="admin-field"><span>Status</span><select value={value.initial_round_status} onChange={(event) => onChange("initial_round_status", event.target.value)}><option value="draft">Draft</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
+          </div>
+          <label className="admin-field"><span>Round description</span><textarea value={value.initial_round_description} onChange={(event) => onChange("initial_round_description", event.target.value)} placeholder="Round rules and qualification notes" /></label>
+        </section>
+      )}
       <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} tournament`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
     </form>
   );
@@ -311,31 +352,35 @@ function RoundForm({ value, tournaments, onChange, onSubmit, onCancel, saving, m
   );
 }
 
-function RaceForm({ value, tournaments, rounds, onChange, onSubmit, onCancel, saving, mode }) {
+function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, onCancel, saving, mode }) {
   const availableRounds = rounds.filter((round) => idOf(round.tournament_id) === value.tournament_id);
+  const hasTournament = Boolean(value.tournament_id);
+  const hasRounds = availableRounds.length > 0;
   return (
     <form className="admin-form-grid admin-competition__form" onSubmit={onSubmit}>
       <div className="admin-competition__form-columns">
         <label className="admin-field"><span>Tournament *</span><select required value={value.tournament_id} onChange={(event) => onChange("tournament_id", event.target.value)}><option value="">Select tournament</option>{tournaments.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}</select></label>
-        <label className="admin-field"><span>Round *</span><select required disabled={!value.tournament_id} value={value.round_id} onChange={(event) => onChange("round_id", event.target.value)}><option value="">Select round</option>{availableRounds.map((item) => <option key={item._id} value={item._id}>{item.round_order}. {item.name}</option>)}</select></label>
-        <label className="admin-field"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Race 01 - Opening heat" /></label>
+        <label className="admin-field"><span>Round *</span><select required disabled={!hasTournament || !hasRounds} value={value.round_id} onChange={(event) => onChange("round_id", event.target.value)}><option value="">{!hasTournament ? "Select tournament first" : hasRounds ? "Select round" : "No rounds in this tournament"}</option>{availableRounds.map((item) => <option key={item._id} value={item._id}>{item.round_order}. {item.name}</option>)}</select></label>
+  <label className="admin-field"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Race 01 - Opening heat" /></label>
         <label className="admin-field"><span>Race date & time</span><input type="datetime-local" value={value.race_date} onChange={(event) => onChange("race_date", event.target.value)} /></label>
         <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Track A" /></label>
         <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+        <label className="admin-field"><span>Race referee</span><select value={value.referee_id} onChange={(event) => onChange("referee_id", event.target.value)}><option value="">Unassigned</option>{referees.map((item) => <option key={getRefereeOptionId(item)} value={getRefereeOptionId(item)}>{getRefereeOptionLabel(item)}</option>)}</select></label>
         <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} placeholder="1600" /></label>
         <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} placeholder="12" /></label>
         <label className="admin-field"><span>Prize pool</span><input min="0" type="number" value={value.prize_pool} onChange={(event) => onChange("prize_pool", event.target.value)} placeholder="50000000" /></label>
         <label className="admin-field"><span>Prize currency</span><select value={value.prize_currency} onChange={(event) => onChange("prize_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
       </div>
-      <div className="admin-live-state"><strong>Referee assignment is not available in this form.</strong></div>
-      <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
+      {hasTournament && !hasRounds && <div className="admin-live-state admin-live-state--warning"><strong>This tournament has no rounds yet.</strong> Create a round for the tournament before scheduling races.</div>}
+      {!referees.length && <div className="admin-live-state"><strong>No active race referees are available.</strong> Approve or assign a Race Referee role before scheduling race control.</div>}
+      <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving || !hasRounds} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
     </form>
   );
 }
 
 function AdminCompetitionModule({ moduleName }) {
   const isSchedule = moduleName === "schedule";
-  const [data, setData] = useState({ tournaments: [], rounds: [], races: [] });
+  const [data, setData] = useState({ tournaments: [], rounds: [], races: [], referees: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -361,15 +406,17 @@ function AdminCompetitionModule({ moduleName }) {
     quiet ? setRefreshing(true) : setLoading(true);
     setError("");
     try {
-      const [tournamentResponse, roundResponse, raceResponse] = await Promise.all([
+      const [tournamentResponse, roundResponse, raceResponse, refereeResponse] = await Promise.all([
         adminApi.listTournaments(),
         adminApi.listRounds(),
         adminApi.listRaces(),
+        adminApi.listUsers({ role: "race_referee", status: "active", limit: 100 }),
       ]);
       setData({
         tournaments: (tournamentResponse.tournaments || []).filter((item) => item.status !== "deleted"),
         rounds: (roundResponse.rounds || []).filter((item) => item.status !== "deleted"),
         races: (raceResponse.races || []).filter((item) => item.status !== "deleted"),
+        referees: (refereeResponse.users || []).filter((item) => getRefereeOptionId(item) !== ""),
       });
     } catch (apiError) {
       setError(apiError.message || "Unable to load competition data.");
@@ -390,25 +437,59 @@ function AdminCompetitionModule({ moduleName }) {
     let next;
     if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", entry_fee: String(item.entry_fee || ""), entry_fee_currency: item.entry_fee_currency || "VND", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
     if (kind === "round") next = item ? { tournament_id: idOf(item.tournament_id), name: item.name || "", round_order: String(item.round_order || ""), description: item.description || "", status: item.status || "draft" } : { ...emptyRound, tournament_id: data.tournaments[0]?._id || "" };
-    if (kind === "race") next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND", status: item.status || "scheduled" } : { ...emptyRace, tournament_id: data.tournaments[0]?._id || "" };
+    if (kind === "race") {
+      const defaultTournamentId = data.tournaments[0]?._id || "";
+      const defaultRoundId = data.rounds.find((round) => idOf(round.tournament_id) === defaultTournamentId)?._id || "";
+    next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), referee_id: idOf(item.referee_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND", status: item.status || "scheduled" } : { ...emptyRace, tournament_id: defaultTournamentId, round_id: defaultRoundId };
+    }
     setForm(next);
     setError("");
     setModal({ kind, mode: item ? "edit" : "create", item });
   };
 
   const changeField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value, ...(field === "tournament_id" && modal.kind === "race" ? { round_id: "" } : {}) }));
+    setForm((current) => {
+      if (field === "tournament_id" && modal?.kind === "race") {
+        const firstRound = data.rounds.find((round) => idOf(round.tournament_id) === value);
+        return { ...current, tournament_id: value, round_id: firstRound?._id || "" };
+      }
+
+      return { ...current, [field]: value };
+    });
   };
 
   const payloadFor = (kind) => {
     if (kind === "tournament") {
       if (form.start_date && form.end_date && form.end_date < form.start_date) throw new Error("End date must be on or after the start date.");
-      return { ...form, image_url: form.image_url?.trim() || "", entry_fee: form.entry_fee ? Number(form.entry_fee) : 0, entry_fee_currency: form.entry_fee_currency || "VND", start_date: form.start_date || null, end_date: form.end_date || null };
+      const {
+        initial_round_name,
+        initial_round_order,
+        initial_round_description,
+        initial_round_status,
+        ...tournamentPayload
+      } = form;
+
+      if (modal?.mode === "create" && !String(initial_round_name || "").trim()) {
+        throw new Error("Initial round name is required.");
+      }
+
+      if (modal?.mode === "create" && Number(initial_round_order) < 1) {
+        throw new Error("Initial round order must be at least 1.");
+      }
+
+      return {
+        ...tournamentPayload,
+        image_url: tournamentPayload.image_url?.trim() || "",
+        entry_fee: tournamentPayload.entry_fee ? Number(tournamentPayload.entry_fee) : 0,
+        entry_fee_currency: tournamentPayload.entry_fee_currency || "VND",
+        start_date: tournamentPayload.start_date || null,
+        end_date: tournamentPayload.end_date || null,
+      };
     }
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);
     if (!selectedRound || idOf(selectedRound.tournament_id) !== form.tournament_id) throw new Error("The selected round does not belong to this tournament.");
-    return { ...form, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null, prize_pool: form.prize_pool ? Number(form.prize_pool) : 0, prize_currency: form.prize_currency || "VND" };
+  return { ...form, referee_id: form.referee_id || null, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null, prize_pool: form.prize_pool ? Number(form.prize_pool) : 0, prize_currency: form.prize_currency || "VND" };
   };
 
   const submitForm = async (event) => {
@@ -418,8 +499,26 @@ function AdminCompetitionModule({ moduleName }) {
     setError("");
     try {
       const payload = payloadFor(modal.kind);
-      if (modal.mode === "edit") await config.update(modal.item._id, payload);
-      else await config.create(payload);
+      if (modal.mode === "edit") {
+        await config.update(modal.item._id, payload);
+      } else if (modal.kind === "tournament") {
+        const created = await config.create(payload);
+        const tournamentId = created?.tournament?._id;
+
+        if (!tournamentId) {
+          throw new Error("Tournament was created, but the response did not include its id.");
+        }
+
+        await adminApi.createRound({
+          tournament_id: tournamentId,
+          name: form.initial_round_name.trim(),
+          round_order: Number(form.initial_round_order),
+          description: form.initial_round_description || "",
+          status: form.initial_round_status || "active",
+        });
+      } else {
+        await config.create(payload);
+      }
       setNotice(`${config.title} ${modal.mode === "edit" ? "updated" : "created"}.`);
       setModal(null);
       setForm(null);
@@ -685,7 +784,7 @@ function AdminCompetitionModule({ moduleName }) {
         </div>
       )}
 
-      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
+      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} referees={data.referees} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
       {deleteTarget && <div className="admin-modal" role="alertdialog" aria-modal="true" aria-labelledby="competition-delete-title" aria-describedby="competition-delete-copy" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}><div className="admin-modal__card admin-competition__delete-dialog"><Trash2 size={22} aria-hidden="true" /><div><p className="admin-panel__eyebrow">Delete {entityConfig[deleteTarget.kind].title}</p><h2 id="competition-delete-title">{deleteTarget.item.name}</h2><p id="competition-delete-copy">{deleteBlocked ? `Remove ${deleteDependencyCount} linked ${deleteTarget.kind === "tournament" ? "rounds" : "races"} first.` : "This record will be removed from the competition workspace."}</p></div><div className="admin-tool-card__footer"><button className="admin-header__button admin-header__button--red" disabled={deleting || deleteBlocked} type="button" onClick={removeEntity}>{deleting ? "Deleting..." : "Delete"}</button><button className="admin-header__button admin-header__button--ghost" disabled={deleting} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button></div></div></div>}
     </AdminLayout>
   );
