@@ -99,7 +99,7 @@ const Results = () => {
         setBetHistory({ bets, isLoading: false, error: "" });
       } catch (apiError) {
         if (!cancelled) {
-          setBetHistory({ bets: [], isLoading: false, error: apiError.message || "Unable to load betting history." });
+          setBetHistory({ bets: [], isLoading: false, error: apiError.message || "Unable to load prediction history." });
         }
       }
     }
@@ -229,7 +229,7 @@ const Results = () => {
             </button>
             <button className={`results-tab ${view === "history" ? "results-tab--active" : ""}`} type="button" onClick={() => setView("history")}>
               <History size={16} />
-              Betting history
+              Prediction history
               <span>{betHistory.isLoading ? "..." : betHistory.bets.length}</span>
             </button>
           </div>
@@ -238,21 +238,21 @@ const Results = () => {
         {view === "results" ? (
           <DataTable columns={resultColumns} data={displayResults} emptyMessage="No published race results are available." />
         ) : betHistory.isLoading ? (
-          <LoadingSkeleton ariaLabel="Loading betting history" rows={4} variant="table" />
+          <LoadingSkeleton ariaLabel="Loading prediction history" rows={4} variant="table" />
         ) : betHistory.error ? (
           <div className="spectator-empty-state results-unavailable-state" role="status">
             <History size={22} />
-            <strong>Betting history is unavailable</strong>
+            <strong>Prediction history is unavailable</strong>
             <span>{betHistory.error}</span>
           </div>
         ) : (
           <>
-            <div className="results-history-summary" aria-label="Betting history summary">
-              <span>{betHistory.bets.length} total bets</span>
+            <div className="results-history-summary" aria-label="Prediction history summary">
+              <span>{betHistory.bets.length} total predictions</span>
               <span>{settledBets.length} settled</span>
               <span>{summarizePaidBets(settledBets) || formatTokenAmount(0, "TOKEN")} paid</span>
             </div>
-            <DataTable columns={betColumns} data={betHistory.bets} emptyMessage="No betting history is available yet." />
+            <DataTable columns={betColumns} data={betHistory.bets} emptyMessage="No prediction history is available yet." />
           </>
         )}
       </div>

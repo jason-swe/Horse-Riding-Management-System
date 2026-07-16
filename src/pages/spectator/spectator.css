@@ -2600,6 +2600,12 @@
   background-color: rgba(212, 200, 179, 0.12);
 }
 
+.spectator-badge--red {
+  border-color: rgba(248, 113, 113, 0.46);
+  color: #fecaca;
+  background-color: rgba(127, 29, 29, 0.18);
+}
+
 .spectator-tab {
   color: var(--spectator-text-soft);
 }
@@ -6830,6 +6836,13 @@
   min-height: 48px;
 }
 
+.profile-wallet-actions .profile-role-access-button {
+  grid-column: 1 / -1;
+  border-color: rgba(var(--racing-accent-rgb), 0.36);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  color: var(--racing-accent-soft);
+}
+
 .profile-wallet-deposit {
   display: grid;
   gap: 8px;
@@ -6896,7 +6909,7 @@
 
 .deposit-page {
   display: grid;
-  gap: 22px;
+  gap: 18px;
   width: min(1280px, 100%);
   margin-inline: auto;
 }
@@ -6994,27 +7007,27 @@
 .deposit-layout {
   display: grid;
   grid-template-columns: minmax(360px, 0.42fr) minmax(0, 1fr);
-  gap: clamp(18px, 2.4vw, 30px);
+  gap: clamp(16px, 2vw, 24px);
   align-items: start;
 }
 
 .deposit-layout--wide {
-  grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
 }
 
 .deposit-form {
   display: grid;
-  gap: 18px;
-  padding: clamp(18px, 2vw, 24px);
+  gap: 14px;
+  padding: clamp(18px, 1.8vw, 22px);
 }
 
 .deposit-form .spectator-card__header,
 .deposit-history-card .spectator-card__header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: start;
-  margin-bottom: 4px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 2px;
 }
 
 .deposit-form .spectator-card__header h2 {
@@ -7087,7 +7100,7 @@
 }
 
 .deposit-mode-toggle button {
-  min-height: 40px;
+  min-height: 38px;
   border-radius: 6px;
   background: transparent;
   font-weight: 900;
@@ -7101,27 +7114,32 @@
 .deposit-package-grid {
   display: grid;
   gap: 12px;
-  max-height: 438px;
+  max-height: 390px;
   overflow: auto;
-  padding-right: 3px;
+  padding: 2px 3px 2px 0;
 }
 
 .deposit-package {
   display: grid;
-  gap: 9px;
-  padding: 16px;
-  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  gap: 7px;
+  min-height: 98px;
+  padding: 14px 16px;
+  border: 2px solid rgba(var(--racing-contrast-rgb), 0.2);
   border-radius: 8px;
   background: rgba(var(--racing-contrast-rgb), 0.07);
   text-align: left;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
-.deposit-package:hover,
-.deposit-package.is-selected {
-  transform: translateY(-1px);
-  border-color: rgba(var(--racing-accent-rgb), 0.4);
+.deposit-package:hover {
+  border-color: rgba(var(--racing-accent-rgb), 0.48);
   background: rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.deposit-package.is-selected {
+  border-color: rgba(var(--racing-accent-rgb), 0.82);
+  background: rgba(var(--racing-accent-rgb), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--racing-accent-rgb), 0.18);
 }
 
 .deposit-package span {
@@ -7160,22 +7178,22 @@
 
 .deposit-payment-methods {
   display: grid;
-  gap: 9px;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .deposit-payment-method-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .deposit-payment-method {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 5px 10px;
+  display: flex;
+  gap: 10px;
   align-items: center;
-  min-height: 106px;
-  padding: 15px;
+  min-height: 58px;
+  padding: 0 16px;
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
   border-radius: 8px;
   background: rgba(var(--racing-contrast-rgb), 0.07);
@@ -7193,23 +7211,14 @@
 }
 
 .deposit-payment-method svg {
-  grid-row: span 3;
+  flex: 0 0 auto;
   color: var(--racing-accent-soft);
-}
-
-.deposit-payment-method span {
-  color: var(--spectator-text-strong);
-  font-weight: 900;
 }
 
 .deposit-payment-method strong {
   color: var(--spectator-text-strong);
-  font-size: 0.94rem;
-}
-
-.deposit-payment-method small {
-  color: var(--spectator-text-soft);
-  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .deposit-empty {
@@ -7224,8 +7233,10 @@
   display: grid;
   grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  min-height: 68px;
+  padding: 13px 16px;
+  margin-top: 2px;
   border: 1px solid rgba(var(--racing-accent-rgb), 0.24);
   border-radius: 8px;
   background: rgba(var(--racing-accent-rgb), 0.08);
@@ -7269,14 +7280,15 @@
 .deposit-form .spectator-button {
   justify-content: center;
   min-height: 48px;
+  margin-top: 2px;
 }
 
 .deposit-history-card {
-  padding: clamp(18px, 2.2vw, 26px);
+  padding: clamp(18px, 2vw, 24px);
 }
 
 .deposit-history-card .spectator-card__header {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .deposit-history-card .profile-refresh-button {
@@ -7289,22 +7301,70 @@
 
 .deposit-history-list {
   display: grid;
-  gap: 12px;
+  gap: 13px;
+}
+
+.deposit-activity-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.deposit-activity-summary div {
+  min-width: 0;
+  min-height: 74px;
+  padding: 12px 13px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 8px;
+  background: rgba(var(--racing-contrast-rgb), 0.075);
+}
+
+.deposit-activity-summary svg {
+  color: var(--racing-accent-soft);
+}
+
+.deposit-activity-summary span {
+  color: var(--spectator-text-soft);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.deposit-activity-summary strong {
+  min-width: 0;
+  color: var(--spectator-text-strong);
+  font-size: 1rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .deposit-history-row {
+  position: relative;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(86px, 0.12fr) minmax(0, 1fr) minmax(180px, auto);
-  gap: clamp(14px, 2vw, 26px);
+  grid-template-columns: 104px minmax(0, 1fr) minmax(92px, auto) minmax(92px, auto);
+  gap: clamp(10px, 1.4vw, 16px);
   align-items: center;
-  min-height: 82px;
-  padding: 16px 18px;
-  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
+  min-height: 76px;
+  padding: 14px 16px 14px 18px;
+  border: 3px solid rgba(var(--racing-contrast-rgb), 0.18);
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(var(--racing-contrast-rgb), 0.075), rgba(var(--racing-contrast-rgb), 0.045)),
     rgba(var(--racing-contrast-rgb), 0.035);
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.deposit-history-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: rgba(var(--racing-contrast-rgb), 0.24);
 }
 
 .deposit-history-row:hover {
@@ -7316,14 +7376,53 @@
 }
 
 .deposit-history-row__date {
+  display: grid;
+  align-content: center;
+  gap: 7px;
   color: var(--spectator-text);
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 800;
+}
+
+.deposit-status-tag {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.22);
+  border-radius: 999px;
+  background: rgba(var(--racing-contrast-rgb), 0.08);
+  color: var(--spectator-text-soft);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.deposit-status-tag--success {
+  border-color: rgba(var(--racing-success-rgb), 0.38);
+  background: rgba(var(--racing-success-rgb), 0.12);
+  color: var(--racing-success-soft);
+}
+
+.deposit-status-tag--lost {
+  border-color: rgba(255, 143, 143, 0.42);
+  background: rgba(255, 143, 143, 0.12);
+  color: #ffb1b1;
+}
+
+.deposit-status-tag--pending {
+  border-color: rgba(var(--racing-accent-rgb), 0.42);
+  background: rgba(var(--racing-accent-rgb), 0.12);
+  color: var(--racing-accent-soft);
 }
 
 .deposit-history-row__main {
   display: grid;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 
@@ -7332,7 +7431,7 @@
   align-items: center;
   gap: 6px;
   color: var(--spectator-text-strong);
-  font-size: 1.02rem;
+  font-size: 0.98rem;
   line-height: 1.2;
 }
 
@@ -7347,11 +7446,66 @@
 .deposit-history-row__amount {
   justify-self: end;
   color: var(--spectator-text-muted);
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 900;
   text-align: right;
   text-transform: lowercase;
   white-space: nowrap;
+}
+
+.deposit-activity-row {
+  grid-template-columns: 104px minmax(0, 1fr) minmax(92px, auto) minmax(92px, auto);
+}
+
+.deposit-activity-row .deposit-history-row__meta {
+  grid-column: auto;
+  justify-self: center;
+  color: var(--spectator-text-muted);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.deposit-activity-row--success,
+.deposit-activity-row--won {
+  border-color: rgb(var(--racing-success-rgb));
+  background:
+    linear-gradient(135deg, rgba(var(--racing-success-rgb), 0.18), rgba(var(--racing-contrast-rgb), 0.05)),
+    rgba(var(--racing-contrast-rgb), 0.035);
+  box-shadow: inset 0 0 0 1px rgba(var(--racing-success-rgb), 0.24);
+}
+
+.deposit-activity-row--lost {
+  border-color: #ff8f8f;
+  background:
+    linear-gradient(135deg, rgba(255, 143, 143, 0.19), rgba(var(--racing-contrast-rgb), 0.045)),
+    rgba(var(--racing-contrast-rgb), 0.035);
+  box-shadow: inset 0 0 0 1px rgba(255, 143, 143, 0.24);
+}
+
+.deposit-activity-row--pending {
+  border-color: rgb(var(--racing-accent-rgb));
+  background:
+    linear-gradient(135deg, rgba(var(--racing-accent-rgb), 0.2), rgba(var(--racing-contrast-rgb), 0.05)),
+    rgba(var(--racing-contrast-rgb), 0.035);
+  box-shadow: inset 0 0 0 1px rgba(var(--racing-accent-rgb), 0.24);
+}
+
+.deposit-activity-row--success::before,
+.deposit-activity-row--won::before {
+  background: rgb(var(--racing-success-rgb));
+}
+
+.deposit-activity-row--lost::before {
+  background: #ff8f8f;
+}
+
+.deposit-activity-row--pending::before {
+  background: rgb(var(--racing-accent-rgb));
+}
+
+.deposit-activity-row--lost .deposit-history-row__amount {
+  color: #ffb1b1;
 }
 
 .payment-return-page {
@@ -7774,13 +7928,23 @@
   }
 
   .deposit-history-row {
-    grid-template-columns: minmax(74px, auto) minmax(0, 1fr);
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: start;
   }
 
   .deposit-history-row__amount {
     grid-column: 2;
     justify-self: start;
     text-align: left;
+  }
+
+  .deposit-activity-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .deposit-activity-row .deposit-history-row__meta {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .payment-return-panel,
@@ -8565,7 +8729,7 @@
 }
 
 .live-race-betting.is-locked .live-race-betting__heading h2::after {
-  content: "Betting locked";
+  content: "Prediction locked";
   display: inline-flex;
   margin-left: 8px;
   padding: 4px 7px;
@@ -14911,4 +15075,335 @@
   background: rgba(0, 0, 0, 0.25);
   padding: 4px 8px;
   border-radius: 4px;
+}
+
+.rewards-page {
+  display: grid;
+  gap: 22px;
+}
+
+.rewards-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.rewards-hero__copy,
+.rewards-wallet-panel,
+.rewards-stat-grid article,
+.reward-card,
+.rewards-empty,
+.rewards-history-row {
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 8px;
+  background: rgba(238, 231, 212, 0.1);
+}
+
+.rewards-hero__copy {
+  min-height: 280px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(120deg, rgba(18, 35, 25, 0.76), rgba(62, 91, 73, 0.2) 58%, rgba(18, 35, 25, 0.58)),
+    url("https://i.pinimg.com/736x/79/6e/66/796e66a1553e39ca36f3d91c5c4c5d39.jpg") center 36%/cover;
+  box-shadow: 0 20px 50px rgba(15, 26, 19, 0.24);
+}
+
+.rewards-hero__copy .spectator-title,
+.rewards-hero__copy .spectator-copy {
+  max-width: 680px;
+}
+
+.rewards-hero__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.rewards-hero__signals span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(238, 231, 212, 0.26);
+  border-radius: 999px;
+  color: #f7f3e8;
+  background: rgba(29, 48, 36, 0.58);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.rewards-wallet-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rewards-wallet-panel > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e6ddc8;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.rewards-wallet-panel strong {
+  color: #fff8ea;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.rewards-wallet-panel small {
+  color: #d4c8b3;
+  line-height: 1.45;
+}
+
+.rewards-wallet-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rewards-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rewards-stat-grid article {
+  min-height: 118px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.rewards-stat-grid svg {
+  color: #f0a15c;
+}
+
+.rewards-stat-grid span,
+.rewards-stat-grid small {
+  color: #d4c8b3;
+}
+
+.rewards-stat-grid strong {
+  color: #fff8ea;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.rewards-status {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  color: #fff8ea;
+  font-weight: 800;
+}
+
+.rewards-status.is-success {
+  border-color: rgba(74, 222, 128, 0.38);
+  background: rgba(21, 128, 61, 0.2);
+}
+
+.rewards-status.is-error {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(127, 29, 29, 0.22);
+}
+
+.rewards-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.rewards-catalog,
+.rewards-history-card {
+  min-width: 0;
+}
+
+.rewards-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.reward-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.reward-card__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  background: rgba(29, 48, 36, 0.64);
+  color: #f0a15c;
+}
+
+.reward-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reward-card__media .spectator-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(29, 48, 36, 0.76);
+  backdrop-filter: blur(8px);
+}
+
+.reward-card__body {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.reward-card h3 {
+  margin: 0 0 6px;
+  color: #fff8ea;
+  font-size: 1.08rem;
+}
+
+.reward-card p {
+  margin: 0;
+  color: #d4c8b3;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.reward-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(238, 231, 212, 0.18);
+}
+
+.reward-card__meta span {
+  color: #d4c8b3;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.reward-card__meta strong {
+  color: #fff8ea;
+}
+
+.reward-card .spectator-button {
+  width: 100%;
+}
+
+.reward-card .spectator-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
+.rewards-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #d4c8b3;
+  text-align: center;
+}
+
+.rewards-empty strong {
+  color: #fff8ea;
+}
+
+.rewards-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.rewards-history-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: center;
+  padding: 14px;
+}
+
+.rewards-history-row > span {
+  color: #d4c8b3;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.rewards-history-row strong {
+  min-width: 0;
+  color: #fff8ea;
+}
+
+.rewards-history-row small {
+  grid-column: 2 / 3;
+  min-width: 0;
+  color: #d4c8b3;
+  line-height: 1.35;
+}
+
+.rewards-history-row b {
+  color: #fff8ea;
+  font-size: 0.9rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rewards-history-row em {
+  grid-column: 3 / 4;
+  justify-self: end;
+  font-style: normal;
+  text-transform: capitalize;
+}
+
+@media (max-width: 1100px) {
+  .rewards-hero,
+  .rewards-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rewards-wallet-panel {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rewards-hero__copy {
+    min-height: 0;
+    padding: 22px;
+  }
+
+  .rewards-stat-grid,
+  .rewards-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rewards-history-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .rewards-history-row b,
+  .rewards-history-row em {
+    grid-column: 2 / 3;
+    justify-self: start;
+    text-align: left;
+  }
 }

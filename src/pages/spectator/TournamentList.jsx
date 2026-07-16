@@ -233,7 +233,7 @@ function TournamentList() {
         <div className="tlboard-header__text">
           <p className="spectator-eyebrow">Tournament Board</p>
           <h1>Find your next race.</h1>
-          <p>Browse all published tournaments. Open the race schedule to view betting markets and event details.</p>
+          <p>Browse all published tournaments. Open the race schedule to view prediction markets and event details.</p>
         </div>
         <div className="tlboard-header__metrics">
           {summaryCards.map(({ key, value, label, icon: Icon, cls }) => (

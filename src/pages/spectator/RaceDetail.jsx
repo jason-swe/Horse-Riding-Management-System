@@ -357,7 +357,7 @@ export default function RaceDetail() {
               className="race-hub-action race-hub-action--primary rd-hero__bet-cta"
               to={`/spectator/predictions/races/${encodeURIComponent(race.id)}`}
             >
-              Bet on this race <CircleDollarSign size={16} />
+              Predict this race <CircleDollarSign size={16} />
             </Link>
           )}
         </div>
@@ -377,11 +377,11 @@ export default function RaceDetail() {
         </section>
       )}
 
-      {/* ── Betting Market Panel ── */}
+      {/* Prediction Market Panel */}
       {race.bettingMarket && race.bettingStatus !== BETTING_STATUS.UNAVAILABLE && (
-        <section className="rd-market-panel" aria-label="Betting market">
+        <section className="rd-market-panel" aria-label="Prediction market">
           <h2 className="rd-panel-title">
-            <Coins size={15} /> Betting market
+            <Coins size={15} /> Prediction market
           </h2>
           <div className="rd-market-grid">
             <div className="rd-market-card rd-market-card--status">
@@ -422,7 +422,7 @@ export default function RaceDetail() {
               className="race-hub-action race-hub-action--primary rd-market-cta"
               to={`/spectator/predictions/races/${encodeURIComponent(race.id)}`}
             >
-              Place a bet <CircleDollarSign size={16} />
+              Make prediction <CircleDollarSign size={16} />
             </Link>
           )}
         </section>

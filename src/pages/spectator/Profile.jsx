@@ -172,6 +172,13 @@ const Profile = () => {
             <Link className="spectator-button" to="/spectator/predictions">
               Prediction
             </Link>
+            <Link className="spectator-button" to="/spectator/rewards">
+              Rewards
+            </Link>
+            <Link className="spectator-button profile-role-access-button" to="/spectator/role-applications">
+              <BadgeCheck size={16} aria-hidden="true" />
+              Role Access
+            </Link>
           </div>
         </aside>
       </div>
@@ -253,7 +260,7 @@ const Profile = () => {
           <div className="profile-history">
             {transactionsState.isLoading && <div><span>Loading</span><strong>Wallet history</strong><small>Fetching latest transactions</small><b>--</b></div>}
             {!transactionsState.isLoading && transactionsState.error && <div><span>Error</span><strong>Unable to load transactions</strong><small>{transactionsState.error}</small><b>--</b></div>}
-            {!transactionsState.isLoading && !transactionsState.error && !transactionsState.transactions.length && <div><span>Empty</span><strong>No wallet transactions yet</strong><small>Deposits, bets, payouts, and redemptions will appear here.</small><b>0 TOKEN</b></div>}
+            {!transactionsState.isLoading && !transactionsState.error && !transactionsState.transactions.length && <div><span>Empty</span><strong>No wallet transactions yet</strong><small>Deposits, predictions, payouts, and redemptions will appear here.</small><b>0 TOKEN</b></div>}
             {!transactionsState.isLoading && !transactionsState.error && transactionsState.transactions.map((transaction) => (
               <div key={transaction._id || transaction.reference_id || `${transaction.transaction_type}-${transaction.created_at}`}>
                 <span>{formatTransactionDate(transaction.created_at)}</span>

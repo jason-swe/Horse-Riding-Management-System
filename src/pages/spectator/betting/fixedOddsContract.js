@@ -28,7 +28,7 @@ export function validateFixedOddsMarket(market, raceId) {
   if (!supportedMarketStates.has(market.status)) errors.push("Market status is unsupported.");
   if (!Number.isFinite(market.minStake) || !Number.isFinite(market.maxStake) || market.minStake <= 0 || market.maxStake < market.minStake) errors.push("Stake limits are invalid.");
   if (!supportedCurrencies.has(market.currency)) errors.push("Market currency is unsupported.");
-  if (!Array.isArray(market.supportedBetTypes) || !market.supportedBetTypes.length || market.supportedBetTypes.some((type) => !supportedBetTypes.has(type))) errors.push("Supported bet types are invalid.");
+  if (!Array.isArray(market.supportedBetTypes) || !market.supportedBetTypes.length || market.supportedBetTypes.some((type) => !supportedBetTypes.has(type))) errors.push("Supported prediction types are invalid.");
   if (!market.selections || typeof market.selections !== "object") errors.push("Odds selections are missing.");
   if (!market.runnerStatuses || typeof market.runnerStatuses !== "object") errors.push("Runner availability is missing.");
   market.supportedBetTypes?.forEach((type) => {
@@ -40,7 +40,7 @@ export function validateFixedOddsMarket(market, raceId) {
 
 export function validateAcceptedBetReceipt(receipt, request) {
   const errors = [];
-  if (!receipt?.bet?.id) errors.push("Receipt bet ID is missing.");
+  if (!receipt?.bet?.id) errors.push("Receipt prediction ID is missing.");
   if (receipt?.bet?.status !== "accepted") errors.push("Receipt is not accepted.");
   if (!Number.isFinite(receipt?.bet?.accepted_odds) || receipt.bet.accepted_odds <= 1) errors.push("Accepted odds are invalid.");
   if (Number(receipt?.bet?.stake) !== Number(request.stake)) errors.push("Receipt stake does not match the request.");
@@ -58,14 +58,14 @@ export function validateBackendBetReceipt(payload, request = {}) {
   const stake = Number(bet?.stake_amount);
   const potentialPayout = Number(bet?.potential_payout);
 
-  if (!bet?._id && !bet?.id) errors.push("Backend bet ID is missing.");
-  if (!acceptedStatuses.has(String(bet?.status || "").toLowerCase())) errors.push("Backend bet status is unsupported.");
+  if (!bet?._id && !bet?.id) errors.push("Backend prediction ID is missing.");
+  if (!acceptedStatuses.has(String(bet?.status || "").toLowerCase())) errors.push("Backend prediction status is unsupported.");
   if (!Number.isFinite(odds) || odds <= 1) errors.push("Backend odds snapshot is invalid.");
   if (!Number.isFinite(stake) || stake <= 0) errors.push("Backend stake is invalid.");
   if (request.stake_amount != null && Number(request.stake_amount) !== stake) errors.push("Backend stake does not match the request.");
   if (request.race_id != null) {
     const raceId = typeof bet?.race_id === "object" ? bet.race_id?._id || bet.race_id?.id : bet?.race_id;
-    if (String(raceId || "") !== String(request.race_id)) errors.push("Backend bet race does not match the request.");
+    if (String(raceId || "") !== String(request.race_id)) errors.push("Backend prediction race does not match the request.");
   }
   if (!Number.isFinite(potentialPayout)) errors.push("Backend potential payout is missing.");
   if (payload?.wallet && !Number.isFinite(Number(payload.wallet.token_balance))) errors.push("Backend wallet balance is invalid.");

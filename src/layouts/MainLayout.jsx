@@ -12,8 +12,8 @@ const MainLayout = () => {
     { name: "Overview", path: "/spectator" },
     { name: "Tournaments", path: "/spectator/tournaments" },
     { name: "Predictions", path: "/spectator/predictions" },
-    { name: "Results", path: "/spectator/results" },
-    { name: "Role Access", path: "/spectator/role-applications" },
+    { name: "Rewards", path: "/spectator/rewards" },
+    { name: "Deposit", path: "/spectator/deposit" },
   ];
   return (
     <div className="page-shell page-shell--spectator" style={{
@@ -85,7 +85,8 @@ const MainLayout = () => {
             <ul>
               <li><Link to="/spectator/tournaments"><span>01</span>Tournaments</Link></li>
               <li><Link to="/spectator/predictions"><span>02</span>Predictions</Link></li>
-              <li><Link to="/spectator/results"><span>03</span>Official results</Link></li>
+              <li><Link to="/spectator/rewards"><span>03</span>Rewards</Link></li>
+              <li><Link to="/spectator/deposit"><span>04</span>Deposit</Link></li>
             </ul>
           </nav>
 
@@ -136,11 +137,14 @@ const MainLayout = () => {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          display: inline-flex;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(116px, 1fr));
           align-items: center;
           justify-content: center;
-          gap: 14px;
-          padding: 8px 10px;
+          gap: 10px;
+          width: min(760px, calc(100vw - 560px));
+          min-width: 660px;
+          padding: 8px 12px;
           border: 1px solid rgba(238, 231, 212, 0.24);
           border-radius: 999px;
           background: rgba(238, 231, 212, 0.1);
@@ -151,14 +155,16 @@ const MainLayout = () => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 118px;
+          width: 100%;
+          min-width: 0;
           min-height: 42px;
-          padding: 0 22px;
+          padding: 0 16px;
           border-radius: 999px;
           color: #E6DDC8;
           text-decoration: none;
           font-size: 0.88rem;
           font-weight: 700;
+          white-space: nowrap;
           overflow: hidden;
           transition: color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
         }
@@ -221,20 +227,22 @@ const MainLayout = () => {
             position: static;
             order: 3;
             width: 100%;
+            min-width: 0;
+            grid-template-columns: repeat(5, minmax(118px, 1fr));
             transform: none;
-            flex-wrap: wrap;
           }
           .nav-link {
-            min-width: 132px;
+            min-width: 0;
           }
         }
         @media (max-width: 640px) {
           .page-shell > .topbar .nav {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
             padding: 8px;
+            border-radius: 28px;
           }
           .nav-link {
-            flex: 1 1 150px;
             min-width: 0;
           }
         }

@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
-import { walletApi } from "../../api/walletApi.js";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -59,8 +58,6 @@ const formatMoney = (value, currency = "VND") => {
     return `${amount.toLocaleString("en-US")} ${currency}`;
   }
 };
-
-const formatToken = (value) => `${Number(value || 0).toLocaleString("en-US")} TOKEN`;
 
 const FactPills = ({ facts, emptyText = "No optional profile data recorded yet." }) => {
   if (!facts?.length) {
@@ -706,15 +703,11 @@ function OwnerRegistrations() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState("");
-  const [walletState, setWalletState] = useState({
-    balance: 0,
-    isLoading: true,
-    error: "",
-  });
   const [entry, setEntry] = useState({
     horse: horses[0]?.name || "",
     tournament: tournaments[0]?.name || "",
     race: "",
+    paymentMethod: "VNPAY",
     note: "",
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
@@ -722,12 +715,8 @@ function OwnerRegistrations() {
   const selectedRace = races.find((race) => race.id === entry.race) ?? races[0];
   const tournamentPrizePool = selectedTournament?.prizePool || races.reduce((total, race) => total + Number(race.prizePool || 0), 0);
   const tournamentPrizeCurrency = selectedTournament?.prizeCurrency || selectedRace?.prizeCurrency || "VND";
-  const tournamentEntryFee = selectedTournament?.entryFee || 0;
-  const registrationFeeToken = tournamentEntryFee > 0 ? Math.ceil(tournamentEntryFee / 1000) : 0;
-  const walletBalance = Number(walletState.balance || 0);
-  const remainingBalance = walletBalance - registrationFeeToken;
-  const hasEnoughToken = registrationFeeToken === 0 || walletBalance >= registrationFeeToken;
-  const tournamentEntryFeeCurrency = selectedTournament?.entryFeeCurrency || tournamentPrizeCurrency;
+  const registrationFeeVnd = Number(selectedRace?.entryFeeVnd || 0);
+  const registrationFeeCurrency = selectedRace?.entryFeeCurrency || "VND";
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
@@ -780,29 +769,6 @@ function OwnerRegistrations() {
     };
   }, [selectedTournament?.id]);
 
-  const loadWallet = async () => {
-    setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
-
-    try {
-      const payload = await walletApi.getMyWallet();
-      setWalletState({
-        balance: Number(payload?.wallet?.token_balance || 0),
-        isLoading: false,
-        error: "",
-      });
-    } catch (apiError) {
-      setWalletState({
-        balance: 0,
-        isLoading: false,
-        error: apiError.message || "Unable to load wallet balance.",
-      });
-    }
-  };
-
-  useEffect(() => {
-    loadWallet();
-  }, []);
-
   const updateEntry = (field, value) => {
     setSaved(false);
     setError("");
@@ -827,12 +793,19 @@ function OwnerRegistrations() {
     setIsSubmitting(true);
 
     try {
-      await ownerApi.registerHorseForRace({
+      const result = await ownerApi.registerHorseForRace({
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
+        payment_method: entry.paymentMethod,
         note: entry.note,
       });
-      await Promise.all([reloadRegistrations(), loadWallet()]);
+
+      if (result.payment_url) {
+        window.location.assign(result.payment_url);
+        return;
+      }
+
+      await reloadRegistrations();
       setSaved(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to submit race registration.");
@@ -856,7 +829,7 @@ function OwnerRegistrations() {
         horse_id: registration.horseId,
         race_id: registration.raceId,
       });
-      await Promise.all([reloadRegistrations(), loadWallet()]);
+      await reloadRegistrations();
       setSaved(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to cancel registration.");
@@ -912,6 +885,7 @@ function OwnerRegistrations() {
           <div className="owner-form-grid owner-form-grid--single">
             <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
             <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
+            <FormSelect label="Payment method" value={entry.paymentMethod} options={["VNPAY", "MOMO", "MOCK"]} onChange={(value) => updateEntry("paymentMethod", value)} />
             <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
 
@@ -928,9 +902,9 @@ function OwnerRegistrations() {
             <div className="owner-tournament-context">
               {selectedTournament?.location && <div><span>Tournament location</span><strong>{selectedTournament.location}</strong></div>}
               {selectedTournament?.date && <div><span>Tournament dates</span><strong>{selectedTournament.date}</strong></div>}
-            <div><span>Tournament prize pool</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
-              <div><span>Registration fee</span><strong>{tournamentEntryFee > 0 ? formatMoney(tournamentEntryFee, tournamentEntryFeeCurrency) : "No fee recorded"}</strong></div>
-              <div><span>Token charge</span><strong>{registrationFeeToken > 0 ? formatToken(registrationFeeToken) : "No payment required"}</strong></div>
+              <div><span>Tournament prize pool</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
+              <div><span>Selected race fee</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee calculated"}</strong></div>
+              <div><span>Payment method</span><strong>{entry.paymentMethod}</strong></div>
               <div><span>Race options</span><strong>{racesLoading ? "Loading" : races.length}</strong></div>
             </div>
 
@@ -956,6 +930,7 @@ function OwnerRegistrations() {
                       {race.distance && <span><Flag size={13} /> {race.distance}</span>}
                       {race.maxParticipants && <span><UsersRound size={13} /> {race.maxParticipants} slots</span>}
                       {race.prizePool > 0 && <span><Trophy size={13} /> {formatMoney(race.prizePool, race.prizeCurrency)}</span>}
+                      {race.entryFeeVnd > 0 && <span><CreditCard size={13} /> Fee {formatMoney(race.entryFeeVnd, race.entryFeeCurrency)}</span>}
                       {race.registrationLock && <span><CalendarDays size={13} /> Locks {race.registrationLock}</span>}
                     </div>
                     <div className="owner-race-choice__awards" aria-label={`${race.name} prize split`}>
@@ -980,47 +955,41 @@ function OwnerRegistrations() {
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
             <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
             <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
-            <div><span>Payment due</span><strong>{registrationFeeToken > 0 ? formatToken(registrationFeeToken) : "No fee required"}</strong></div>
+            <div><span>Payment due</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee required"}</strong></div>
           </div>
 
-          <section className={`owner-registration-payment${hasEnoughToken ? "" : " is-insufficient"}`} aria-label="Registration payment">
+          <section className="owner-registration-payment" aria-label="Registration payment">
             <div className="owner-registration-payment__header">
               <div>
-                <span className="owner-kicker">Wallet payment</span>
-                <h3>{registrationFeeToken > 0 ? "Pay registration fee with TOKEN" : "No payment required"}</h3>
+                <span className="owner-kicker">Gateway payment</span>
+                <h3>{registrationFeeVnd > 0 ? "Pay registration fee in VND" : "No payment required"}</h3>
               </div>
               <CreditCard size={20} />
             </div>
             <div className="owner-registration-payment__grid">
               <div>
-                <span>Current balance</span>
-                <strong>{walletState.isLoading ? "Loading" : formatToken(walletBalance)}</strong>
+                <span>Auto formula</span>
+                <strong>Prize / slots</strong>
               </div>
               <div>
                 <span>Registration charge</span>
-                <strong>{formatToken(registrationFeeToken)}</strong>
+                <strong>{formatMoney(registrationFeeVnd, registrationFeeCurrency)}</strong>
               </div>
               <div>
                 <span>After submit</span>
-                <strong>{walletState.isLoading ? "Pending" : formatToken(Math.max(remainingBalance, 0))}</strong>
+                <strong>{registrationFeeVnd > 0 ? "Gateway redirect" : "Review queue"}</strong>
               </div>
             </div>
-            {walletState.error && <p className="owner-registration-payment__note is-error">{walletState.error}</p>}
-            {!walletState.error && registrationFeeToken > 0 && !hasEnoughToken && (
-              <p className="owner-registration-payment__note is-error">
-                You need {formatToken(registrationFeeToken - walletBalance)} more before submitting this entry.
-              </p>
-            )}
-            {!walletState.error && registrationFeeToken > 0 && hasEnoughToken && (
-              <p className="owner-registration-payment__note">Fee is deducted immediately, then refunded automatically if you cancel before the race locks.</p>
+            {registrationFeeVnd > 0 && (
+              <p className="owner-registration-payment__note">A pending entry is created first, then the payment gateway confirms the VND charge before admin approval.</p>
             )}
           </section>
 
           <div className="owner-form-actions">
             {saved && <span className="owner-success"><CheckCircle2 size={16} /> Registration submitted.</span>}
             {error && <span className="owner-success owner-success--error">{error}</span>}
-            <button className="owner-button owner-button--primary" disabled={isSubmitting || walletState.isLoading || !hasEnoughToken || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
-              {isSubmitting ? "Submitting..." : registrationFeeToken > 0 ? `Pay ${formatToken(registrationFeeToken)} and submit` : "Submit Entry"}
+            <button className="owner-button owner-button--primary" disabled={isSubmitting || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
+              {isSubmitting ? "Submitting..." : registrationFeeVnd > 0 ? `Deposit ${formatMoney(registrationFeeVnd, registrationFeeCurrency)}` : "Submit Entry"}
             </button>
           </div>
         </form>
@@ -1067,7 +1036,7 @@ function OwnerRegistrations() {
                 <small className="owner-registration__note">{item.race ? `${item.race} / ${item.note}` : item.note}</small>
                 <div className="owner-registration__payment">
                   <CreditCard size={14} />
-                  <span>{item.entryFeeToken > 0 ? `${item.paymentStatus} / ${formatToken(item.entryFeeToken)}` : "No fee required"}</span>
+                  <span>{item.entryFeeVnd > 0 ? `${item.paymentStatus} / ${formatMoney(item.entryFeeVnd, "VND")}` : "No fee required"}</span>
                 </div>
               </div>
               <div className="owner-registration__actions">

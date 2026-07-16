@@ -164,7 +164,7 @@ function ConfirmModal({ isSubmitting, payload, onClose, onConfirm }) {
       <section className="prediction-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="prediction-confirm-title" onMouseDown={(event) => event.stopPropagation()}>
         <button className="prediction-confirm-modal__close" disabled={isSubmitting} type="button" aria-label="Close confirmation" onClick={onClose}><X size={18} /></button>
         <div className="prediction-confirm-modal__intro">
-          <span className="prediction-confirm-modal__badge"><ReceiptText size={14} /> Review bet</span>
+          <span className="prediction-confirm-modal__badge"><ReceiptText size={14} /> Review prediction</span>
           <h2 id="prediction-confirm-title">Confirm fixed odds</h2>
           <p>The accepted receipt keeps these odds even if the market changes later.</p>
         </div>
@@ -174,13 +174,13 @@ function ConfirmModal({ isSubmitting, payload, onClose, onConfirm }) {
         </div>
         <div className="prediction-confirm-summary">
           <div><span>Race</span><strong>{payload.race}</strong></div>
-          <div><span>Bet type</span><strong>{payload.betType}</strong></div>
+          <div><span>Prediction type</span><strong>{payload.betType}</strong></div>
           <div><span>Selection</span><strong>{payload.selection}</strong></div>
           <div><span>Stake</span><strong>{formatPoints(payload.stake, payload.currency)}</strong></div>
         </div>
         <div className="prediction-confirm-actions">
           <button className="spectator-button" disabled={isSubmitting} type="button" onClick={onClose}>Cancel</button>
-          <button className="spectator-button spectator-button--primary" disabled={isSubmitting} type="button" onClick={onConfirm}>{isSubmitting ? "Processing..." : "Place fixed-odds bet"}</button>
+          <button className="spectator-button spectator-button--primary" disabled={isSubmitting} type="button" onClick={onConfirm}>{isSubmitting ? "Processing..." : "Place fixed-odds prediction"}</button>
         </div>
       </section>
     </div>
@@ -361,7 +361,7 @@ export default function PredictionDetail() {
         }
       } catch (error) {
         if (!cancelled) {
-          setMyBetsState({ bets: [], isLoading: false, error: error.message || "Unable to load your bets." });
+          setMyBetsState({ bets: [], isLoading: false, error: error.message || "Unable to load your predictions." });
         }
       }
     }
@@ -429,7 +429,7 @@ export default function PredictionDetail() {
         };
         const response = await betApi.placeBet(request);
         const receiptValidation = validateBackendBetReceipt(response, request);
-        if (!receiptValidation.isValid) throw new Error(`Invalid backend bet receipt: ${receiptValidation.errors.join(" ")}`);
+        if (!receiptValidation.isValid) throw new Error(`Invalid backend prediction receipt: ${receiptValidation.errors.join(" ")}`);
         acceptedReceipt = toReceiptFromBet(response.bet, confirmPayload);
         nextBalance = Number(response.wallet?.token_balance ?? walletBalance);
         setMyBetsState((current) => ({
@@ -442,10 +442,10 @@ export default function PredictionDetail() {
       setReceipts((current) => [acceptedReceipt, ...current.filter((receipt) => String(receipt.id) !== String(acceptedReceipt.id))]);
       setConfirmPayload(null);
       setSelection([]);
-      setMessage({ type: "success", text: `Bet accepted at ${acceptedReceipt.odds.toFixed(2)}x. Balance: ${formatPoints(nextBalance, marketCurrency)}.` });
+      setMessage({ type: "success", text: `Prediction accepted at ${acceptedReceipt.odds.toFixed(2)}x. Balance: ${formatPoints(nextBalance, marketCurrency)}.` });
     } catch (error) {
       setConfirmPayload(null);
-      setMessage({ type: "error", text: error.message || "The bet was rejected." });
+      setMessage({ type: "error", text: error.message || "The prediction was rejected." });
     } finally {
       setIsSubmittingBet(false);
     }
@@ -454,8 +454,8 @@ export default function PredictionDetail() {
   const hint = !marketOpen
     ? marketState.isLoading ? "Loading the latest odds market."
       : marketState.error ? marketState.error
-        : !isSpectator ? "A spectator role is required to place a bet."
-          : !liveTransportConnected ? "A live connection is required before betting." : "This market is locked. Selections and stake controls are disabled."
+        : !isSpectator ? "A spectator role is required to place a prediction."
+          : !liveTransportConnected ? "A live connection is required before predicting." : "This market is locked. Selections and stake controls are disabled."
     : !selectionComplete ? "Select one runner to win."
       : !stakeValid ? `Stake must be ${formatPoints(minStake, marketCurrency)} to ${formatPoints(Math.min(maxStake, walletBalance), marketCurrency)}.`
         : "Review the slip before confirming. Odds are finalized by the server.";
@@ -475,13 +475,13 @@ export default function PredictionDetail() {
             <span><CalendarDays size={14} /> {race.time}</span><span><Flag size={14} /> {race.distance}</span><span><UsersRound size={14} /> {contenders.length} runners</span>
           </div>
         </div>
-        <div className="fixed-odds-clock"><span>Market locks in</span><strong>{marketCountdown}</strong><small>{marketOpen ? "Betting open" : "Market locked"}</small></div>
+        <div className="fixed-odds-clock"><span>Market locks in</span><strong>{marketCountdown}</strong><small>{marketOpen ? "Prediction open" : "Market locked"}</small></div>
       </header>
 
-      {(realtime.error || realtime.connectionState === CONNECTION_STATES.DISCONNECTED) && <div className="live-race-state-message live-race-state-message--error" role="alert">{realtime.error || "Connection lost. Betting remains locked until a fresh server state is received."}</div>}
+      {(realtime.error || realtime.connectionState === CONNECTION_STATES.DISCONNECTED) && <div className="live-race-state-message live-race-state-message--error" role="alert">{realtime.error || "Connection lost. Prediction remains locked until a fresh server state is received."}</div>}
       {marketState.error && <div className={`live-race-state-message ${marketState.isPreview ? "" : "live-race-state-message--error"}`} role={marketState.isPreview ? "status" : "alert"}>{marketState.error}</div>}
       {walletState.error && !import.meta.env.DEV && <div className="live-race-state-message live-race-state-message--error" role="alert">{walletState.error}</div>}
-      {!marketState.isLoading && !marketValidation.isValid && <div className="live-race-state-message live-race-state-message--error" role="alert">Market contract mismatch. Betting is disabled until a valid snapshot is received.</div>}
+      {!marketState.isLoading && !marketValidation.isValid && <div className="live-race-state-message live-race-state-message--error" role="alert">Market contract mismatch. Prediction is disabled until a valid snapshot is received.</div>}
 
       <div className="fixed-odds-workspace">
         <main className="fixed-odds-board">
@@ -490,7 +490,7 @@ export default function PredictionDetail() {
             <Link to={`/spectator/tournaments/${tournament.id}/races/${race.id}`}>View race track <ArrowRight size={15} /></Link>
           </div>
 
-          <div className="fixed-odds-market-note"><Info size={15} /><span><strong>Win only:</strong> Pick the horse you expect to finish first. Other bet types are disabled until backend odds and settlement rules exist.</span></div>
+          <div className="fixed-odds-market-note"><Info size={15} /><span><strong>Win only:</strong> Pick the horse you expect to finish first. Other prediction types are disabled until backend odds and settlement rules exist.</span></div>
 
           <SelectionSlots contendersById={contendersById} disabled={formDisabled} onClear={handleSelect} selection={selection} type={type} />
 
@@ -512,7 +512,7 @@ export default function PredictionDetail() {
 
         <aside className={`fixed-odds-slip ${formDisabled ? "is-locked" : ""}`}>
           <div className="fixed-odds-slip__wallet"><span><WalletCards size={15} /> Available balance</span><strong>{walletState.isLoading ? "--" : formatPoints(walletBalance, marketCurrency)}</strong><small>{marketState.isPreview ? "Preview wallet" : "Updated by wallet API"}</small></div>
-          <div className="fixed-odds-slip__heading"><span className="live-race-kicker"><ReceiptText size={14} /> Bet slip</span><h2>Win bet</h2><p>{selectedHorses.length ? "Runner selected" : "Choose one winner"}</p></div>
+          <div className="fixed-odds-slip__heading"><span className="live-race-kicker"><ReceiptText size={14} /> Prediction slip</span><h2>Win prediction</h2><p>{selectedHorses.length ? "Runner selected" : "Choose one winner"}</p></div>
 
           <div className="fixed-odds-slip__selections">
             {type.slots.map((slot, index) => {
@@ -530,12 +530,12 @@ export default function PredictionDetail() {
           </div>
           <p className="fixed-odds-slip__hint"><Info size={14} /> {hint}</p>
           {message && <p className={`fixed-odds-message fixed-odds-message--${message.type}`} role={message.type === "error" ? "alert" : "status"}>{message.text}</p>}
-          <button className="fixed-odds-review" disabled={!canSubmit} type="button" onClick={handleReview}><LockKeyhole size={16} /> Review bet</button>
-          <p className="fixed-odds-security"><ShieldCheck size={14} /><span>Every control locks immediately on <code>stop_betting</code>.</span></p>
+          <button className="fixed-odds-review" disabled={!canSubmit} type="button" onClick={handleReview}><LockKeyhole size={16} /> Review prediction</button>
+          <p className="fixed-odds-security"><ShieldCheck size={14} /><span>Every control locks immediately when the market closes.</span></p>
         </aside>
       </div>
 
-      {(displayedReceipts.length > 0 || myBetsState.isLoading || myBetsState.error) && <section className="fixed-odds-receipts"><div className="live-race-section-heading"><div><span className="live-race-kicker"><CheckCircle2 size={14} /> My bets</span><h2>Fixed-odds receipts</h2></div><small>{myBetsState.isLoading ? "Loading" : `${displayedReceipts.length} recorded`}</small></div>{myBetsState.error && <p className="fixed-odds-message fixed-odds-message--error" role="alert">{myBetsState.error}</p>}{displayedReceipts.map((receipt) => <article key={receipt.id}><span>{receipt.status}</span><div><strong>{receipt.selection}</strong><small>{receipt.betType} / {receipt.odds.toFixed(2)}x</small></div><b>{formatPoints(receipt.stake, receipt.currency || marketCurrency)}</b></article>)}</section>}
+      {(displayedReceipts.length > 0 || myBetsState.isLoading || myBetsState.error) && <section className="fixed-odds-receipts"><div className="live-race-section-heading"><div><span className="live-race-kicker"><CheckCircle2 size={14} /> My predictions</span><h2>Fixed-odds receipts</h2></div><small>{myBetsState.isLoading ? "Loading" : `${displayedReceipts.length} recorded`}</small></div>{myBetsState.error && <p className="fixed-odds-message fixed-odds-message--error" role="alert">{myBetsState.error}</p>}{displayedReceipts.map((receipt) => <article key={receipt.id}><span>{receipt.status}</span><div><strong>{receipt.selection}</strong><small>{receipt.betType} / {receipt.odds.toFixed(2)}x</small></div><b>{formatPoints(receipt.stake, receipt.currency || marketCurrency)}</b></article>)}</section>}
 
       <ConfirmModal isSubmitting={submitting} payload={confirmPayload} onClose={() => { if (!submitting) setConfirmPayload(null); }} onConfirm={handleConfirm} />
     </section>

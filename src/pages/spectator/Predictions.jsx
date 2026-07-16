@@ -119,7 +119,7 @@ export default function Predictions() {
   return (
     <section className="spectator-page race-market-board">
       <header className="race-market-board__header">
-        <div><p className="spectator-eyebrow">Race markets</p><h1>Choose a race, not a tournament.</h1><p>Open markets come first. Upcoming races stay visible without implying that betting is available.</p></div>
+        <div><p className="spectator-eyebrow">Race markets</p><h1>Choose a race, not a tournament.</h1><p>Open markets come first. Upcoming races stay visible without implying that prediction is available.</p></div>
         <aside className="race-market-board__wallet"><span><WalletCards size={15} /> Wallet balance</span><strong>{walletState.isLoading ? "Loading..." : formatWalletBalance(walletState.balance)}</strong><small>{walletState.error || "Live wallet balance"}</small></aside>
       </header>
 

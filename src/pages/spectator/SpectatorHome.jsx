@@ -44,13 +44,14 @@ const topPicks = [
 const quickActions = [
   { label: "Tournament Hub", meta: "Active and upcoming events", to: "/spectator/tournaments" },
   { label: "Prediction Room", meta: "Place picks before gates open", to: "/spectator/predictions" },
-  { label: "Official Results", meta: "Final standings and rewards", to: "/spectator/results" },
+  { label: "Reward Exchange", meta: "Redeem TOKEN for active rewards", to: "/spectator/rewards" },
+  { label: "Deposit Ledger", meta: "Top-ups, predictions, and wins", to: "/spectator/deposit" },
 ];
 
 const SpectatorHome = () => {
   const overviewStats = [
     { label: "Reward balance", value: "1,280", note: "points ready", icon: CircleDollarSign },
-    { label: "Active bets", value: "04", note: "tracking now", icon: Radio },
+    { label: "Active predictions", value: "04", note: "tracking now", icon: Radio },
     { label: "Win rate", value: "62%", note: "last 30 picks", icon: LineChart },
     { label: "Next gate", value: "14:00", note: "Emerald Sprint", icon: Clock3 },
   ];
@@ -150,7 +151,7 @@ const SpectatorHome = () => {
             <span>Weekly target</span>
             <strong>68%</strong>
           </div>
-          <Link className="spectator-button" to="/spectator/results">View Rewards</Link>
+          <Link className="spectator-button" to="/spectator/deposit">View Deposit</Link>
         </aside>
 
         <article className="spectator-card spectator-popular-card">
