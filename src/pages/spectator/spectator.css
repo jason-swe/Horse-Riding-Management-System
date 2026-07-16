@@ -15374,6 +15374,83 @@
   text-transform: capitalize;
 }
 
+.rewards-confirm-toast {
+  position: fixed;
+  right: clamp(16px, 3vw, 34px);
+  bottom: clamp(16px, 3vw, 32px);
+  z-index: 60;
+  width: min(520px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(238, 231, 212, 0.32);
+  border-left: 3px solid #f0a15c;
+  border-radius: 8px;
+  background: rgba(29, 48, 36, 0.96);
+  box-shadow: 0 20px 50px rgba(15, 26, 19, 0.42);
+  color: #f7f3e8;
+}
+
+.rewards-confirm-toast__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(238, 231, 212, 0.22);
+  border-radius: 6px;
+  color: #d4c8b3;
+  background: rgba(238, 231, 212, 0.08);
+}
+
+.rewards-confirm-toast__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(240, 161, 92, 0.38);
+  border-radius: 8px;
+  background: rgba(240, 161, 92, 0.14);
+  color: #f0a15c;
+}
+
+.rewards-confirm-toast__copy {
+  min-width: 0;
+  padding-right: 26px;
+}
+
+.rewards-confirm-toast__copy h3,
+.rewards-confirm-toast__copy p {
+  margin: 0;
+}
+
+.rewards-confirm-toast__copy h3 {
+  color: #fff8ea;
+  font-size: 0.98rem;
+}
+
+.rewards-confirm-toast__copy p {
+  margin-top: 4px;
+  color: #d4c8b3;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.rewards-confirm-toast__copy strong {
+  color: #fff8ea;
+}
+
+.rewards-confirm-toast__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-right: 28px;
+}
+
 @media (max-width: 1100px) {
   .rewards-hero,
   .rewards-layout {
@@ -15405,5 +15482,19 @@
     grid-column: 2 / 3;
     justify-self: start;
     text-align: left;
+  }
+
+  .rewards-confirm-toast {
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .rewards-confirm-toast__actions {
+    grid-column: 1 / -1;
+    padding-right: 0;
+  }
+
+  .rewards-confirm-toast__actions .spectator-button {
+    flex: 1;
   }
 }

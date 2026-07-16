@@ -752,6 +752,137 @@
   flex-wrap: wrap;
 }
 
+.admin-rewards-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.36fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-rewards-metrics article svg {
+  color: var(--admin-accent);
+}
+
+.admin-rewards-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(130px, 0.28fr) minmax(140px, 0.28fr) auto;
+  gap: 9px;
+  padding: 12px;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-rewards-toolbar--compact {
+  grid-template-columns: minmax(160px, 240px) auto;
+}
+
+.admin-rewards-toolbar label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 5px;
+  background: rgba(9, 15, 11, 0.48);
+  color: var(--admin-muted);
+}
+
+.admin-rewards-toolbar input,
+.admin-rewards-toolbar select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 5px;
+  background: rgba(9, 15, 11, 0.48);
+  color: var(--admin-text);
+}
+
+.admin-rewards-toolbar label input {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.admin-rewards-toolbar select {
+  padding: 0 10px;
+}
+
+.admin-rewards-subline {
+  display: block;
+  max-width: 42ch;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-rewards-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-rewards-row-actions .admin-command-review {
+  min-height: 31px;
+  padding: 0 9px;
+  text-transform: capitalize;
+}
+
+.admin-rewards-row-actions__danger {
+  border-color: rgba(218, 104, 94, 0.42) !important;
+  color: var(--racing-danger-soft) !important;
+}
+
+.admin-rewards-terminal {
+  color: var(--admin-muted);
+  font-size: 0.74rem;
+  font-weight: 720;
+}
+
+.admin-rewards-editor {
+  position: sticky;
+  top: 18px;
+}
+
+.admin-rewards-editor .admin-panel__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.admin-rewards-editor__split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-rewards-stock {
+  margin-top: 4px;
+  padding-top: 14px;
+  display: grid;
+  gap: 11px;
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-rewards-stock > div {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-rewards-stock p,
+.admin-rewards-stock strong {
+  margin: 0;
+}
+
+.admin-rewards-stock strong {
+  color: var(--admin-text);
+  font-family: "Sora", sans-serif;
+}
+
 .admin-dashboard-section {
   display: grid;
   gap: 14px;
@@ -3073,6 +3204,20 @@
     grid-template-columns: 1fr;
   }
 
+  .admin-rewards-workspace,
+  .admin-deposit-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-rewards-editor,
+  .admin-deposit-editor {
+    position: static;
+  }
+
+  .admin-rewards-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .admin-registry-detail {
     position: static;
     grid-row: 1;
@@ -3358,6 +3503,16 @@
 
   .admin-registry-summary {
     grid-template-columns: 1fr;
+  }
+
+  .admin-rewards-toolbar,
+  .admin-rewards-toolbar--compact,
+  .admin-rewards-editor__split {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-rewards-toolbar .admin-header__button {
+    width: 100%;
   }
 
   .admin-registry-summary > div,

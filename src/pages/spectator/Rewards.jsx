@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   WalletCards,
+  X,
 } from "lucide-react";
 import { rewardApi } from "../../api/rewardApi.js";
 import { walletApi } from "../../api/walletApi.js";
@@ -44,6 +45,7 @@ export default function Rewards() {
   const [rewardsState, setRewardsState] = useState({ items: [], isLoading: true, error: "" });
   const [historyState, setHistoryState] = useState({ redemptions: [], meta: null, isLoading: true, error: "" });
   const [redeemState, setRedeemState] = useState({ itemId: "", message: "", error: "" });
+  const [confirmReward, setConfirmReward] = useState(null);
 
   async function loadRewardsData() {
     setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
@@ -110,6 +112,7 @@ export default function Rewards() {
     const itemId = getItemId(item);
     if (!itemId) return;
 
+    setConfirmReward(null);
     setRedeemState({ itemId, message: "", error: "" });
 
     try {
@@ -140,6 +143,11 @@ export default function Rewards() {
         error: error.message || "Unable to redeem reward.",
       });
     }
+  }
+
+  function requestRedeem(item) {
+    setRedeemState({ itemId: "", message: "", error: "" });
+    setConfirmReward(item);
   }
 
   const walletBalance = Number(walletState.balance ?? 0);
@@ -273,7 +281,7 @@ export default function Rewards() {
                         className="spectator-button spectator-button--primary"
                         disabled={actionDisabled}
                         type="button"
-                        onClick={() => handleRedeem(item)}
+                        onClick={() => requestRedeem(item)}
                       >
                         {isRedeeming ? "Redeeming..." : isOutOfStock ? "Out of stock" : isUnaffordable ? "Need more TOKEN" : "Redeem reward"}
                         {!actionDisabled && <ArrowRight size={16} aria-hidden="true" />}
@@ -328,6 +336,30 @@ export default function Rewards() {
           </div>
         </aside>
       </div>
+
+      {confirmReward && (
+        <div className="rewards-confirm-toast" role="dialog" aria-modal="false" aria-labelledby="reward-confirm-title">
+          <button className="rewards-confirm-toast__close" type="button" onClick={() => setConfirmReward(null)} aria-label="Cancel reward redemption">
+            <X size={16} aria-hidden="true" />
+          </button>
+          <div className="rewards-confirm-toast__icon" aria-hidden="true">
+            <Gift size={18} />
+          </div>
+          <div className="rewards-confirm-toast__copy">
+            <h3 id="reward-confirm-title">Confirm reward redemption</h3>
+            <p>
+              Redeem <strong>{confirmReward.name || "this reward"}</strong> for{" "}
+              <strong>{formatTokenAmount(confirmReward.token_price)}</strong>. Your request will start as pending.
+            </p>
+          </div>
+          <div className="rewards-confirm-toast__actions">
+            <button className="spectator-button" type="button" onClick={() => setConfirmReward(null)}>Cancel</button>
+            <button className="spectator-button spectator-button--primary" type="button" onClick={() => handleRedeem(confirmReward)}>
+              Confirm redeem
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

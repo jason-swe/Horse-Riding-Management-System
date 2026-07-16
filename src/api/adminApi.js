@@ -30,6 +30,48 @@ export const adminApi = {
     return apiRequest(withQuery("/admin/prize-awards/summary", params));
   },
 
+  getRewardStatistics() {
+    return apiRequest("/admin/rewards/statistics");
+  },
+
+  listRewards(params = {}) {
+    return apiRequest(withQuery("/admin/rewards", params));
+  },
+
+  getReward(id) {
+    return apiRequest(`/admin/rewards/${id}`);
+  },
+
+  createReward(payload) {
+    return apiRequest("/admin/rewards", { method: "POST", body: payload });
+  },
+
+  updateReward(id, payload) {
+    return apiRequest(`/admin/rewards/${id}`, { method: "PUT", body: payload });
+  },
+
+  updateRewardStock(id, payload) {
+    return apiRequest(`/admin/rewards/${id}/stock`, { method: "PATCH", body: payload });
+  },
+
+  updateRewardStatus(id, isActive) {
+    return apiRequest(`/admin/rewards/${id}/status`, {
+      method: "PATCH",
+      body: { is_active: isActive },
+    });
+  },
+
+  listRewardRedemptions(params = {}) {
+    return apiRequest(withQuery("/admin/rewards/redemptions", params));
+  },
+
+  updateRewardRedemptionStatus(id, status) {
+    return apiRequest(`/admin/rewards/redemptions/${id}/status`, {
+      method: "PATCH",
+      body: { status },
+    });
+  },
+
   listUsers(params = {}) {
     return apiRequest(withQuery("/admin/users", params));
   },

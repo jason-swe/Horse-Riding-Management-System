@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   Flag,
   Gauge,
+  Gift,
   LogOut,
   ShieldAlert,
   ShieldCheck,
@@ -24,6 +25,7 @@ const navigationGroups = [
       { to: "/admin/incidents", label: "Incidents", icon: ShieldAlert },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/deposits", label: "Deposits", icon: CircleDollarSign },
+      { to: "/admin/rewards", label: "Prize rewards", icon: Gift },
     ],
   },
   {

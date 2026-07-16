@@ -5,6 +5,7 @@ import AdminDepositModule from "./AdminDepositModule";
 import AdminIncidentModule from "./AdminIncidentModule";
 import AdminLayout from "./AdminLayout";
 import AdminRegistryModule from "./AdminRegistryModule";
+import AdminRewardsModule from "./AdminRewardsModule";
 
 const commandModules = new Set(["users", "registrations", "results"]);
 const competitionModules = new Set(["tournament", "schedule"]);
@@ -15,6 +16,7 @@ function AdminModulePage() {
 
   if (moduleName === "incidents") return <AdminIncidentModule />;
   if (moduleName === "deposits") return <AdminDepositModule />;
+  if (moduleName === "rewards") return <AdminRewardsModule />;
   if (commandModules.has(moduleName)) return <AdminCommandModule moduleName={moduleName} />;
   if (competitionModules.has(moduleName)) return <AdminCompetitionModule moduleName={moduleName} />;
   if (registryModules.has(moduleName)) return <AdminRegistryModule moduleName={moduleName} />;
