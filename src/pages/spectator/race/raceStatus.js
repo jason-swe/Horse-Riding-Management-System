@@ -29,9 +29,9 @@ export const raceStatusMeta = {
 export const bettingStatusMeta = {
   [BETTING_STATUS.UNAVAILABLE]: { label: "Market unavailable", tone: "muted" },
   [BETTING_STATUS.SCHEDULED]: { label: "Opening soon", tone: "neutral" },
-  [BETTING_STATUS.OPEN]: { label: "Betting open", tone: "open" },
+  [BETTING_STATUS.OPEN]: { label: "Prediction open", tone: "open" },
   [BETTING_STATUS.SUSPENDED]: { label: "Market suspended", tone: "amber" },
-  [BETTING_STATUS.CLOSED]: { label: "Betting closed", tone: "muted" },
+  [BETTING_STATUS.CLOSED]: { label: "Prediction closed", tone: "muted" },
   [BETTING_STATUS.SETTLED]: { label: "Market settled", tone: "muted" },
   [BETTING_STATUS.VOID]: { label: "Market void", tone: "danger" },
 };

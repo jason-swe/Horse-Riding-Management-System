@@ -219,6 +219,10 @@ export function toOwnerRaceOption(apiRace, index = 0) {
   const lockDate = apiRace.registration_lock_at ? new Date(apiRace.registration_lock_at) : null;
   const hasLockDate = lockDate && !Number.isNaN(lockDate.getTime());
 
+  const prizePool = Number(apiRace.prize_pool || 0);
+  const maxParticipants = Number(apiRace.max_participants || 0);
+  const entryFeeVnd = Number(apiRace.entry_fee_vnd ?? (prizePool > 0 && maxParticipants > 0 ? Math.ceil(prizePool / maxParticipants) : 0));
+
   return {
     id: apiRace._id || apiRace.id || `R-${index + 1}`,
     name: apiRace.name || `Race ${index + 1}`,
@@ -230,8 +234,10 @@ export function toOwnerRaceOption(apiRace, index = 0) {
     location: apiRace.location || "",
     distance: hasValue(apiRace.distance) ? `${apiRace.distance}m` : "",
     maxParticipants: hasValue(apiRace.max_participants) ? String(apiRace.max_participants) : "",
-    prizePool: Number(apiRace.prize_pool || 0),
+    prizePool,
     prizeCurrency: apiRace.prize_currency || "VND",
+    entryFeeVnd,
+    entryFeeCurrency: "VND",
     registrationLock: hasLockDate
       ? `${lockDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}, ${lockDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
       : "",

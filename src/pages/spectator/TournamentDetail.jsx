@@ -28,7 +28,7 @@ import "./spectator.css";
 // ─── Constants ────────────────────────────────────────────────────────────────
 const FILTERS = [
   { id: "all", label: "All races" },
-  { id: "betting", label: "Betting open" },
+  { id: "betting", label: "Prediction open" },
   { id: "live", label: "Live" },
   { id: "completed", label: "Completed" },
 ];
@@ -127,7 +127,7 @@ function RaceRow({ race, tournament }) {
         </Link>
         {canBet && (
           <Link className="race-hub-action race-hub-action--primary" to={bettingPath}>
-            Bet <CircleDollarSign size={14} />
+            Predict <CircleDollarSign size={14} />
           </Link>
         )}
       </div>
@@ -297,7 +297,7 @@ function TournamentDetail() {
           {counts.betting > 0 && (
             <div className="rh-stat rh-stat--open">
               <strong>{counts.betting}</strong>
-              <span>Betting open</span>
+              <span>Prediction open</span>
             </div>
           )}
           {counts.live > 0 && (

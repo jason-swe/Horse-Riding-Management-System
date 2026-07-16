@@ -15,7 +15,7 @@ import PredictionDetail from "./pages/spectator/PredictionDetail";
 import Profile from "./pages/spectator/Profile";
 import Deposit from "./pages/spectator/Deposit";
 import PaymentReturn from "./pages/spectator/PaymentReturn";
-import Results from "./pages/spectator/Results";
+import Rewards from "./pages/spectator/Rewards";
 import RoleApplications from "./pages/applications/RoleApplications";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import OwnerLayout from "./pages/owner/OwnerLayout";
@@ -62,6 +62,7 @@ function App() {
       <Route path="/reset-password" element={<AuthRecovery mode="reset" />} />
       <Route path="/resend-verification" element={<AuthRecovery mode="resend" />} />
       <Route path="/change-password" element={<ProtectedRoute><AuthRecovery mode="change" /></ProtectedRoute>} />
+      <Route path="/payment-success" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
       <Route path="/choose-role" element={<WorkspaceChooser />} />
 
       <Route path="/owner" element={<ProtectedRoute role="horse_owner"><OwnerLayout /></ProtectedRoute>}>
@@ -96,7 +97,6 @@ function App() {
       <Route path="/referee/races/:raceId/closure" element={<ProtectedRoute role="race_referee"><RaceClosure /></ProtectedRoute>} />
 
       <Route element={<ProtectedRoute role="spectator"><MainLayout /></ProtectedRoute>}>
-        <Route path="/payment-success" element={<PaymentReturn />} />
         <Route path="/spectator" element={<SpectatorHome />} />
         <Route path="/spectator/tournaments" element={<TournamentList />} />
         <Route path="/spectator/tournaments/:tournamentId" element={<TournamentDetail />} />
@@ -106,8 +106,9 @@ function App() {
         <Route path="/spectator/predictions/:tournamentId" element={<Navigate to="/spectator/predictions" replace />} />
         <Route path="/spectator/profile" element={<Profile />} />
         <Route path="/spectator/deposit" element={<Deposit />} />
+        <Route path="/spectator/rewards" element={<Rewards />} />
         <Route path="/spectator/payment-success" element={<PaymentReturn />} />
-        <Route path="/spectator/results" element={<Results />} />
+        <Route path="/spectator/results" element={<Navigate to="/spectator/deposit" replace />} />
         <Route path="/spectator/role-applications" element={<RoleApplications />} />
       </Route>
 

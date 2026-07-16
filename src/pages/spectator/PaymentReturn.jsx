@@ -16,24 +16,49 @@ export default function PaymentReturn() {
   const orderId = searchParams.get("order_id") || searchParams.get("vnp_TxnRef") || searchParams.get("orderId") || "";
   const gatewayStatus = searchParams.get("status") || searchParams.get("vnp_ResponseCode") || searchParams.get("resultCode") || "";
   const paymentMethod = searchParams.get("payment_method") || searchParams.get("method") || "";
+  const isRegistrationPayment = orderId.startsWith("REG-");
   const [state, setState] = useState({ order: null, balance: null, isLoading: true, error: "", polls: 0 });
 
   const statusCopy = useMemo(() => {
     const orderStatus = String(state.order?.status || "").toLowerCase();
-    if (orderStatus === "success") return { title: "Payment completed", tone: "success", detail: "Your wallet and deposit history are up to date.", icon: CheckCircle2 };
-    if (orderStatus === "failed") return { title: "Payment failed", tone: "error", detail: "No TOKEN was credited for this order.", icon: XCircle };
+    if (orderStatus === "success") return { title: "Payment completed", tone: "success", detail: isRegistrationPayment ? "Your race registration payment is recorded." : "Your wallet and deposit history are up to date.", icon: CheckCircle2 };
+    if (orderStatus === "failed") return { title: "Payment failed", tone: "error", detail: isRegistrationPayment ? "The race registration fee was not confirmed." : "No TOKEN was credited for this order.", icon: XCircle };
     return { title: "Payment processing", tone: "pending", detail: "We are checking the latest gateway confirmation for this order.", icon: Clock3 };
-  }, [state.order]);
+  }, [isRegistrationPayment, state.order]);
 
   const StatusIcon = statusCopy.icon;
   const orderStatus = String(state.order?.status || "pending").toLowerCase();
-  const orderToken = state.order ? formatTokenAmount(state.order.total_token) : "Pending";
+  const orderAmount = state.order
+    ? isRegistrationPayment
+      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(state.order.total_vnd || 0))
+      : formatTokenAmount(state.order.total_token)
+    : "Pending";
   const gatewayLabel = paymentMethod || (searchParams.get("vnp_TxnRef") ? "VNPAY" : "Gateway");
+  const backTarget = isRegistrationPayment ? "/owner/registrations" : "/spectator/deposit";
+  const backLabel = isRegistrationPayment ? "Back to registrations" : "Back to deposit";
 
   async function refresh(polls = state.polls) {
     setState((current) => ({ ...current, isLoading: true, error: "" }));
 
     try {
+      if (isRegistrationPayment) {
+        const response = await depositApi.confirmPaymentReturn(Object.fromEntries(searchParams.entries()));
+        setState({
+          order: response.order || {
+            order_id: orderId,
+            status: response.registration?.payment_status === "paid" ? "success" : response.registration?.payment_status || "pending",
+            total_vnd: response.registration?.entry_fee_vnd || 0,
+            package_id: "RACE_REGISTRATION",
+            gateway_reference_id: response.registration?.gateway_reference_id,
+          },
+          balance: null,
+          isLoading: false,
+          error: "",
+          polls,
+        });
+        return;
+      }
+
       if (searchParams.get("vnp_TxnRef") || searchParams.get("vnp_SecureHash") || searchParams.get("orderId")) {
         await depositApi.confirmPaymentReturn(Object.fromEntries(searchParams.entries()));
       }
@@ -80,7 +105,7 @@ export default function PaymentReturn() {
 
   return (
     <section className="spectator-page payment-return-page">
-      <Link className="tournament-detail-back" to="/spectator/deposit"><ArrowLeft size={16} /> Back to deposit</Link>
+      <Link className="tournament-detail-back" to={backTarget}><ArrowLeft size={16} /> {backLabel}</Link>
 
       <article className={`payment-return-panel payment-return-panel--${statusCopy.tone}`} aria-labelledby="payment-return-title">
         <div className="payment-return-panel__main">
@@ -97,10 +122,10 @@ export default function PaymentReturn() {
           </div>
         </div>
 
-        <aside className="payment-return-balance" aria-label="Current wallet balance">
-          <span><WalletCards size={17} aria-hidden="true" /> Current balance</span>
-          <strong>{state.isLoading ? "Checking" : formatTokenAmount(state.balance)}</strong>
-          <small>{gatewayStatus ? `${gatewayLabel} code ${gatewayStatus}` : "Latest wallet snapshot"}</small>
+        <aside className="payment-return-balance" aria-label={isRegistrationPayment ? "Registration payment amount" : "Current wallet balance"}>
+          <span><WalletCards size={17} aria-hidden="true" /> {isRegistrationPayment ? "Registration fee" : "Current balance"}</span>
+          <strong>{state.isLoading ? "Checking" : isRegistrationPayment ? orderAmount : formatTokenAmount(state.balance)}</strong>
+          <small>{gatewayStatus ? `${gatewayLabel} code ${gatewayStatus}` : isRegistrationPayment ? "VND gateway payment" : "Latest wallet snapshot"}</small>
         </aside>
       </article>
 
@@ -117,14 +142,14 @@ export default function PaymentReturn() {
             <div className={`payment-return-result payment-return-result--${statusCopy.tone}`} role="status">
               <StatusIcon size={18} aria-hidden="true" />
               <span>{orderStatus}</span>
-              <strong>{orderToken}</strong>
+              <strong>{orderAmount}</strong>
             </div>
           )}
 
           <dl className="payment-return-details">
             <div><dt>Gateway</dt><dd>{gatewayLabel}</dd></div>
             <div><dt>Reference</dt><dd>{state.order?.gateway_reference_id || searchParams.get("vnp_BankTranNo") || "Pending"}</dd></div>
-            <div><dt>Package</dt><dd>{state.order?.package_id || "Checking"}</dd></div>
+            <div><dt>{isRegistrationPayment ? "Purpose" : "Package"}</dt><dd>{state.order?.package_id || (isRegistrationPayment ? "RACE_REGISTRATION" : "Checking")}</dd></div>
           </dl>
         </article>
 
@@ -136,8 +161,8 @@ export default function PaymentReturn() {
 
           <ol className="payment-return-steps">
             <li className="is-complete"><CreditCard size={16} aria-hidden="true" /><span>Gateway payment</span><strong>Received</strong></li>
-            <li className={orderStatus === "success" ? "is-complete" : orderStatus === "failed" ? "is-error" : "is-active"}><ShieldCheck size={16} aria-hidden="true" /><span>Wallet settlement</span><strong>{orderStatus}</strong></li>
-            <li className={orderStatus === "success" ? "is-complete" : ""}><WalletCards size={16} aria-hidden="true" /><span>History refresh</span><strong>{state.order ? "Ready" : "Waiting"}</strong></li>
+            <li className={orderStatus === "success" ? "is-complete" : orderStatus === "failed" ? "is-error" : "is-active"}><ShieldCheck size={16} aria-hidden="true" /><span>{isRegistrationPayment ? "Registration settlement" : "Wallet settlement"}</span><strong>{orderStatus}</strong></li>
+            <li className={orderStatus === "success" ? "is-complete" : ""}><WalletCards size={16} aria-hidden="true" /><span>{isRegistrationPayment ? "Entry update" : "History refresh"}</span><strong>{state.order ? "Ready" : "Waiting"}</strong></li>
           </ol>
         </article>
       </section>

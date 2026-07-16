@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, CreditCard, Landmark, Package, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, History, Landmark, Package, RefreshCw, ShieldCheck, Target, Trophy, WalletCards } from "lucide-react";
+import { betApi } from "../../api/betApi.js";
 import { depositApi } from "../../api/depositApi.js";
 import { walletApi } from "../../api/walletApi.js";
-import { formatTokenAmount, formatTransactionDate, getWalletBalance } from "./walletFormatters.js";
+import { formatTokenAmount, formatTransactionAmount, formatTransactionDate, getWalletBalance, transactionLabel } from "./walletFormatters.js";
+import { useSpectatorRaceResults } from "./useSpectatorData.js";
 import "./spectator.css";
 
 const VALID_PAYMENT_METHODS = ["VNPAY", "MOMO"];
@@ -16,13 +18,9 @@ const paymentMethods = (import.meta.env.VITE_PAYMENT_METHODS || "VNPAY,MOMO")
 const paymentMethodMeta = {
   VNPAY: {
     label: "VNPAY",
-    title: "ATM / bank card",
-    note: "Sandbox gateway return",
   },
   MOMO: {
     label: "MoMo",
-    title: "MoMo wallet",
-    note: "Sandbox wallet checkout",
   },
 };
 
@@ -43,10 +41,80 @@ function normalizeOrders(payload) {
   return payload?.orders || payload?.history || [];
 }
 
+function normalizeTransactions(payload) {
+  return payload?.transactions || payload?.history || [];
+}
+
+function normalizePredictions(payload) {
+  return Array.isArray(payload) ? payload : Array.isArray(payload?.bets) ? payload.bets : [];
+}
+
+function getEntityName(value, fallback = "") {
+  if (!value || typeof value === "string") return fallback;
+  return value.name || value.full_name || fallback;
+}
+
+function formatPredictionStatus(value) {
+  const normalized = String(value || "pending").toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function normalizeActivityTone(status, fallbackTone = "pending", transactionType = "") {
+  const normalized = String(status || "").toLowerCase();
+  const type = String(transactionType || "").toLowerCase();
+
+  if (type.includes("redemption") || type.includes("redeem") || type.includes("reward")) return "lost";
+  if (["success", "completed", "complete", "published", "won", "settled"].includes(normalized)) return "success";
+  if (["lost", "failed", "failure", "cancelled", "canceled", "rejected", "expired"].includes(normalized)) return "lost";
+  if (fallbackTone === "won") return "success";
+  if (fallbackTone === "lost") return "lost";
+  return "pending";
+}
+
+function formatActivityStatus(value) {
+  const normalized = String(value || "pending").toLowerCase();
+  if (normalized === "success") return "Success";
+  if (normalized === "completed" || normalized === "complete") return "Completed";
+  if (normalized === "published") return "Published";
+  if (normalized === "won") return "Won";
+  if (normalized === "lost") return "Lost";
+  if (normalized === "failed" || normalized === "failure") return "Failed";
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function toPredictionHistoryRow(prediction) {
+  const status = String(prediction?.status || "pending").toLowerCase();
+  const raceName = getEntityName(prediction?.race_id, "Race");
+  const horseName =
+    prediction?.odds_snapshot?.horse_name ||
+    getEntityName(prediction?.predicted_horse_id, "Selected runner");
+  const currency =
+    prediction?.odds_snapshot?.currency ||
+    prediction?.race_id?.betting_market?.currency ||
+    "TOKEN";
+  const payoutAmount = Number(prediction?.payout_amount ?? 0);
+  const potentialPayout = Number(prediction?.potential_payout ?? 0);
+
+  return {
+    id: prediction?._id || prediction?.id,
+    kind: "prediction",
+    date: prediction?.settled_at || prediction?.submitted_at,
+    title: `${formatPredictionStatus(status)} prediction`,
+    detail: `${raceName} / ${horseName}`,
+    amount: status === "won" ? payoutAmount : Number(prediction?.stake_amount ?? 0),
+    amountLabel: status === "won" ? `+${formatTokenAmount(payoutAmount).replace(" TOKEN", ` ${currency}`)}` : formatTokenAmount(Number(prediction?.stake_amount ?? 0)).replace(" TOKEN", ` ${currency}`),
+    status,
+    tone: normalizeActivityTone(status, status === "won" ? "won" : status === "lost" ? "lost" : "pending"),
+    meta: status === "won" ? "Prediction payout" : potentialPayout ? `Potential ${formatTokenAmount(potentialPayout).replace(" TOKEN", ` ${currency}`)}` : "Prediction receipt",
+  };
+}
+
 export default function Deposit() {
+  const { error: resultsError, isLoading: resultsLoading, reload: reloadResults, results: raceResults } = useSpectatorRaceResults();
   const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
   const [packagesState, setPackagesState] = useState({ packages: [], isLoading: true, error: "" });
   const [historyState, setHistoryState] = useState({ orders: [], isLoading: true, error: "" });
+  const [activityState, setActivityState] = useState({ transactions: [], predictions: [], isLoading: true, error: "" });
   const [depositState, setDepositState] = useState({
     mode: "package",
     packageId: "",
@@ -69,18 +137,27 @@ export default function Deposit() {
     setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
     setPackagesState((current) => ({ ...current, isLoading: true, error: "" }));
     setHistoryState((current) => ({ ...current, isLoading: true, error: "" }));
+    setActivityState((current) => ({ ...current, isLoading: true, error: "" }));
 
     try {
-      const [walletPayload, packagesPayload, historyPayload] = await Promise.all([
+      const [walletPayload, packagesPayload, historyPayload, transactionsPayload, predictionsPayload] = await Promise.all([
         walletApi.getMyWallet(),
         depositApi.listPackages(),
         depositApi.getHistory({ page: 1, limit: 8 }),
+        walletApi.getTransactions({ page: 1, limit: 12 }),
+        betApi.getMyBets({ page: 1, limit: 12 }),
       ]);
       const packages = normalizePackages(packagesPayload);
 
       setWalletState({ balance: getWalletBalance(walletPayload), isLoading: false, error: "" });
       setPackagesState({ packages, isLoading: false, error: "" });
       setHistoryState({ orders: normalizeOrders(historyPayload), isLoading: false, error: "" });
+      setActivityState({
+        transactions: normalizeTransactions(transactionsPayload),
+        predictions: normalizePredictions(predictionsPayload).map(toPredictionHistoryRow),
+        isLoading: false,
+        error: "",
+      });
       setDepositState((current) => ({
         ...current,
         packageId: current.packageId || packages[0]?.package_id || "",
@@ -91,6 +168,7 @@ export default function Deposit() {
       setWalletState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load wallet." }));
       setPackagesState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load deposit packages." }));
       setHistoryState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load deposit history." }));
+      setActivityState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load account activity." }));
     }
   }
 
@@ -99,10 +177,12 @@ export default function Deposit() {
 
     async function load() {
       try {
-        const [walletPayload, packagesPayload, historyPayload] = await Promise.all([
+        const [walletPayload, packagesPayload, historyPayload, transactionsPayload, predictionsPayload] = await Promise.all([
           walletApi.getMyWallet(),
           depositApi.listPackages(),
           depositApi.getHistory({ page: 1, limit: 8 }),
+          walletApi.getTransactions({ page: 1, limit: 12 }),
+          betApi.getMyBets({ page: 1, limit: 12 }),
         ]);
         if (cancelled) return;
 
@@ -110,6 +190,12 @@ export default function Deposit() {
         setWalletState({ balance: getWalletBalance(walletPayload), isLoading: false, error: "" });
         setPackagesState({ packages, isLoading: false, error: "" });
         setHistoryState({ orders: normalizeOrders(historyPayload), isLoading: false, error: "" });
+        setActivityState({
+          transactions: normalizeTransactions(transactionsPayload),
+          predictions: normalizePredictions(predictionsPayload).map(toPredictionHistoryRow),
+          isLoading: false,
+          error: "",
+        });
         setDepositState((current) => ({
           ...current,
           packageId: current.packageId || packages[0]?.package_id || "",
@@ -120,6 +206,7 @@ export default function Deposit() {
         setWalletState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load wallet." }));
         setPackagesState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load deposit packages." }));
         setHistoryState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load deposit history." }));
+        setActivityState((current) => ({ ...current, isLoading: false, error: error.message || "Unable to load account activity." }));
       }
     }
 
@@ -212,6 +299,55 @@ export default function Deposit() {
       bonus_token: 0,
     }
     : packagePreview;
+  const latestWinner = raceResults.find((result) => Number(result.position) === 1) || null;
+  const activityRows = useMemo(() => {
+    const depositRows = historyState.orders.map((order) => ({
+      id: order._id || order.order_id,
+      kind: "deposit",
+      date: getOrderDate(order),
+      title: order.package_id || "Custom deposit",
+      detail: order.note || "Top-up order",
+      amountLabel: formatTokenAmount(order.total_token),
+      status: order.status || "pending",
+      tone: normalizeActivityTone(order.status),
+      meta: "Top-up order",
+    }));
+
+    const transactionRows = activityState.transactions.map((transaction) => ({
+      id: transaction._id || transaction.reference_id || `${transaction.transaction_type}-${transaction.created_at}`,
+      kind: "wallet",
+      date: transaction.created_at,
+      title: transactionLabel(transaction.transaction_type),
+      detail: transaction.note || "Wallet movement",
+      amountLabel: formatTransactionAmount(transaction),
+      status: transaction.status || "completed",
+      tone: normalizeActivityTone(
+        transaction.status,
+        transaction.direction === "credit" ? "won" : transaction.direction === "debit" ? "lost" : "pending",
+        transaction.transaction_type
+      ),
+      meta: transaction.direction === "credit" ? "Credit" : "Debit",
+    }));
+
+    const winnerRows = raceResults
+      .filter((result) => Number(result.position) === 1)
+      .slice(0, 6)
+      .map((result) => ({
+        id: result.id || `${result.race}-${result.horse}-${result.publishedAt}`,
+        kind: "race-win",
+        date: result.publishedAt,
+        title: "Race winner",
+        detail: `${result.horse} / ${result.race}`,
+        amountLabel: result.score === "-" ? "Published" : `${result.score} pts`,
+        status: "published",
+        tone: "success",
+        meta: `Lane ${result.lane} / ${result.time}`,
+      }));
+
+    return [...depositRows, ...transactionRows, ...activityState.predictions, ...winnerRows]
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      .slice(0, 18);
+  }, [activityState.predictions, activityState.transactions, historyState.orders, raceResults]);
 
   return (
     <section className="spectator-page deposit-page">
@@ -219,19 +355,19 @@ export default function Deposit() {
 
       <header className="deposit-hero">
         <div>
-          <p className="spectator-eyebrow">Wallet top-up</p>
-          <h1 className="spectator-title">Add TOKEN for race-day betting.</h1>
-          <p className="spectator-copy">Pick a bonus package or enter an exact TOKEN amount, then continue through a supported payment gateway.</p>
+          <p className="spectator-eyebrow">Wallet command</p>
+          <h1 className="spectator-title">Deposit</h1>
+          <p className="spectator-copy">Top up TOKEN, review wallet movement, track prediction receipts, and follow published race wins from one account ledger.</p>
           <div className="deposit-hero__signals" aria-label="Deposit support summary">
             <span><ShieldCheck size={15} aria-hidden="true" /> Secure gateway return</span>
             <span><CreditCard size={15} aria-hidden="true" /> VNPAY and MoMo only</span>
-            <span><Package size={15} aria-hidden="true" /> Custom amount supported</span>
+            <span><Target size={15} aria-hidden="true" /> Prediction history included</span>
           </div>
         </div>
         <aside className="deposit-balance-card">
           <span><WalletCards size={16} /> Current balance</span>
           <strong>{walletState.isLoading ? "Loading..." : formatTokenAmount(walletState.balance)}</strong>
-          <small>{walletState.error || "Wallet updates after a successful gateway callback"}</small>
+          <small>{walletState.error || "Wallet updates after payment, prediction settlement, and race prize activity."}</small>
         </aside>
       </header>
 
@@ -248,7 +384,7 @@ export default function Deposit() {
           {CUSTOM_DEPOSIT_ENABLED && (
             <div className="deposit-mode-toggle" role="group" aria-label="Deposit mode">
               <button className={depositState.mode === "package" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "package", error: "", message: "" }))}>Packages</button>
-              <button className={depositState.mode === "custom" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "custom", error: "", message: "" }))}>Exact amount</button>
+              <button className={depositState.mode === "custom" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "custom", error: "", message: "" }))}>Custom</button>
             </div>
           )}
 
@@ -297,7 +433,7 @@ export default function Deposit() {
             <span className="deposit-field-label">Payment method</span>
             <div className="deposit-payment-method-grid">
               {visiblePaymentMethods.map((method) => {
-                const meta = paymentMethodMeta[method] || { label: method, title: method, note: "Supported gateway" };
+                const meta = paymentMethodMeta[method] || { label: method };
                 const isSelected = depositState.paymentMethod === method;
                 return (
                   <button
@@ -308,9 +444,7 @@ export default function Deposit() {
                     aria-pressed={isSelected}
                   >
                     <Landmark size={17} aria-hidden="true" />
-                    <span>{meta.label}</span>
-                    <strong>{meta.title}</strong>
-                    <small>{meta.note}</small>
+                    <strong>{meta.label}</strong>
                   </button>
                 );
               })}
@@ -337,26 +471,37 @@ export default function Deposit() {
         <article className="spectator-card deposit-history-card">
           <div className="spectator-card__header">
             <div>
-              <p className="spectator-eyebrow">Deposit orders</p>
-              <h2>Recent top-ups</h2>
+              <p className="spectator-eyebrow">Account ledger</p>
+              <h2>Recent activity</h2>
             </div>
-            <button className="spectator-badge profile-refresh-button" disabled={historyState.isLoading} type="button" onClick={loadDepositData}>
+            <button className="spectator-badge profile-refresh-button" disabled={historyState.isLoading || activityState.isLoading || resultsLoading} type="button" onClick={() => { loadDepositData(); reloadResults?.(); }}>
               <RefreshCw size={13} /> Refresh
             </button>
           </div>
 
-          <div className="profile-history deposit-history-list">
-            {historyState.isLoading && <div className="deposit-history-row"><span>Loading</span><strong>Deposit history</strong><small>Fetching latest orders</small><b>--</b></div>}
-            {!historyState.isLoading && historyState.error && <div className="deposit-history-row"><span>Error</span><strong>Unable to load deposits</strong><small>{historyState.error}</small><b>--</b></div>}
-            {!historyState.isLoading && !historyState.error && !historyState.orders.length && <div className="deposit-history-row"><span>Empty</span><strong>No deposit orders yet</strong><small>Create a payment intent to start your first top-up.</small><b>0 TOKEN</b></div>}
-            {!historyState.isLoading && !historyState.error && historyState.orders.map((order) => (
-              <div className="deposit-history-row" key={order._id || order.order_id}>
-                <span className="deposit-history-row__date">{formatTransactionDate(getOrderDate(order))}</span>
-                <span className="deposit-history-row__main">
-                  <strong>{order.package_id || "CUSTOM"} <CheckCircle2 size={14} aria-hidden="true" /></strong>
-                  <small>{order.order_id || order.gateway_reference_id || order.note || "Deposit order"}</small>
+          <div className="deposit-activity-summary" aria-label="Deposit account summary">
+            <div><Package size={16} /><span>Top-ups</span><strong>{historyState.orders.length}</strong></div>
+            <div><History size={16} /><span>Ledger rows</span><strong>{activityState.transactions.length}</strong></div>
+            <div><Target size={16} /><span>Predictions</span><strong>{activityState.predictions.length}</strong></div>
+            <div><Trophy size={16} /><span>Latest winner</span><strong>{latestWinner?.horse || "TBA"}</strong></div>
+          </div>
+
+          <div className="profile-history deposit-history-list deposit-activity-list">
+            {(historyState.isLoading || activityState.isLoading || resultsLoading) && <div className="deposit-history-row"><span>Loading</span><strong>Account activity</strong><small>Fetching wallet, prediction, and race records</small><b>--</b></div>}
+            {!historyState.isLoading && (historyState.error || activityState.error || resultsError) && <div className="deposit-history-row"><span>Error</span><strong>Some activity is unavailable</strong><small>{historyState.error || activityState.error || resultsError}</small><b>--</b></div>}
+            {!historyState.isLoading && !activityState.isLoading && !resultsLoading && !historyState.error && !activityState.error && !resultsError && !activityRows.length && <div className="deposit-history-row"><span>Empty</span><strong>No account activity yet</strong><small>Top-ups, withdrawals, predictions, payouts, and race wins will appear here.</small><b>0 TOKEN</b></div>}
+            {!historyState.isLoading && !activityState.isLoading && !resultsLoading && activityRows.map((row) => (
+              <div className={`deposit-history-row deposit-activity-row deposit-activity-row--${row.tone}`} key={`${row.kind}-${row.id}`}>
+                <span className="deposit-history-row__date">
+                  <span>{formatTransactionDate(row.date)}</span>
+                  <em className={`deposit-status-tag deposit-status-tag--${row.tone}`}>{formatActivityStatus(row.status)}</em>
                 </span>
-                <b className={order.status === "success" ? "profile-history__won deposit-history-row__amount" : "deposit-history-row__amount"}>{order.status} / {formatTokenAmount(order.total_token)}</b>
+                <span className="deposit-history-row__main">
+                  <strong>{row.title} {row.tone === "success" && <CheckCircle2 size={14} aria-hidden="true" />}</strong>
+                  <small>{row.detail}</small>
+                </span>
+                <b className={row.tone === "success" ? "profile-history__won deposit-history-row__amount" : "deposit-history-row__amount"}>{row.amountLabel}</b>
+                <em className="deposit-history-row__meta">{row.meta}</em>
               </div>
             ))}
           </div>

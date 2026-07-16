@@ -27,9 +27,9 @@ export function formatTransactionDate(value) {
 export function transactionLabel(type) {
   const labels = {
     deposit: "Wallet deposit",
-    bet_deduct: "Bet stake",
-    bet_refund: "Bet refund",
-    bet_win: "Bet payout",
+    bet_deduct: "Prediction stake",
+    bet_refund: "Prediction refund",
+    bet_win: "Prediction payout",
     race_prize: "Race prize",
     redeem: "Reward redemption",
   };
