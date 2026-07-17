@@ -13,6 +13,29 @@ const TRACK_IMAGES = [
   "https://i.pinimg.com/1200x/ae/08/50/ae0850e67c950abd7e962008bc7ae3fb.jpg",
 ];
 
+const TOURNAMENT_IMAGES = [
+  "https://upload.wikimedia.org/wikipedia/commons/4/48/GGF_Race5.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1eBBm_P-QFmlqGsCPSzMhVvCLgox9RdzPLcjWYd5s7gjrsZDEmAo0r9Y&s=10",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsBhvh6eZD9Po6EQggn33GSJ2HDxBbPfBsn0U8voOVqnilVhRjAeD2vL8&s=10",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHIR1YaAw1iN9gOWTeEpJRIdyM2ZU2hyfGltYpQsOKBA&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQos0Yf2hCLEj8Zdvan6F_oqxJ7fgoFBz6pv83cDcDeO2VgF7uR5KnwDcY&s=10",
+  "https://i.ytimg.com/vi/DcKduq72F3s/maxresdefault.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_pohoZ7249yBzQjLVn3tdU1AJc_EyWl8S1sNGh4aNKEvFmHSvvCzTW-UH&s=10",
+  "https://static.vecteezy.com/system/resources/thumbnails/056/330/676/small_2x/cartoon-hippodrome-competition-horse-race-track-with-jockey-riding-horses-equestrian-sport-and-horse-riders-compete-fast-galloping-tournament-illustration-vector.jpg",
+  "https://static.vecteezy.com/system/resources/previews/043/336/525/non_2x/horse-racing-competition-illustration-with-equestrian-performance-sport-and-rider-or-jockeys-in-a-racecourse-on-flat-cartoon-background-vector.jpg",
+  "https://tscom.imgix.net/Keeneland_Scenics_Keeneland_3_27482bc9c0.jpg?auto=compress,format",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6AtOlQwndBjMfZiuXr4F1E9nQbgYr9wvhAtoCvhCH4fexRSi1vS-27D0&s=10",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBxdTiAyxKOJ1qDBVXSyJ3QAz_FqmeZ_o2UDxJlPxtOYUlMjjC6RCX5R34&s=10",
+  "https://tscom.imgix.net/Keeneland_Scenics_Keeneland_3_27482bc9c0.jpg?auto=compress,format",
+  "https://thumbs.dreamstime.com/b/horse-racing-tournament-flat-style-colorful-vector-illustration-jockeys-sprinting-horses-280854880.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqPcsP_eWFAOV6F8--oSDELEwJ3JuQumnrrY_xB6hU8cHXlmxN3EBBNoL4&s=10",
+];
+
+const BROKEN_TOURNAMENT_IMAGES = new Set([
+  "https://i.pinimg.com/736x/77/67/b3/7767b3aff6520a4c2f8b298759cd9f98.jpg",
+]);
+const SAFE_TOURNAMENT_FALLBACK_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/4/48/GGF_Race5.jpg";
+
 const HORSE_JOCKEY_IMAGES = [horseAmber, horseBlue, horseIvory, horseMint, horseRed];
 
 // Deterministic image selection based on id string → stable across renders
@@ -27,6 +50,14 @@ function pickImage(pool, id) {
 
 export function getTrackImage(id) {
   return pickImage(TRACK_IMAGES, id);
+}
+
+export function getTournamentImage(id) {
+  return pickImage(TOURNAMENT_IMAGES, id);
+}
+
+export function getTournamentFallbackImage() {
+  return SAFE_TOURNAMENT_FALLBACK_IMAGE;
 }
 
 export function getHorseJockeyImage(id) {
@@ -120,10 +151,22 @@ function extractCollection(payload, keys) {
   return [];
 }
 
+function pickUniqueTournamentImage(seed, usedImages) {
+  const seedIndex = Math.abs(String(seed || "").split("").reduce((total, char) => total + char.charCodeAt(0), 0));
+
+  for (let offset = 0; offset < TOURNAMENT_IMAGES.length; offset += 1) {
+    const candidate = TOURNAMENT_IMAGES[(seedIndex + offset) % TOURNAMENT_IMAGES.length];
+    if (!usedImages.has(candidate)) return candidate;
+  }
+
+  return TOURNAMENT_IMAGES[seedIndex % TOURNAMENT_IMAGES.length];
+}
+
 // ─── Tournament adapter ───────────────────────────────────────────────────────
 export function toSpectatorTournament(apiTournament) {
   const id = getId(apiTournament);
   const status = normalizeTournamentStatus(apiTournament.status);
+  const imageUrl = apiTournament.image_url?.trim();
 
   return {
     id,
@@ -136,7 +179,7 @@ export function toSpectatorTournament(apiTournament) {
     dateDisplay: formatDateDisplay(apiTournament.start_date || apiTournament.date),
     endDate: formatDate(apiTournament.end_date),
     endDateDisplay: formatDateDisplay(apiTournament.end_date),
-    image: apiTournament.image_url || getTrackImage(id),
+    image: imageUrl && !BROKEN_TOURNAMENT_IMAGES.has(imageUrl) ? imageUrl : getTournamentFallbackImage(),
     distance: apiTournament.distance ? `${apiTournament.distance}m` : null,
     track: apiTournament.track || null,
     entries: apiTournament.entries ?? apiTournament.max_participants ?? null,
@@ -214,8 +257,19 @@ export function toSpectatorRace(apiRace) {
 // ─── List adapters ────────────────────────────────────────────────────────────
 export function adaptTournamentList(payload) {
   const rows = extractCollection(payload, ["tournaments", "data"]);
+  const usedImages = new Set();
+
   return {
-    tournaments: rows.map(toSpectatorTournament),
+    tournaments: rows.map((row, index) => {
+      const tournament = toSpectatorTournament(row);
+
+      if (!tournament.image || usedImages.has(tournament.image)) {
+        tournament.image = pickUniqueTournamentImage(tournament.id || index, usedImages);
+      }
+
+      usedImages.add(tournament.image);
+      return tournament;
+    }),
   };
 }
 

@@ -16,6 +16,7 @@ import {
 import SearchFilterBar from "../../components/SearchFilterBar.jsx";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { useSpectatorTournaments } from "./useSpectatorData.js";
+import { getTournamentFallbackImage } from "./spectatorAdapters.js";
 import "./spectator.css";
 
 const STATUS_META = {
@@ -35,6 +36,12 @@ const STATUS_META = {
     dotClass: "tcard-status-dot--closed",
   },
 };
+
+function handleTournamentImageError(event, tournamentId) {
+  if (event.currentTarget.dataset.fallbackApplied === "true") return;
+  event.currentTarget.dataset.fallbackApplied = "true";
+  event.currentTarget.src = getTournamentFallbackImage(tournamentId);
+}
 
 function formatDateRange(startIso, endIso) {
   if (!startIso) return null;
@@ -89,7 +96,12 @@ function TournamentCard({ tournament }) {
         tabIndex={-1}
         aria-hidden="true"
       >
-        <img src={tournament.image} alt="" loading="lazy" />
+        <img
+          src={tournament.image}
+          alt=""
+          loading="lazy"
+          onError={(event) => handleTournamentImageError(event, tournament.id)}
+        />
         <div className="tcard__image-overlay" />
         <span className={`tcard__status-badge ${status.className}`}>
           <span className={`tcard-status-dot ${status.dotClass}`} />

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Clock3, CreditCard, ReceiptText, RefreshCw, ShieldCheck, WalletCards, XCircle } from "lucide-react";
 import { depositApi } from "../../api/depositApi.js";
+import { ownerApi } from "../../api/ownerApi.js";
 import { walletApi } from "../../api/walletApi.js";
 import { formatTokenAmount, getWalletBalance } from "./walletFormatters.js";
 import "./spectator.css";
@@ -36,13 +37,20 @@ export default function PaymentReturn() {
   const gatewayLabel = paymentMethod || (searchParams.get("vnp_TxnRef") ? "VNPAY" : "Gateway");
   const backTarget = isRegistrationPayment ? "/owner/registrations" : "/spectator/deposit";
   const backLabel = isRegistrationPayment ? "Back to registrations" : "Back to deposit";
+  const hasSignedGatewayPayload = Boolean(
+    searchParams.get("vnp_SecureHash")
+    || searchParams.get("signature")
+    || searchParams.get("mock_secret")
+  );
 
   async function refresh(polls = state.polls) {
     setState((current) => ({ ...current, isLoading: true, error: "" }));
 
     try {
       if (isRegistrationPayment) {
-        const response = await depositApi.confirmPaymentReturn(Object.fromEntries(searchParams.entries()));
+        const response = hasSignedGatewayPayload
+          ? await depositApi.confirmPaymentReturn(Object.fromEntries(searchParams.entries()))
+          : await ownerApi.getRegistrationPayment(orderId);
         setState({
           order: response.order || {
             order_id: orderId,

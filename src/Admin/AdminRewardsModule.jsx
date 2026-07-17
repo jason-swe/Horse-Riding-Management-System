@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Gift,
+  Image as ImageIcon,
   PackageCheck,
   Plus,
   RefreshCw,
@@ -9,10 +10,12 @@ import {
   Search,
   ShoppingBag,
   SlidersHorizontal,
+  Upload,
   WalletCards,
 } from "lucide-react";
 import { adminApi } from "../api/adminApi";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import { readFileAsDataUri } from "../utils/fileData";
 import AdminLayout from "./AdminLayout";
 
 const emptyDraft = {
@@ -21,6 +24,9 @@ const emptyDraft = {
   token_price: 100,
   stock: 10,
   is_active: true,
+  image_file_data: "",
+  image_preview: "",
+  image_file_name: "",
 };
 
 const rewardFiltersInitial = {
@@ -96,6 +102,9 @@ function toDraft(item) {
     token_price: Number(item.token_price || 1),
     stock: Number(item.stock || 0),
     is_active: Boolean(item.is_active),
+    image_file_data: "",
+    image_preview: item.image_url || "",
+    image_file_name: "",
   };
 }
 
@@ -189,6 +198,37 @@ export default function AdminRewardsModule() {
     setNotice("");
   }
 
+  async function updateRewardImage(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setError("");
+    setNotice("");
+
+    try {
+      const imageData = await readFileAsDataUri(file);
+      setDraft((current) => ({
+        ...current,
+        image_file_data: imageData,
+        image_preview: imageData,
+        image_file_name: file.name,
+      }));
+    } catch (fileError) {
+      setError(fileError.message || "Unable to read selected reward image.");
+    }
+  }
+
+  function clearRewardImage() {
+    setDraft((current) => ({
+      ...current,
+      image_file_data: "",
+      image_preview: selectedReward?.image_url || "",
+      image_file_name: "",
+    }));
+    setError("");
+    setNotice("");
+  }
+
   function startCreate() {
     setIsCreating(true);
     setSelectedId("");
@@ -218,6 +258,10 @@ export default function AdminRewardsModule() {
       description: draft.description.trim(),
       token_price: Number(draft.token_price),
     };
+
+    if (draft.image_file_data) {
+      payload.image_file_data = draft.image_file_data;
+    }
 
     if (isCreating) {
       payload.stock = Number(draft.stock);
@@ -394,7 +438,17 @@ export default function AdminRewardsModule() {
                     const id = getId(item);
                     return (
                       <tr className={selectedId === id ? "admin-command-row--selected" : ""} key={id || item.name}>
-                        <td><strong>{item.name}</strong><span className="admin-rewards-subline">{item.description || "No description"}</span></td>
+                        <td>
+                          <div className="admin-rewards-prize-cell">
+                            <span className="admin-rewards-thumb" aria-hidden="true">
+                              {item.image_url ? <img src={item.image_url} alt="" /> : <Gift size={18} />}
+                            </span>
+                            <span>
+                              <strong>{item.name}</strong>
+                              <span className="admin-rewards-subline">{item.description || "No description"}</span>
+                            </span>
+                          </div>
+                        </td>
                         <td>{formatToken(item.token_price)}</td>
                         <td>{Number(item.stock || 0)}</td>
                         <td><StatusBadge value={item.is_active ? "active" : "inactive"} /></td>
@@ -443,6 +497,28 @@ export default function AdminRewardsModule() {
               <span>Description</span>
               <textarea value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} placeholder="Short fulfillment note shown to spectators." />
             </label>
+
+            <div className="admin-field admin-rewards-image-field">
+              <span>Prize image</span>
+              <div className="admin-rewards-image-picker">
+                <div className="admin-rewards-image-preview">
+                  {draft.image_preview ? <img src={draft.image_preview} alt={draft.name || "Prize preview"} /> : <ImageIcon size={30} aria-hidden="true" />}
+                </div>
+                <div>
+                  <label className="admin-header__button admin-header__button--ghost admin-rewards-upload-button">
+                    <Upload size={15} aria-hidden="true" />
+                    Upload image
+                    <input accept="image/*" type="file" onChange={updateRewardImage} />
+                  </label>
+                  <small>{draft.image_file_name || (draft.image_preview ? "Current catalog image" : "PNG, JPG, or WEBP image.")}</small>
+                  {draft.image_file_data && (
+                    <button className="admin-command-review" type="button" onClick={clearRewardImage}>
+                      Reset selection
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="admin-rewards-editor__split">
               <label className="admin-field">
