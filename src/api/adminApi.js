@@ -130,20 +130,6 @@ export const adminApi = {
     return apiRequest(`/registrations/${id}`);
   },
 
-  approveRegistration(id, adminNote = "Approved") {
-    return apiRequest(`/registrations/${id}/approve`, {
-      method: "POST",
-      body: { admin_note: adminNote },
-    });
-  },
-
-  rejectRegistration(id, adminNote = "Rejected by admin review") {
-    return apiRequest(`/registrations/${id}/reject`, {
-      method: "POST",
-      body: { admin_note: adminNote },
-    });
-  },
-
   listRaceResults(params = {}) {
     return apiRequest(withQuery("/race-results", params));
   },

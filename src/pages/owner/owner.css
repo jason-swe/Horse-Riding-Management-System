@@ -3125,6 +3125,35 @@
   color: #ffb49f;
 }
 
+.owner-registration-terms {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 14px 16px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--owner-text-soft);
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.owner-registration-terms input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--racing-accent);
+}
+
+.owner-registration-terms:focus-within {
+  border-color: rgba(var(--racing-accent-rgb), 0.7);
+  outline: 2px solid rgba(var(--racing-accent-rgb), 0.18);
+  outline-offset: 2px;
+}
+
 .owner-assignment-conflict {
   display: flex;
   align-items: flex-start;

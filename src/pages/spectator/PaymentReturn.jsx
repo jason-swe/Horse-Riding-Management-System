@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Clock3, CreditCard, ReceiptText, RefreshCw, ShieldCheck, WalletCards, XCircle } from "lucide-react";
 import { depositApi } from "../../api/depositApi.js";
+import { ownerApi } from "../../api/ownerApi.js";
 import { walletApi } from "../../api/walletApi.js";
 import { formatTokenAmount, getWalletBalance } from "./walletFormatters.js";
 import "./spectator.css";
@@ -42,7 +43,7 @@ export default function PaymentReturn() {
 
     try {
       if (isRegistrationPayment) {
-        const response = await depositApi.confirmPaymentReturn(Object.fromEntries(searchParams.entries()));
+        const response = await ownerApi.getRegistrationPayment(orderId);
         setState({
           order: response.order || {
             order_id: orderId,

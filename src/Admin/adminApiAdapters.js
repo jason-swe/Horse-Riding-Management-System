@@ -349,17 +349,18 @@ export function adaptRaceRegistrationDetail(data) {
       ["Owner", getEntityName(owner, registration.owner_email || "Unknown owner")],
       ["Owner ID", getEntityId(registration.owner_id || owner)],
       ["Status", getStatusLabel(registration.status)],
-      ["Submitted", formatDate(registration.created_at || registration.submitted_at)],
-      ["Reviewed", formatDate(registration.reviewed_at)],
-      ["Admin note", registration.admin_note || registration.note || "-"],
+      ["Registered", formatDate(registration.registered_at || registration.created_at || registration.submitted_at)],
+      ["Confirmed", formatDate(registration.approved_at)],
+      ["Entry fee", Number(registration.entry_fee_vnd || 0) > 0 ? `${Number(registration.entry_fee_vnd).toLocaleString("en-US")} VND` : "No fee required"],
+      ["Payment", getStatusLabel(registration.payment_status || "not_required")],
+      ["Owner note", registration.note || "-"],
     ],
   };
 }
 
 export function adaptRaceRegistrations(data) {
   const registrations = unwrapRegistrations(data).slice().sort((first, second) => (
-    statusPriority(first.status) - statusPriority(second.status)
-    || dateTime(second.registered_at || second.created_at || second.submitted_at) - dateTime(first.registered_at || first.created_at || first.submitted_at)
+    dateTime(second.registered_at || second.created_at || second.submitted_at) - dateTime(first.registered_at || first.created_at || first.submitted_at)
   ));
   const rows = registrations.map((registration) => {
     const horse = getRegistrationHorse(registration);
@@ -375,21 +376,21 @@ export function adaptRaceRegistrations(data) {
       getEntityName(horse, registration.horse_name || "Horse"),
       "Horse Race Entry",
       target || "-",
-      formatDate(registration.created_at || registration.submitted_at),
+      formatDate(registration.registered_at || registration.created_at || registration.submitted_at),
       getStatusLabel(registration.status),
     ];
   });
 
   return {
     summary: [
-      { label: "Waiting approval", value: String(rows.filter((row) => row[5] === "Pending").length) },
-      { label: "Approved entries", value: String(rows.filter((row) => row[5] === "Approved").length) },
-      { label: "Rejected entries", value: String(rows.filter((row) => row[5] === "Rejected").length) },
+      { label: "Total entries", value: String(rows.length) },
+      { label: "Confirmed entries", value: String(rows.filter((row) => row[5] === "Approved").length) },
+      { label: "Paid entries", value: String(registrations.filter((registration) => registration.payment_status === "paid").length) },
     ],
     tables: [
       {
-        title: "Race registration queue",
-        columns: ["Reg ID", "Participant", "Role", "Target", "Submitted", "Status"],
+        title: "Race entry ledger",
+        columns: ["Reg ID", "Participant", "Role", "Target", "Registered", "Status"],
         rows,
       },
     ],

@@ -21,7 +21,7 @@ const navigationGroups = [
     label: "Command",
     items: [
       { to: "/admin", label: "Overview", icon: Gauge, end: true },
-      { to: "/admin/registrations", label: "Approvals", icon: ClipboardCheck },
+      { to: "/admin/registrations", label: "Race entries", icon: ClipboardCheck },
       { to: "/admin/incidents", label: "Incidents", icon: ShieldAlert },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/deposits", label: "Deposits", icon: CircleDollarSign },

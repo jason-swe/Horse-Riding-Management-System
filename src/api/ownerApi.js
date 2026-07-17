@@ -85,6 +85,10 @@ export const ownerApi = {
     });
   },
 
+  getRegistrationPayment(orderId) {
+    return apiRequest(`/horse-owner/registration-payments/${encodeURIComponent(orderId)}`);
+  },
+
   cancelTournamentRegistration(payload) {
     return apiRequest("/horse-owner/tournament-registrations/cancel", {
       method: "PATCH",

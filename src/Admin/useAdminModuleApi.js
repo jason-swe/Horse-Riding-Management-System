@@ -70,20 +70,6 @@ export function useAdminModuleApi(moduleName) {
       }
     }
 
-    if (moduleName === "registrations") {
-      if (actionLabel === "Approve") {
-        await adminApi.approveRegistration(id, note || "Race registration approved");
-        await load();
-        return true;
-      }
-
-      if (actionLabel === "Reject") {
-        await adminApi.rejectRegistration(id, note || "Race registration rejected");
-        await load();
-        return true;
-      }
-    }
-
     if (moduleName === "results") {
       if (actionLabel === "Request Correction") {
         await adminApi.requestRaceResultCorrection(id, note);

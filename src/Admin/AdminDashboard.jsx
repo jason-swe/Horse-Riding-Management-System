@@ -179,15 +179,14 @@ function buildDashboardFromResources(resources, finance) {
   const publishedRaceIds = new Set(Object.entries(resultGroups).filter(([, rows]) => getRaceStatus(rows) === "published").map(([raceId]) => raceId));
   const correctionRequested = results.filter((result) => result.correction_requested).length;
 
-  const pendingRegistrations = registrations
-    .filter((registration) => String(registration.status || "").toLowerCase() === "pending")
+  const recentRegistrations = registrations
     .sort((first, second) => getDateTime(second.registered_at || second.created_at) - getDateTime(first.registered_at || first.created_at))
     .slice(0, 6)
     .map((registration) => ({
       id: getId(registration),
       title: getName(registration.horse_id || registration.horse, "Horse entry"),
       meta: getName(registration.race_id || registration.race, "Race") + " | " + getName(registration.tournament_id || registration.tournament, "Tournament"),
-      status: registration.status || "pending",
+      status: registration.status || "approved",
       date: registration.registered_at || registration.created_at,
       to: "/admin/registrations",
     }));
@@ -255,6 +254,7 @@ function buildDashboardFromResources(resources, finance) {
       },
       approvals: {
         role_applications_pending: roleApplications.filter((application) => application.status === "pending").length,
+        registrations_total: registrations.length,
         registrations_pending: registrationStatus.pending || 0,
         registrations_approved: registrationStatus.approved || 0,
         registrations_rejected: registrationStatus.rejected || 0,
@@ -278,7 +278,7 @@ function buildDashboardFromResources(resources, finance) {
       finance,
     },
     queues: {
-      pending_registrations: pendingRegistrations,
+      recent_registrations: recentRegistrations,
       upcoming_races: upcomingRaces,
       result_publication: resultPublication,
       incident_review: incidentReview,
@@ -390,7 +390,7 @@ function AdminDashboard() {
   const summary = dashboard?.summary || {};
   const queues = dashboard?.queues || {};
   const topMetrics = useMemo(() => [
-    { label: "Pending entries", value: formatNumber(summary.approvals?.registrations_pending), note: "Registration queue" },
+    { label: "Race entries", value: formatNumber(summary.approvals?.registrations_total ?? summary.approvals?.registrations_approved), note: "Auto-confirmed ledger" },
     { label: "Races today", value: formatNumber(summary.competition?.races_today), note: `${formatNumber(summary.competition?.races_running)} live now` },
     { label: "Unpublished results", value: formatNumber(summary.results?.completed_unpublished), note: `${formatNumber(summary.results?.correction_requested)} correction` },
     { label: "Incident review", value: formatNumber(summary.incidents?.violations_recorded), note: "Recorded violations" },
@@ -400,13 +400,13 @@ function AdminDashboard() {
     <AdminLayout
       title="Race control dashboard"
       eyebrow="Admin command desk"
-      description="Monitor approvals, race operations, incidents, publication gates, and finance signals from one workspace."
+      description="Monitor race entries, operations, incidents, publication gates, and finance signals from one workspace."
       actions={(
         <>
           <button className="admin-header__button admin-header__button--ghost" disabled={isLoading} type="button" onClick={load}>
             <RefreshCw size={16} className={isLoading ? "admin-competition__spin" : ""} aria-hidden="true" /> Refresh
           </button>
-          <Link className="admin-header__button" to="/admin/registrations">Review entries <ArrowUpRight size={16} aria-hidden="true" /></Link>
+          <Link className="admin-header__button" to="/admin/registrations">View entries <ArrowUpRight size={16} aria-hidden="true" /></Link>
         </>
       )}
     >
@@ -428,11 +428,11 @@ function AdminDashboard() {
           <section className="admin-dashboard-grid admin-dashboard-grid--wide">
             <article className="admin-module-ledger" aria-labelledby="operations-title">
               <div className="admin-section-heading admin-section-heading--compact">
-                <div><p>Live operations</p><h2 id="operations-title">Queues that need action</h2></div>
+                <div><p>Live operations</p><h2 id="operations-title">Queues and latest records</h2></div>
                 <span>API-backed where endpoints exist</span>
               </div>
               <div className="admin-dashboard-queue-grid">
-                <QueueList title="Pending registrations" icon={ClipboardCheck} items={queues.pending_registrations || []} emptyText="No pending registration approvals." />
+                <QueueList title="Recent race entries" icon={ClipboardCheck} items={queues.recent_registrations || queues.pending_registrations || []} emptyText="No race entries have been recorded." />
                 <QueueList title="Upcoming races" icon={CalendarRange} items={queues.upcoming_races || []} emptyText="No races scheduled in the current window." />
                 <QueueList title="Result publication" icon={Trophy} items={queues.result_publication || []} emptyText="No draft or confirmed race results waiting." />
                 <QueueList title="Incident review" icon={ShieldAlert} items={queues.incident_review || []} emptyText="No unresolved incidents returned." />
