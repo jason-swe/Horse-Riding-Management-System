@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { useSpectatorTournamentDetail } from "./useSpectatorData.js";
+import { getTournamentFallbackImage } from "./spectatorAdapters.js";
 import {
   BETTING_STATUS,
   RACE_STATUS,
@@ -38,6 +39,12 @@ const TOURNAMENT_STATUS_CLASS = {
   Upcoming: "spectator-badge--amber",
   Completed: "",
 };
+
+function handleTournamentImageError(event, tournamentId) {
+  if (event.currentTarget.dataset.fallbackApplied === "true") return;
+  event.currentTarget.dataset.fallbackApplied = "true";
+  event.currentTarget.src = getTournamentFallbackImage(tournamentId);
+}
 
 function raceMatchesFilter(race, filter) {
   if (filter === "betting") return isRaceBettable(race);
@@ -253,7 +260,11 @@ function TournamentDetail() {
       {/* ── Hero ── */}
       <header className="rh-hero">
         <div className="rh-hero__image-wrap">
-          <img src={tournament.image} alt={`Race horses at ${tournament.name}`} />
+          <img
+            src={tournament.image}
+            alt={`Race horses at ${tournament.name}`}
+            onError={(event) => handleTournamentImageError(event, tournament.id)}
+          />
           <div className="rh-hero__image-overlay" />
         </div>
         <div className="rh-hero__content">

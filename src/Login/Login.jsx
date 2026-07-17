@@ -40,10 +40,13 @@ function Login() {
       const requestedRole = getRequiredRoleForPath(requestedPath);
       const roleIntent = getRoleApplicationIntent(form.email);
       const fallbackRoute = getPostLoginRoute(roles);
+      const shouldChooseWorkspace = roles.length > 1;
       const shouldApplyForRole = roles.includes("spectator") && roleIntent?.role && !roles.includes(roleIntent.role);
       const nextRoute = shouldApplyForRole
         ? `/spectator/role-applications?role=${roleIntent.role}`
-        : requestedRole && roles.includes(requestedRole)
+        : shouldChooseWorkspace
+          ? "/choose-role"
+          : requestedRole && roles.includes(requestedRole)
           ? requestedPath
           : fallbackRoute;
 
@@ -51,7 +54,10 @@ function Login() {
         clearRoleApplicationIntent();
       }
 
-      navigate(nextRoute, { replace: true });
+      navigate(nextRoute, {
+        replace: true,
+        state: shouldChooseWorkspace ? { from: location.state?.from || null } : undefined,
+      });
     } catch (apiError) {
       const nextError = apiError.message || "Unable to login. Please try again.";
       setError(nextError);
