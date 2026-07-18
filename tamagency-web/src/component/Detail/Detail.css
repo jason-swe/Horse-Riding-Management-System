@@ -1,0 +1,350 @@
+/* Detail.css */
+.quiz-container {
+  background: none;
+
+  min-height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+  padding: 40px;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.video-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1; /* Đẩy video xuống dưới */
+}
+
+/*.quiz-container {
+  background-image: url("https://i.pinimg.com/736x/da/5c/d9/da5cd90c2370006a63824a6075040853.jpg");
+
+  background-size: cover; 
+  background-position: center; 
+  background-repeat: no-repeat; 
+  background-attachment: fixed; 
+
+  background-color: #e5e5dd;
+  min-height: 100vh;
+  width: 100vw; 
+  box-sizing: border-box; 
+  padding: 40px;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+*/
+
+.quiz-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+/* Đưa logo về góc trên bên trái */
+.logo-image {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+}
+
+.question-number {
+  font-size: 55px;
+  color: #ffb142;
+  text-shadow: 4px 4px 0px #000;
+  margin: 0;
+  letter-spacing: 3px;
+  font-weight: 900;
+}
+
+.quiz-main {
+  width: 100%;
+  max-width: 1200px; /* Đã làm khung rộng ra */
+  text-align: center;
+}
+
+.question-text {
+  font-size: 32px;
+  color: #ffffff;
+  margin-bottom: 50px;
+  line-height: 1.5;
+  font-weight: bold;
+}
+
+.options-wrapper {
+  /* Hiệu ứng Kính mờ (Glassmorphism) chuẩn xác */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  border-radius: 40px;
+  padding: 60px 80px; /* Tăng không gian bên trong để rộng rãi hơn */
+}
+
+.options-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px; /* Tăng khoảng cách giữa các khối */
+}
+
+.option-column {
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* Tăng khoảng cách giữa các nút */
+  flex: 1;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.option-letter {
+  background-color: #a0d87a;
+  color: #000;
+  font-size: 26px;
+  font-weight: 900;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px solid #000;
+  flex-shrink: 0;
+}
+
+.option-btn {
+  background-color: #2a5135;
+  color: #fff;
+  font-size: 22px; /* Tăng cỡ chữ nút */
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  padding: 25px 40px; /* Làm nút dày dặn hơn */
+  flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.option-btn:hover {
+  transform: scale(1.02);
+  background-color: #1e3b26;
+}
+
+/* Chỉnh lại nút quay về cho nổi bật trên nền họa tiết */
+.back-btn {
+  margin-top: 40px;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.5); /* Nền đen mờ */
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+} /* Detail.css */
+
+.quiz-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+/* Đưa logo về góc trên bên trái */
+.logo-image {
+  position: absolute;
+  top: 40px; /* Cách lề trên bằng đúng padding của container */
+  left: 40px; /* Cách lề trái bằng đúng padding của container */
+  width: 150px; /* Bạn có thể tăng giảm số này để logo to/nhỏ vừa mắt */
+  height: auto;
+  object-fit: contain;
+}
+
+.question-number {
+  font-size: 55px;
+  color: #ffb142;
+  text-shadow: 4px 4px 0px #000;
+  margin: 0;
+  letter-spacing: 3px;
+  font-weight: 900;
+}
+
+.quiz-main {
+  width: 100%;
+  max-width: 1000px;
+  text-align: center;
+}
+
+.question-text {
+  font-size: 32px;
+  color: #ffffff;
+  margin-bottom: 50px;
+  line-height: 1.5;
+  font-weight: bold;
+}
+
+.options-wrapper {
+  /* Nền trong suốt */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  /* XÓA background-color: #fff; ở đây */
+  border-radius: 40px;
+  padding: 40px 50px;
+}
+
+.options-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.option-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  flex: 1;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.option-letter {
+  background-color: #a0d87a;
+  color: #000;
+  font-size: 26px;
+  font-weight: 900;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px solid #000;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.option-btn {
+  background-color: #2a5135;
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  padding: 20px 30px;
+  flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.option-btn:hover {
+  transform: scale(1.02);
+  background-color: #1e3b26;
+}
+
+.back-btn {
+  margin-top: 40px;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.5); /* Nền đen mờ */
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  text-decoration: none;
+}
+
+/* --- HIỆU ỨNG ĐÚNG/SAI --- */
+
+/* Màu xanh lá cho đáp án đúng */
+.option-btn.correct {
+  background-color: #2ecc71 !important; /* Xanh lá cây sáng */
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.6); /* Phát sáng nhẹ */
+  color: #fff;
+  border: 2px solid #27ae60;
+}
+
+/* Màu đỏ cho đáp án sai */
+.option-btn.wrong {
+  background-color: #e74c3c !important; /* Đỏ sáng */
+  box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); /* Phát sáng nhẹ */
+  color: #fff;
+  border: 2px solid #c0392b;
+}
+
+/* Tắt hiệu ứng hover và con trỏ chuột khi người dùng đã chọn xong */
+.option-btn:disabled {
+  cursor: not-allowed;
+}
+
+.option-item {
+  cursor: pointer; /* Cho phép click vào cả dòng chữ cái và nút */
+}
+
+/* --- HIỆU ỨNG ĐỒNG HỒ KÍNH MỜ GÓC PHẢI --- */
+.timer-wrapper {
+  position: absolute;
+  top: 40px; /* Cùng độ cao với logo */
+  right: 40px; /* Ép sát sang lề phải */
+
+  /* Hiệu ứng kính giống với khung câu hỏi */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  border-radius: 20px;
+  padding: 15px 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10; /* Đảm bảo đồng hồ luôn nổi lên trên cùng */
+}
+
+.timer-text {
+  font-size: 38px; /* Chữ to cho dễ nhìn */
+  color: #ffb142;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0px #000; /* Đổ bóng đen cho số nổi lên */
+  margin: 0;
+}

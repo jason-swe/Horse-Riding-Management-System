@@ -1,0 +1,93 @@
+.homeContainer {
+    min-height: 100vh;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2vh 1rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.logoContainer {
+    margin-bottom: 2vh;
+    text-align: center;
+}
+
+.logo {
+    max-width: 300px;
+    height: auto;
+    max-height: 12vh;
+}
+
+.gridContainer {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: min(1.5vw, 1.5vh);
+    max-width: min(95vw, 75vh);
+    width: 100%;
+
+    /* Code blur từ question page */
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 40px;
+    padding: min(3vw, 3vh) min(4vw, 4vh);
+}
+
+.questionCircle {
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background-color: #9ED17A;
+    border: 2px solid #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: min(1.2rem, 2.5vh);
+    font-weight: 900;
+    color: #000;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    user-select: none;
+}
+
+.questionCircle:hover {
+    transform: scale(1.1);
+    background-color: #8ed669;
+}
+
+@media (max-width: 1024px) {
+    .gridContainer {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .gridContainer {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .questionCircle {
+        font-size: 1.2rem;
+        border-width: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gridContainer {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .questionCircle {
+        font-size: 1rem;
+        border-width: 2px;
+    }
+}

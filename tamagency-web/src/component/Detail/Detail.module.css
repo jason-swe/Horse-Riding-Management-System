@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+
+.container {
+    min-height: 100vh;
+    background-image: url('../../images/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    position: relative;
+    padding: 60px 20px 40px;
+    box-sizing: border-box;
+}
+
+.logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    height: 100px;
+    /* Tăng kích thước logo */
+    object-fit: contain;
+}
+
+.contentWrapper {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.numberWrapper {
+    margin-top: 10px;
+    margin-bottom: 40px;
+}
+
+.numberText {
+    font-family: 'Arial Black', Impact, sans-serif;
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: #FFC34A;
+    /* yellow/orange color */
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    -webkit-text-stroke: 2px #000;
+    text-shadow:
+        1px 1px 0 #000,
+        2px 2px 0 #000,
+        3px 3px 0 #000,
+        4px 4px 0 #000,
+        5px 5px 0 #000,
+        6px 6px 0 #000;
+}
+
+.questionText {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    text-align: center;
+    margin-bottom: 50px;
+    line-height: 1.3;
+}
+
+.answersContainer {
+    background-color: rgba(255, 255, 255, 0.4);
+    /* Thêm độ trong suốt */
+    backdrop-filter: blur(90px);
+    /* Thêm hiệu ứng blur */
+    -webkit-backdrop-filter: blur(40px);
+    /* Hỗ trợ cho Safari */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Tuỳ chọn: Thêm viền trắng mờ để nổi bật hơn */
+    border-radius: 30px;
+    padding: 30px 40px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 20px;
+    column-gap: 30px;
+    box-sizing: border-box;
+}
+
+.answerButton {
+    background-color: #2C5635;
+    /* dark green */
+    border-radius: 50px;
+    padding: 8px 8px 8px 8px;
+    /* inner padding to keep circle inside tight */
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* subtle shadow below button based on design */
+}
+
+/* Looking at image, the gap between circle A and left border of green pill is very small, 
+almost matching the border radius. Same for the circle size, it's quite big relative to the height. */
+
+.answerLetter {
+    background-color: #9ED17A;
+    /* light green */
+    border: 2px solid #000;
+    color: #000;
+    font-size: 2rem;
+    font-weight: 900;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 15px;
+    /* space between letter and text inside button */
+}
+
+.answerText {
+    color: #FFFFFF;
+    font-size: 1.2rem;
+    font-weight: 700;
+    flex-grow: 1;
+    text-align: center;
+    padding-right: 50px;
+    /* Match width of answerLetter to center the text exactly */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .answersContainer {
+        grid-template-columns: 1fr;
+    }
+
+    .numberText {
+        font-size: 3rem;
+    }
+
+    .questionText {
+        font-size: 1.5rem;
+    }
+}

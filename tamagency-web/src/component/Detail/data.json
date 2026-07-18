@@ -1,0 +1,22 @@
+{
+    "questionNumber": "01",
+    "questionText": "Trong Marketing, \"Insight\" khách hàng thường được ví với hình ảnh nào?",
+    "answers": [
+        {
+            "id": "A",
+            "text": "Paid Media"
+        },
+        {
+            "id": "B",
+            "text": "Owned Media"
+        },
+        {
+            "id": "C",
+            "text": "Earned Media"
+        },
+        {
+            "id": "D",
+            "text": "Shared Media"
+        }
+    ]
+}

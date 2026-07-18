@@ -1,0 +1,1103 @@
+[
+  {
+    "id": 1,
+    "question": "Trong Marketing, \"Insight\" khách hàng thường được ví với hình ảnh nào?",
+    "options": {
+      "A": "Bề nổi của tảng băng.",
+      "B": "Phần chìm của tảng băng.",
+      "C": "Ngọn núi lửa đang phun trào.",
+      "D": "Một ly trà sữa nhiều topping."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 2,
+    "question": "\"Content is King\", vậy theo các chuyên gia, ai là \"Queen\"?",
+    "options": {
+      "A": "Context (Bối cảnh).",
+      "B": "Designer (Người thiết kế).",
+      "C": "Khách hàng.",
+      "D": "Thầy Lê Thành Tâm."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 3,
+    "question": "Thuật ngữ \"O2O2O\" của Tâm Agency có nghĩa là gì?",
+    "options": {
+      "A": "Một loại công thức hóa học.",
+      "B": "Một bài hát của Sơn Tùng M-TP.",
+      "C": "Online to Offline to Online.",
+      "D": "Không có gì cả."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 4,
+    "question": "Khi làm Marketing, điều gì khiến Gen Z \"sang chấn tâm lý\" nhất?",
+    "options": {
+      "A": "Deadline lúc 12h đêm.",
+      "B": "Client bắt sửa Feedback lần thứ n.",
+      "C": "Sếp hỏi: \"Em có Insight chưa?\".",
+      "D": "Tất cả các phương án trên."
+    },
+    "correctAnswer": "D"
+  },
+  {
+    "id": 5,
+    "question": "Một Marketer \"thực chiến\" khác Marketer \"lý thuyết\" ở điểm nào?",
+    "options": {
+      "A": "Nói hay hơn.",
+      "B": "Có bằng cấp cao hơn.",
+      "C": "Giải quyết được vấn đề thực tế của doanh nghiệp.",
+      "D": "Biết dùng nhiều thuật ngữ tiếng Anh hơn."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 6,
+    "question": "Tại sao bạn hỏi AI nhưng nó trả lời rất \"ngô nghê\" hoặc sai lệch?",
+    "options": {
+      "A": "Vì AI bị hỏng.",
+      "B": "Vì bạn thiếu tư duy đặt lệnh (Prompt) chuẩn.",
+      "C": "Vì AI không thích bạn.",
+      "D": "Vì mạng Wifi yếu."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 7,
+    "question": "Lớp AI Prompting của Thầy Tâm tập trung vào điều gì?",
+    "options": {
+      "A": "Dạy cách tạo tài khoản ChatGPT.",
+      "B": "Tư duy quản trị & Năng lực làm chủ chuyên môn với AI.",
+      "C": "Cách dùng AI để viết bài hộ mà không bị phát hiện.",
+      "D": "Danh sách các công cụ AI miễn phí."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 8,
+    "question": "\"Hallucination\" trong AI có nghĩa là gì?",
+    "options": {
+      "A": "AI làm việc quá nhanh.",
+      "B": "AI tự \"bịa\" ra thông tin trông như thật.",
+      "C": "AI bị đứng máy.",
+      "D": "AI biết yêu."
+    },
+    "correctAnswer": "B",
+    "explanation": "Học lớp AI của Thầy Tâm để biết cách kiểm soát độ \"ảo\" này nhé!"
+  },
+  {
+    "id": 9,
+    "question": "Điểm khác biệt lớn nhất của khóa học tại Tâm Agency là gì?",
+    "options": {
+      "A": "Chỉ học lý thuyết qua slide.",
+      "B": "Hoàn thành Mini Project dưới sự hướng dẫn của chuyên gia.",
+      "C": "Được phát trà sữa miễn phí mỗi buổi.",
+      "D": "Không cần đi học cũng có bằng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 10,
+    "question": "Kho tài liệu của Tâm Agency tặng bạn gồm những gì?",
+    "options": {
+      "A": "100 câu chuyện cười Marketing.",
+      "B": "Tài liệu kiến thức thực chiến độc quyền.",
+      "C": "Top mẫu slide thuyết trình.",
+      "D": "100 địa chỉ ăn ngon cho sinh viên."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 11,
+    "question": "Storytelling trong thuyết trình thực chất là gì?",
+    "options": {
+      "A": "Kể chuyện cổ tích cho khách hàng.",
+      "B": "Nói dông dài cho hay.",
+      "C": "Tư duy sắp xếp nội dung có mục tiêu để thuyết phục.",
+      "D": "Diễn kịch trên sân khấu."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 12,
+    "question": "Sản phẩm đầu ra của lớp Storytelling tại Tâm Agency là gì?",
+    "options": {
+      "A": "Một cuốn truyện ngắn.",
+      "B": "02 Kịch bản Storytelling & Persuasive Presentation hoàn chỉnh.",
+      "C": "Một video TikTok triệu view.",
+      "D": "Khả năng nói liên tục 2 tiếng không mệt."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 13,
+    "question": "Tại sao sinh viên làm luận văn Marketing thường bị điểm thấp?",
+    "options": {
+      "A": "Do không có duyên với thầy cô.",
+      "B": "Phân tích rời rạc, giải pháp thiếu tính khả thi.",
+      "C": "Do không đi in màu luận văn.",
+      "D": "Do chọn đề tài quá dễ."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 14,
+    "question": "Lớp \"Truyền thông & Bán hàng thực chiến\" dạy bạn kết nối điều gì?",
+    "options": {
+      "A": "Truyền thông - Bán hàng - Hành vi khách hàng.",
+      "B": "Facebook - TikTok - Instagram.",
+      "C": "Người mua - Người bán - Người giao hàng.",
+      "D": "Tiền - Hàng - Tiền."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 15,
+    "question": "\"Moment of Truth\" (Khoảnh khắc sự thật) trong O2O2O là gì?",
+    "options": {
+      "A": "Lúc khách hàng đòi trả hàng.",
+      "B": "Lúc trải nghiệm của khách hàng quyết định việc mua hàng.",
+      "C": "Lúc sếp hỏi doanh thu tháng này đâu.",
+      "D": "Lúc bạn biết mình hết tiền trong thẻ."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 16,
+    "question": "Thầy Lê Thành Tâm - Giảng viên chính của khóa học là ai?",
+    "options": {
+      "A": "Một Youtuber nổi tiếng.",
+      "B": "Một CEO khởi nghiệp thất bại.",
+      "C": "Giảng viên Đại học FPT TP.HCM với 12 năm kinh nghiệm thực chiến.",
+      "D": "Một người lạ ơi là lạ."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 17,
+    "question": "Triết lý thiết kế chương trình của Tâm Agency là gì?",
+    "options": {
+      "A": "Teacher-first (Giảng viên là nhất).",
+      "B": "Student-first (Sinh viên là trọng tâm).",
+      "C": "Theory-first (Lý thuyết là trên hết).",
+      "D": "Money-first (Tiền là hàng đầu)."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 18,
+    "question": "Để nhận ưu đãi 30% học phí hôm nay, bạn cần làm gì?",
+    "options": {
+      "A": "Chờ đến khi tốt nghiệp.",
+      "B": "Về nhà hỏi ý kiến người yêu.",
+      "C": "Đăng ký hoặc đặt cọc giữ suất ngay tại gian hàng.",
+      "D": "Nhắn tin cho Thầy Tâm vào lúc 12h đêm."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 19,
+    "question": "Gift Box của Tâm Agency chứa đựng điều gì đặc biệt?",
+    "options": {
+      "A": "Bánh kẹo.",
+      "B": "Những \"vũ khí\" bí mật để bứt phá sự nghiệp Marketing.",
+      "C": "Một chiếc hộp trống rỗng.",
+      "D": "Một tấm gương để bạn tự soi mình."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 20,
+    "question": "Câu nói nào sau đây là slogan \"ngầm\" của dân thực chiến tại Tâm Agency?",
+    "options": {
+      "A": "Học cho vui, thi cho biết.",
+      "B": "Marketing là làm màu.",
+      "C": "Thực chiến hoặc là chết (Lý thuyết suông không có cửa).",
+      "D": "Cứ làm đại đi, hên xui."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 21,
+    "question": "Khi phân tích đối thủ cạnh tranh, sai lầm lớn nhất của sinh viên là gì?",
+    "options": {
+      "A": "Liệt kê quá ít đối thủ.",
+      "B": "Không biết giá bán của đối thủ.",
+      "C": "Chỉ mô tả đối thủ mà không rút ra được \"ý nghĩa chiến lược\" cho mình.",
+      "D": "Quên không chụp ảnh cửa hàng đối thủ."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 22,
+    "question": "Trong phễu Marketing, giai đoạn nào thường bị các Marketer nghiệp dư bỏ qua dẫn đến chi phí cao?",
+    "options": {
+      "A": "Nhận diện (Awareness).",
+      "B": "Cân nhắc (Consideration).",
+      "C": "Duy trì và nuôi dưỡng sau mua (Retention).",
+      "D": "Chốt đơn (Conversion)."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 23,
+    "question": "Trong bước \"Chuẩn bị\" (Pre-approach), yếu tố nào quyết định 80% thành công của cuộc hội thoại?",
+    "options": {
+      "A": "Trang phục đẹp và nụ cười tươi.",
+      "B": "Học thuộc lòng kịch bản giới thiệu sản phẩm (Script).",
+      "C": "Nghiên cứu sâu về \"Customer Persona\" (Chân dung khách hàng) và nhu cầu của họ.",
+      "D": "Tất cả các phương án trên."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 24,
+    "question": "Khi phân loại khách hàng (Qualifying), mô hình \"MAN\" giúp bạn xác định điều gì?",
+    "options": {
+      "A": "Giới tính của khách hàng.",
+      "B": "Money (Tiền), Authority (Thẩm quyền), Need (Nhu cầu).",
+      "C": "Marketing, Advertising, Network.",
+      "D": "Motivation (Động lực), Ability (Khả năng), Name (Tên)."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 25,
+    "question": "Mô hình FAB trong trình bày sản phẩm có nghĩa là gì?",
+    "options": {
+      "A": "Fast - Accurate - Best.",
+      "B": "Features (Đặc điểm) - Advantages (Ưu thế) - Benefits (Lợi ích).",
+      "C": "Fame - Art - Business.",
+      "D": "Fashion - Active - Beautiful."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 26,
+    "question": "Theo bạn, đạo đức trong bán hàng (Ethics) tại Tâm Agency thể hiện ở:",
+    "options": {
+      "A": "Bán bằng mọi giá để đạt KPI.",
+      "B": "Chỉ bán khóa học khi thực sự giải quyết được vấn đề của sinh viên.",
+      "C": "Nói quá lên về thu nhập sau khóa học.",
+      "D": "Giấu đi những phần bài tập khó."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 27,
+    "question": "Một nội dung \"Viral\" nhưng không có \"Brand Linkage\" (Mối liên kết thương hiệu) sẽ dẫn đến kết quả:",
+    "options": {
+      "A": "Người ta nhớ video rất hay nhưng không nhớ ai là người quảng cáo.",
+      "B": "Doanh số tăng vọt ngay lập tức.",
+      "C": "Thương hiệu bị tẩy chay.",
+      "D": "Không có ai xem video đó."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 28,
+    "question": "\"Content Pillars\" (Cột trụ nội dung) được xây dựng dựa trên yếu tố nào?",
+    "options": {
+      "A": "Những gì sếp thích nói.",
+      "B": "Điểm giao giữa giá trị thương hiệu và sự quan tâm của khách hàng.",
+      "C": "Những xu hướng (Trend) mới nhất trên TikTok.",
+      "D": "Danh sách sản phẩm đang tồn kho."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 29,
+    "question": "Khi gặp một khách hàng thuộc nhóm tính cách \"D\" (Dominance - Thống trị) trong DISC, Sale nên:",
+    "options": {
+      "A": "Nói chuyện chậm rãi, tâm sự về gia đình.",
+      "B": "Đi thẳng vào vấn đề, tập trung vào kết quả và hiệu quả.",
+      "C": "Đưa ra thật nhiều số liệu chi tiết và quy trình.",
+      "D": "Khen ngợi bộ đồ khách đang mặc thật nhiều."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 30,
+    "question": "Điểm khác biệt lớn nhất giữa \"Transaction Selling\" và \"Relationship Selling\" là:",
+    "options": {
+      "A": "Transaction bán rẻ hơn.",
+      "B": "Trọng tâm là lợi ích ngắn hạn của đơn hàng vs. giá trị trọn đời của khách hàng.",
+      "C": "Relationship tốn ít thời gian hơn.",
+      "D": "Transaction chỉ dành cho bán lẻ."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 31,
+    "question": "Trong phễu Marketing, chỉ số \"CAC\" (Customer Acquisition Cost) nên được so sánh với chỉ số nào để biết chiến dịch có lãi?",
+    "options": {
+      "A": "ROI (Lợi nhuận đầu tư).",
+      "B": "LTV (Lifetime Value - Giá trị trọn đời của khách hàng).",
+      "C": "CPC (Chi phí mỗi lượt click).",
+      "D": "Doanh thu trong tháng đầu tiên."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 32,
+    "question": "Trong mô hình O2O2O, giai đoạn \"Offline\" thường được dùng để tối ưu hóa điều gì?",
+    "options": {
+      "A": "Giảm chi phí vận hành.",
+      "B": "Trải nghiệm chạm/thử (Touch and Feel) và tăng tỷ lệ chuyển đổi tại chỗ.",
+      "C": "Chụp ảnh check-in cho đẹp.",
+      "D": "Tuyển thêm nhân viên bán hàng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 33,
+    "question": "Tại sao \"Marketing là cuộc chiến về nhận thức, không phải cuộc chiến về sản phẩm\"?",
+    "options": {
+      "A": "Vì sản phẩm không quan trọng.",
+      "B": "Vì khách hàng mua dựa trên những gì họ tin về sản phẩm, không phải bản chất kỹ thuật.",
+      "C": "Vì nhận thức dễ thay đổi hơn sản phẩm.",
+      "D": "Vì chi phí làm nhận thức rẻ hơn làm sản phẩm."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 34,
+    "question": "Trong mô hình 7P, yếu tố \"Physical Evidence\" (Bằng chứng hữu hình) đối với một khóa học Online là gì?",
+    "options": {
+      "A": "Tòa nhà của trung tâm.",
+      "B": "Các chứng chỉ, kết quả học viên, đánh giá (Review) và giao diện học tập.",
+      "C": "Giấy bút mà học viên tự chuẩn bị.",
+      "D": "Hợp đồng pháp lý giữa hai bên."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 35,
+    "question": "Chỉ số ROAS (Return on Ad Spend) khác gì so với ROI (Return on Investment)?",
+    "options": {
+      "A": "ROAS tính cả lương nhân viên, ROI thì không.",
+      "B": "ROAS chỉ tính doanh thu trên chi phí quảng cáo, ROI tính lợi nhuận trên tổng chi phí đầu tư.",
+      "C": "ROAS luôn cao hơn ROI.",
+      "D": "Hai chỉ số này là một."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 36,
+    "question": "Tại sao IMC cần sự nhất quán về \"Tone of Voice\" (Giọng văn thương hiệu)?",
+    "options": {
+      "A": "Để nhân viên dễ viết Content.",
+      "B": "Để khách hàng nhận diện thương hiệu ngay cả khi không thấy Logo.",
+      "C": "Để bài viết trông chuyên nghiệp hơn.",
+      "D": "Để tiết kiệm thời gian duyệt bài."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 37,
+    "question": "\"Insight\" của một Client (Khách hàng) khi đòi sửa thiết kế lần thứ 10 thường là gì?",
+    "options": {
+      "A": "Họ muốn bản thiết kế hoàn hảo hơn.",
+      "B": "Họ cũng không biết họ muốn gì cho đến khi thấy cái họ... không thích.",
+      "C": "Họ muốn thử thách lòng kiên nhẫn của Designer.",
+      "D": "Họ muốn tiết kiệm chi phí."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 38,
+    "question": "Sự khác biệt giữa \"Ảnh quảng cáo\" và \"Sản phẩm thực tế\" gọi là gì trong Marketing?",
+    "options": {
+      "A": "Nghệ thuật sắp đặt.",
+      "B": "Sự cố kỹ thuật.",
+      "C": "Khoảng cách giữa kỳ vọng và thực tế (Expectation vs Reality).",
+      "D": "Lừa đảo chuyên nghiệp."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 39,
+    "question": "Tại sao Thầy Lê Thành Tâm lại chọn dạy \"Marketing thực chiến\"?",
+    "options": {
+      "A": "Thầy dạy vì đam mê",
+      "B": "Vì thầy không muốn sinh viên ra trường chỉ có \"một bụng lý thuyết\" mà thất nghiệp.",
+      "C": "Vì thực chiến thì... vui hơn.",
+      "D": "Vì thầy muốn bán được nhiều Gift Box."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 40,
+    "question": "Một bài thuyết trình Storytelling \"thất bại\" là bài bài thuyết trình:",
+    "options": {
+      "A": "Không có hình ảnh minh họa.",
+      "B": "Có cốt truyện nhưng không dẫn đến giải pháp (Sản phẩm).",
+      "C": "Người nói bị vấp tiếng.",
+      "D": "Quá ngắn (dưới 5 phút)."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 41,
+    "question": "\"Nhu cầu\" (Needs) của con người được hiểu là gì?",
+    "options": {
+      "A": "Những thứ con người muốn có để thể hiện đẳng cấp.",
+      "B": "Cảm giác thiếu hụt một thứ gì đó cơ bản (như thức ăn, quần áo, sự an toàn).",
+      "C": "Các mong muốn cụ thể về một thương hiệu nào đó.",
+      "D": "Số tiền khách hàng sẵn sàng bỏ ra để mua hàng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 42,
+    "question": "Công thức Marketing Mix truyền thống cho sản phẩm hữu hình gồm những yếu tố nào (4P)?",
+    "options": {
+      "A": "Product, Price, Place, Promotion.",
+      "B": "People, Process, Physical Evidence, Price.",
+      "C": "Position, Product, Price, Plan.",
+      "D": "Product, Price, Publicity, People."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 43,
+    "question": "Quan điểm quản trị Marketing nào tập trung vào việc \"sản xuất thật nhiều và bán với giá thật rẻ\"?",
+    "options": {
+      "A": "Quan điểm sản phẩm (Product concept).",
+      "B": "Quan điểm bán hàng (Selling concept).",
+      "C": "Quan điểm sản xuất (Production concept).",
+      "D": "Quan điểm Marketing xã hội."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 44,
+    "question": "Yếu tố nào sau đây thuộc môi trường Marketing VI MÔ (Micro-environment)?",
+    "options": {
+      "A": "Tình hình tăng trưởng kinh tế (GDP).",
+      "B": "Các đối thủ cạnh tranh của doanh nghiệp.",
+      "C": "Sự thay đổi về công nghệ tự động hóa.",
+      "D": "Các quy định pháp luật của nhà nước."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 45,
+    "question": "Yếu tố \"Dân số học\" (Demographic) như độ tuổi, giới tính, quy mô gia đình thuộc môi trường nào?",
+    "options": {
+      "A": "Môi trường vĩ mô.",
+      "B": "Môi trường vi mô.",
+      "C": "Môi trường nội bộ.",
+      "D": "Môi trường văn hóa."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 46,
+    "question": "Dữ liệu \"Thứ cấp\" (Secondary data) được hiểu là gì?",
+    "options": {
+      "A": "Dữ liệu lần đầu tiên được thu thập cho mục đích nghiên cứu hiện tại.",
+      "B": "Dữ liệu đã có sẵn từ trước, được thu thập cho một mục đích khác.",
+      "C": "Dữ liệu chỉ lấy từ các cuộc phỏng vấn trực tiếp.",
+      "D": "Dữ liệu có độ chính xác tuyệt đối 100%."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 47,
+    "question": "Bước đầu tiên trong quy trình nghiên cứu Marketing là gì?",
+    "options": {
+      "A": "Thu thập thông tin.",
+      "B": "Phân tích dữ liệu.",
+      "C": "Xác định vấn đề và mục tiêu nghiên cứu.",
+      "D": "Lập kế hoạch nghiên cứu."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 48,
+    "question": "Bước đầu tiên trong quy trình quyết định mua của người tiêu dùng là gì?",
+    "options": {
+      "A": "Tìm kiếm thông tin.",
+      "B": "Đánh giá các phương án thay thế.",
+      "C": "Nhận biết nhu cầu.",
+      "D": "Quyết định mua."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 49,
+    "question": "\"Nhóm tham khảo\" (Reference groups) ảnh hưởng đến hành vi mua của khách hàng thuộc nhóm yếu tố nào?",
+    "options": {
+      "A": "Yếu tố văn hóa.",
+      "B": "Yếu tố xã hội.",
+      "C": "Yếu tố cá nhân.",
+      "D": "Yếu tố tâm lý."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 50,
+    "question": "Trạng thái không thoải mái của khách hàng sau khi mua hàng do sự phân vân giữa các lựa chọn được gọi là gì?",
+    "options": {
+      "A": "Sự hài lòng tuyệt đối.",
+      "B": "Sự trung thành thương hiệu.",
+      "C": "Sự bất hòa nhận thức (Cognitive dissonance).",
+      "D": "Nhu cầu tiềm ẩn."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 51,
+    "question": "Việc chia thị trường lớn thành các nhóm khách hàng nhỏ có đặc điểm và nhu cầu giống nhau được gọi là:",
+    "options": {
+      "A": "Phân đoạn thị trường (Market Segmentation).",
+      "B": "Lựa chọn thị trường mục tiêu (Market Targeting).",
+      "C": "Định vị thị trường (Positioning).",
+      "D": "Phát triển sản phẩm mới."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 52,
+    "question": "Phân đoạn thị trường dựa trên độ tuổi, giới tính, thu nhập là kiểu phân đoạn theo:",
+    "options": {
+      "A": "Địa lý.",
+      "B": "Tâm lý học.",
+      "C": "Nhân khẩu học (Demographics).",
+      "D": "Hành vi."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 53,
+    "question": "Một \"thị trường mục tiêu\" (Target market) là:",
+    "options": {
+      "A": "Tất cả mọi người có mặt trên thị trường.",
+      "B": "Tập hợp những khách hàng có cùng nhu cầu/đặc điểm mà doanh nghiệp quyết định phục vụ.",
+      "C": "Tập hợp các đối thủ cạnh tranh mạnh nhất.",
+      "D": "Những người đã mua hàng của doanh nghiệp trong quá khứ."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 54,
+    "question": "\"Định vị sản phẩm\" (Positioning) là việc:",
+    "options": {
+      "A": "Sắp xếp sản phẩm trên kệ hàng của siêu thị.",
+      "B": "Xác định vị trí địa lý của cửa hàng.",
+      "C": "Tạo ra một hình ảnh/vị thế riêng biệt của sản phẩm trong tâm trí khách hàng mục tiêu.",
+      "D": "Đặt giá bán cho sản phẩm."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 55,
+    "question": "Cấp độ cơ bản nhất của một sản phẩm, giải quyết nhu cầu cốt lõi của khách hàng là:",
+    "options": {
+      "A": "Sản phẩm thực tế (Actual product).",
+      "B": "Sản phẩm bổ sung (Augmented product).",
+      "C": "Giá trị lợi ích cốt lõi (Core customer value).",
+      "D": "Sản phẩm tiềm năng."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 56,
+    "question": "Các yếu tố như: Tên gọi, biểu tượng, kiểu dáng nhằm phân biệt sản phẩm của người bán này với người bán khác được gọi là:",
+    "options": {
+      "A": "Bao bì.",
+      "B": "Nhãn hiệu (Brand).",
+      "C": "Dịch vụ đi kèm.",
+      "D": "Giá trị gia tăng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 57,
+    "question": "Những sản phẩm khách hàng mua thường xuyên, ngay lập tức và ít tốn công sức so sánh (như kem đánh răng, báo chí) được gọi là:",
+    "options": {
+      "A": "Sản phẩm mua có lựa chọn (Shopping products).",
+      "B": "Sản phẩm tiêu dùng thuận tiện (Convenience products).",
+      "C": "Sản phẩm đặc biệt (Specialty products).",
+      "D": "Sản phẩm không thiết yếu."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 58,
+    "question": "Việc mở rộng thêm các dòng sản phẩm mới dưới cùng một tên thương hiệu đã có sẵn được gọi là:",
+    "options": {
+      "A": "Đa dạng hóa thương hiệu.",
+      "B": "Tái định vị.",
+      "C": "Mở rộng thương hiệu (Brand extension).",
+      "D": "Loại bỏ thương hiệu."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 59,
+    "question": "\"Chu kỳ sống của sản phẩm\" (PLC) thường trải qua các giai đoạn theo thứ tự nào?",
+    "options": {
+      "A": "Tăng trưởng -> Giới thiệu -> Chín muồi -> Suy thoái.",
+      "B": "Giới thiệu -> Tăng trưởng -> Chín muồi -> Suy thoái.",
+      "C": "Giới thiệu -> Chín muồi -> Tăng trưởng -> Suy thoái.",
+      "D": "Phát triển -> Suy thoái -> Tăng trưởng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 60,
+    "question": "Dịch vụ có đặc điểm là \"Không thể nhìn thấy, nếm, cảm nhận hay nghe thấy trước khi mua\", đặc điểm này gọi là:",
+    "options": {
+      "A": "Tính không thể tách rời.",
+      "B": "Tính vô hình (Intangibility).",
+      "C": "Tính không đồng nhất.",
+      "D": "Tính dễ bị tiêu hủy."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 61,
+    "question": "Mục tiêu chính của khóa \"Tư duy Marketing Căn bản\" là gì?",
+    "options": {
+      "A": "Dạy các mẹo (tips) và thủ thuật (tricks) quảng cáo.",
+      "B": "Cầu nối hoàn thiện luận văn tốt nghiệp và tối ưu hiệu quả kinh doanh thực tế.",
+      "C": "Hướng dẫn sử dụng các công cụ Digital Marketing chuyên sâu.",
+      "D": "Đào tạo kỹ năng thiết kế đồ họa cho Marketing."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 62,
+    "question": "Một trong những khó khăn phổ biến của sinh viên khi làm luận văn được đề cập là gì?",
+    "options": {
+      "A": "Không biết sử dụng phần mềm thống kê.",
+      "B": "Thiếu kỹ năng trình bày bằng tiếng Anh.",
+      "C": "Phân tích rời rạc, thiên về mô tả và giải pháp thiếu tính khả thi.",
+      "D": "Không tìm được nguồn tài liệu tham khảo."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 63,
+    "question": "Khóa học tập trung vào yếu tố nào thay vì dạy các công cụ (tools)?",
+    "options": {
+      "A": "Cách nghĩ của một người làm marketing đúng nghĩa.",
+      "B": "Kỹ thuật chạy quảng cáo Facebook.",
+      "C": "Cách chỉnh sửa video TikTok.",
+      "D": "Kỹ năng lập trình web."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 64,
+    "question": "Marketing thường bị hiểu lầm là gì?",
+    "options": {
+      "A": "Chỉ là hoạt động nghiên cứu thị trường.",
+      "B": "Là quảng cáo, truyền thông hoặc bán hàng.",
+      "C": "Là quy trình sản xuất hàng hóa.",
+      "D": "Là hoạt động chăm sóc khách hàng sau mua."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 65,
+    "question": "Tại sao cần tránh phân tích thị trường lan man trong luận văn?",
+    "options": {
+      "A": "Để tiết kiệm thời gian in ấn.",
+      "B": "Để đảm bảo phân tích phải phục vụ cho mục tiêu cụ thể.",
+      "C": "Vì giảng viên không có thời gian đọc.",
+      "D": "Vì không có đủ dữ liệu."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 66,
+    "question": "STP trong Marketing là viết tắt của cụm từ nào?",
+    "options": {
+      "A": "Sales - Testing - Pricing.",
+      "B": "Segmentation - Targeting - Positioning.",
+      "C": "Social - Technology - Politics.",
+      "D": "Strategy - Tactics - Planning."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 67,
+    "question": "Giải pháp trong Marketing Mix (4P/7P) phải giải quyết được điều gì?",
+    "options": {
+      "A": "Ý muốn của chủ doanh nghiệp.",
+      "B": "Các xu hướng mới nhất trên mạng xã hội.",
+      "C": "Insight và vấn đề đã phân tích.",
+      "D": "Ngân sách còn dư của phòng Marketing."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 68,
+    "question": "Đâu là một giai đoạn trong \"Buying Process\" (Quá trình mua hàng) được đề cập?",
+    "options": {
+      "A": "Thiết kế sản phẩm.",
+      "B": "Tuyển dụng nhân sự sales.",
+      "C": "Nhận thức → Quan tâm → Cân nhắc → Quyết định → Hậu mua.",
+      "D": "Sản xuất → Phân phối → Quảng cáo."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 69,
+    "question": "\"Bán hàng\" được định nghĩa như thế nào?",
+    "options": {
+      "A": "Chỉ là việc chốt đơn nhanh nhất có thể.",
+      "B": "Là quá trình tạo niềm tin.",
+      "C": "Là ép buộc khách hàng mua sản phẩm.",
+      "D": "Là việc chiết khấu thật nhiều để khách mua."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 70,
+    "question": "Công cụ \"Customer Journey Map\" (CJM) giúp ích gì cho kế hoạch truyền thông?",
+    "options": {
+      "A": "Giúp biết được đối thủ đang chạy quảng cáo gì.",
+      "B": "Xác định các Touchpoint (điểm chạm) và tránh làm kế hoạch bị \"đứt gãy\".",
+      "C": "Dùng để tính toán lợi nhuận trên mỗi đơn hàng.",
+      "D": "Dùng để quản lý nhân viên bán hàng tại cửa hàng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 71,
+    "question": "Mục tiêu chính của khóa \"Mastering AI Prompting\" là gì?",
+    "options": {
+      "A": "Dạy cách lập trình ra một AI mới.",
+      "B": "Rèn luyện tư duy, phát triển bản thân và tạo khác biệt với AI Prompting & Ứng dụng.",
+      "C": "Dạy cách bẻ khóa (crack) các phần mềm AI.",
+      "D": "Hướng dẫn sử dụng AI để làm hộ bài tập về nhà hoàn toàn."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 72,
+    "question": "Tại sao \"hỏi sai\" dẫn đến \"AI trả lời sai\"?",
+    "options": {
+      "A": "Vì AI bị hỏng.",
+      "B": "Do thiếu kỹ năng Prompting (đặt câu hỏi/câu lệnh).",
+      "C": "Vì AI không biết tiếng Việt.",
+      "D": "Do máy tính yếu."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 73,
+    "question": "Thuật ngữ \"AI Hallucination\" nghĩa là gì?",
+    "options": {
+      "A": "AI có khả năng tiên tri.",
+      "B": "Hiện tượng AI đưa ra thông tin giả, kiến thức không có thật (ảo giác).",
+      "C": "AI có thể nhìn thấy hình ảnh.",
+      "D": "AI bị nhiễm virus."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 74,
+    "question": "Sinh viên có thể dùng AI để hỗ trợ việc gì trong học tập?",
+    "options": {
+      "A": "Đọc tài liệu, tóm tắt, so sánh và viết outline bài tiểu luận.",
+      "B": "Tự động điểm danh giúp sinh viên.",
+      "C": "Hack vào hệ thống điểm của trường.",
+      "D": "Chơi trò chơi điện tử trực tuyến."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 75,
+    "question": "Đạo đức AI yêu cầu người dùng phải làm gì khi sử dụng nội dung từ AI?",
+    "options": {
+      "A": "Giấu kín việc sử dụng AI.",
+      "B": "Biết cách trích dẫn, kiểm tra và chịu trách nhiệm về nội dung.",
+      "C": "Coi đó là kiến thức của riêng mình.",
+      "D": "Chia sẻ nội dung đó mà không cần kiểm chứng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 76,
+    "question": "Khái niệm \"Demonstration\" có nghĩa là gì?",
+    "options": {
+      "A": "Nói thật hay về sản phẩm.",
+      "B": "Cho khách hàng thấy giá trị thay vì chỉ nói suông thông qua minh họa, case khách hàng....",
+      "C": "Tổ chức các buổi biểu diễn văn nghệ để bán hàng.",
+      "D": "Thuê người nổi tiếng nói tốt về sản phẩm."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 77,
+    "question": "\"Sales Motivation\" (Động cơ mua hàng) bao gồm những yếu tố nào?",
+    "options": {
+      "A": "Chỉ có lý trí.",
+      "B": "Chỉ có cảm xúc.",
+      "C": "Lý trí – cảm xúc – hoàn cảnh – thời điểm.",
+      "D": "Chỉ dựa vào giá rẻ."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 78,
+    "question": "IMC Plan được khẳng định KHÔNG phải là gì?",
+    "options": {
+      "A": "Một kế hoạch tích hợp.",
+      "B": "Một checklist các kênh truyền thông.",
+      "C": "Một công cụ kết nối truyền thông và bán hàng.",
+      "D": "Một sơ đồ logic về hành trình khách hàng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 79,
+    "question": "Mô hình O2O2O là viết tắt của cụm từ nào?",
+    "options": {
+      "A": "Online to Offline to Online.",
+      "B": "Only to Offline to Only.",
+      "C": "Office to Online to Office.",
+      "D": "Online to Only to Online."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 80,
+    "question": "Điểm đặc biệt của mô hình O2O2O so với O2O truyền thống là gì?",
+    "options": {
+      "A": "Marketing, sales và trải nghiệm khách hàng được thiết kế như một vòng lặp giá trị liên tục.",
+      "B": "Chỉ tập trung vào việc bán hàng trên website.",
+      "C": "Loại bỏ hoàn toàn các cửa hàng vật lý (offline).",
+      "D": "Không cần quan tâm đến phản hồi của khách hàng sau mua."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 81,
+    "question": "Tại sao nhiều thương hiệu gặp khó khăn dù Digital Marketing phát triển mạnh?",
+    "options": {
+      "A": "Do marketing – bán hàng – trải nghiệm khách hàng bị tách rời.",
+      "B": "Do khách hàng không còn tiền mua sắm.",
+      "C": "Do không có mạng internet.",
+      "D": "Do thuế doanh nghiệp quá cao."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 82,
+    "question": "Mapping hành trình khách hàng trong O2O2O bao gồm những giai đoạn nào?",
+    "options": {
+      "A": "Chỉ giai đoạn đang mua.",
+      "B": "Chỉ giai đoạn sau mua.",
+      "C": "Trước – Trong – Sau mua.",
+      "D": "Chỉ giai đoạn tìm kiếm thông tin."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 83,
+    "question": "Theo Tháp nhu cầu của Maslow, nhu cầu cao nhất của con người là gì?",
+    "options": {
+      "A": "Nhu cầu xã hội.",
+      "B": "Nhu cầu được tôn trọng.",
+      "C": "Nhu cầu tự thể hiện (Self-actualization).",
+      "D": "Nhu cầu an toàn."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 84,
+    "question": "Yếu tố \"Lối sống\" (Lifestyle) thuộc nhóm ảnh hưởng nào đến hành vi mua?",
+    "options": {
+      "A": "Yếu tố xã hội.",
+      "B": "Yếu tố văn hóa.",
+      "C": "Yếu tố cá nhân.",
+      "D": "Yếu tố tâm lý."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 85,
+    "question": "\"Niềm tin\" và \"Thái độ\" là các yếu tố thuộc nhóm:",
+    "options": {
+      "A": "Nhân khẩu học.",
+      "B": "Tâm lý học.",
+      "C": "Văn hóa.",
+      "D": "Tình huống."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 86,
+    "question": "Điểm khác biệt (Differentiation) có thể dựa trên yếu tố nào?",
+    "options": {
+      "A": "Sản phẩm, dịch vụ, kênh phân phối, nhân sự hoặc hình ảnh.",
+      "B": "Chỉ dựa trên giá bán.",
+      "C": "Chỉ dựa trên chất lượng sản phẩm.",
+      "D": "Chỉ dựa trên biểu tượng logo."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 87,
+    "question": "Trong mô hình O2O2O, điểm chạm \"Offline\" đóng vai trò gì chính?",
+    "options": {
+      "A": "Chỉ để trưng bày sản phẩm.",
+      "B": "Tạo trải nghiệm trực tiếp và xây dựng niềm tin sâu sắc.",
+      "C": "Là nơi duy nhất khách hàng có thể thanh toán.",
+      "D": "Để cắt giảm chi phí nhân sự."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 88,
+    "question": "\"Moment of Truth\" (Khoảnh khắc sự thật) trong Customer Journey là gì?",
+    "options": {
+      "A": "Khi khách hàng xem quảng cáo trên TV.",
+      "B": "Khi khách hàng tương tác với sản phẩm/dịch vụ và hình thành ấn tượng quan trọng.",
+      "C": "Khi doanh nghiệp công bố báo cáo tài chính.",
+      "D": "Khi đối thủ cạnh tranh giảm giá."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 89,
+    "question": "AI Prompting tốt nhất nên tuân theo nguyên tắc nào?",
+    "options": {
+      "A": "Viết càng ngắn gọn càng tốt.",
+      "B": "Cung cấp bối cảnh (context), vai trò (role) và yêu cầu rõ ràng.",
+      "C": "Yêu cầu AI làm thay 100% công việc mà không cần kiểm tra.",
+      "D": "Chỉ sử dụng tiếng Anh để hỏi."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 90,
+    "question": "Trong kỷ nguyên Digital, tại sao mô hình O2O2O lại quan trọng hơn mô hình O2O truyền thống?",
+    "options": {
+      "A": "Vì nó tập trung vào việc tạo ra vòng lặp giá trị và trải nghiệm khách hàng liên tục.",
+      "B": "Vì nó giúp doanh nghiệp đóng cửa hoàn toàn các cửa hàng vật lý.",
+      "C": "Vì nó chỉ sử dụng duy nhất nền tảng Facebook.",
+      "D": "Vì nó không yêu cầu phải chăm sóc khách hàng sau khi bán."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 91,
+    "question": "Trong Marketing, \"Sự tử tế\" (Ethics) có tạo ra lợi nhuận không?",
+    "options": {
+      "A": "Không, làm Marketing là phải \"lùa gà\".",
+      "B": "Có, nhưng rất chậm, không nên theo.",
+      "C": "Có, đó là nền tảng bền vững nhất để xây dựng Brand Loyalty (Lòng trung thành).",
+      "D": "Chỉ dành cho các tập đoàn đa quốc gia."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 92,
+    "question": "Một Marketer giỏi nhất không phải là người bán được nhiều hàng nhất, mà là người:",
+    "options": {
+      "A": "Chạy quảng cáo rẻ nhất.",
+      "B": "Có nhiều giải thưởng nhất.",
+      "C": "Giúp khách hàng giải quyết được vấn đề và cải thiện cuộc sống của họ.",
+      "D": "Nói năng lưu loát nhất."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 93,
+    "question": "Tại sao \"Sự thấu cảm\" (Empathy) lại là kỹ năng tối thượng của một người làm nghề?",
+    "options": {
+      "A": "Để dễ dàng lừa khách hàng.",
+      "B": "Để đứng vào đôi giày của khách, cảm nhận nỗi đau của họ và đưa ra giải pháp đúng.",
+      "C": "Để làm hài lòng sếp.",
+      "D": "Để viết Content hay hơn."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 94,
+    "question": "Khi AI có thể làm mọi thứ từ viết bài đến thiết kế, giá trị độc bản của bạn là gì?",
+    "options": {
+      "A": "Khả năng gõ phím nhanh.",
+      "B": "Tư duy chiến lược, sự sáng tạo mang tính nhân văn và khả năng ra quyết định.",
+      "C": "Khả năng copy-paste thần tốc.",
+      "D": "Không có giá trị gì cả, AI sẽ thay thế tất cả."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 95,
+    "question": "Trong bán hàng, \"Sự chân thành\" có ý nghĩa gì đối với khách hàng?",
+    "options": {
+      "A": "Là một chiêu trò để chốt đơn.",
+      "B": "Là sợi dây liên kết giúp khách hàng an tâm khi đặt niềm tin vào bạn.",
+      "C": "Khiến khách hàng thấy mình yếu thế.",
+      "D": "Không quan trọng bằng giá rẻ."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 96,
+    "question": "Bạn chọn con đường nào cho sự nghiệp của mình?",
+    "options": {
+      "A": "Marketer \"thời vụ\", chỉ quan tâm lợi ích trước mắt.",
+      "B": "Marketer \"thực chiến\", xây dựng giá trị bền vững cùng Tâm Agency.",
+      "C": "Đợi đến khi tốt nghiệp rồi tính.",
+      "D": "Chuyển sang ngành khác cho nhẹ đầu."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 97,
+    "question": "Tại sao \"Bằng giỏi\" đại học vẫn có thể thất nghiệp trong ngành Marketing?",
+    "options": {
+      "A": "Do thị trường đang bão hòa nhân sự.",
+      "B": "Do may mắn chưa mỉm cười.",
+      "C": "Do khoảng cách quá lớn giữa \"Lý thuyết học thuật\" và \"Kỹ năng thực thi\" của doanh nghiệp.",
+      "D": "Do doanh nghiệp không biết trọng dụng tài năng."
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "id": 98,
+    "question": "Tại sao Marketer cần phải hiểu về \"Mô hình kinh doanh\" (Business Model)?",
+    "options": {
+      "A": "Để đảm bảo các hoạt động truyền thông thực sự mang lại dòng tiền cho doanh nghiệp.",
+      "B": "Để nói chuyện chuyên nghiệp hơn với sếp.",
+      "C": "Để biết công ty mình có giàu không.",
+      "D": "Để xin tăng lương dễ hơn."
+    },
+    "correctAnswer": "A"
+  },
+  {
+    "id": 99,
+    "question": "Nếu AI có thể lập kế hoạch Marketing trong 30 giây, tại sao doanh nghiệp vẫn cần bạn?",
+    "options": {
+      "A": "Vì AI không biết sử dụng máy in.",
+      "B": "Vì doanh nghiệp cần người chịu trách nhiệm, thẩm định và \"thổi hồn\" vào kế hoạch đó.",
+      "C": "Vì AI không biết đi họp thay con người.",
+      "D": "Vì AI thường xuyên bị lỗi mạng."
+    },
+    "correctAnswer": "B"
+  },
+  {
+    "id": 100,
+    "question": "\"Sáng tạo\" trong Marketing thực chiến được định nghĩa là:",
+    "options": {
+      "A": "Nghĩ ra những thứ chưa ai từng làm.",
+      "B": "Làm cho mọi thứ trở nên kỳ quặc để thu hút chú ý.",
+      "C": "Tìm ra cách làm mới để giải quyết vấn đề cũ một cách hiệu quả hơn.",
+      "D": "Vẽ đẹp và biết dùng nhiều phần mềm đồ họa."
+    },
+    "correctAnswer": "C"
+  }
+]
