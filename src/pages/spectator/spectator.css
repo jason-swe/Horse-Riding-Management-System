@@ -1574,6 +1574,25 @@
   gap: 6px;
 }
 
+.profile-identity-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.profile-identity-actions .spectator-button {
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+}
+
+.profile-identity-actions .profile-role-access-button {
+  border-color: rgba(var(--racing-accent-rgb), 0.36);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  color: var(--racing-accent-soft);
+}
+
 .profile-wallet-card {
   display: flex;
   flex-direction: column;
@@ -1642,6 +1661,33 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+}
+
+.profile-account-ledger-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.profile-column-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-column-stack > .spectator-card,
+.profile-transactions-card {
+  min-height: 0;
+}
+
+.profile-transactions-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-transactions-card .profile-history {
+  flex: 1;
+  align-content: start;
 }
 
 .profile-detail-grid {
@@ -2425,6 +2471,7 @@
   .tournament-detail-grid,
   .profile-hero,
   .profile-layout,
+  .profile-account-ledger-layout,
   .prediction-hero,
   .prediction-layout,
   .prediction-lower-grid,
@@ -7903,6 +7950,10 @@
   }
 
   .profile-wallet-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity-actions {
     grid-template-columns: 1fr;
   }
 

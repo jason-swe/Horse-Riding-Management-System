@@ -30,7 +30,9 @@ export function AuthProvider({ children }) {
         const nextProfiles = data.profiles || {};
         const nextActiveRole = storedSession.activeRole && nextRoles.includes(storedSession.activeRole)
           ? storedSession.activeRole
-          : null;
+          : nextRoles.length === 1
+            ? nextRoles[0]
+            : null;
 
         setUser(data.user);
         setRoles(nextRoles);

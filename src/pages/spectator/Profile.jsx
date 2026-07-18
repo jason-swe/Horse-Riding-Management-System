@@ -33,12 +33,6 @@ const activePredictions = [
   { race: "Worcester Chase", pick: "Golden Gallop", stake: "120 pts", potential: "408 pts", status: "Locked" },
 ];
 
-const achievements = [
-  { title: "Hot Streak", detail: "Won 3 predictions in a row" },
-  { title: "Sharp Eye", detail: "Picked a winner above 3.0x odds" },
-  { title: "Early Market", detail: "Placed 10 predictions before race day" },
-];
-
 const Profile = () => {
   const { user } = useAuth();
   const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
@@ -147,12 +141,22 @@ const Profile = () => {
             <p className="spectator-eyebrow">Spectator profile</p>
             <h1 className="spectator-title">{displayUser.name}</h1>
             <p className="spectator-copy profile-copy">
-              Track spectator details, reward balance, active predictions, race history, and achievements from one focused profile.
+              Track spectator details, reward balance, active predictions, race history, and wallet movement from one focused profile.
             </p>
             <div className="profile-tags">
               <span className="spectator-badge spectator-badge--amber"><Award size={14} /> {spectator.tier}</span>
               <span className="spectator-badge"><Calendar size={14} /> {displayUser.joined}</span>
               <span className="spectator-badge spectator-badge--green"><BadgeCheck size={14} /> Verified</span>
+            </div>
+            <div className="profile-identity-actions">
+              <Link className="spectator-button spectator-button--primary" to="/choose-role">
+                <RefreshCw size={16} aria-hidden="true" />
+                Switch role
+              </Link>
+              <Link className="spectator-button profile-role-access-button" to="/spectator/role-applications">
+                <BadgeCheck size={16} aria-hidden="true" />
+                Role Access
+              </Link>
             </div>
           </div>
         </div>
@@ -175,10 +179,6 @@ const Profile = () => {
             <Link className="spectator-button" to="/spectator/rewards">
               Rewards
             </Link>
-            <Link className="spectator-button profile-role-access-button" to="/spectator/role-applications">
-              <BadgeCheck size={16} aria-hidden="true" />
-              Role Access
-            </Link>
           </div>
         </aside>
       </div>
@@ -197,60 +197,42 @@ const Profile = () => {
         })}
       </div>
 
-      <div className="profile-layout">
-        <article className="spectator-card">
-          <div className="spectator-card__header">
-            <h2>Spectator details</h2>
-            <span className="spectator-badge">Account</span>
-          </div>
-          <div className="profile-detail-grid">
-            <div><span>Username</span><strong>{displayUser.username}</strong></div>
-            <div><span>Email</span><strong>{displayUser.email}</strong></div>
-            <div><span><MapPin size={13} /> Location</span><strong>{spectator.location}</strong></div>
-            <div><span>Tier</span><strong>{spectator.tier}</strong></div>
-          </div>
-        </article>
+      <div className="profile-account-ledger-layout">
+        <div className="profile-column-stack">
+          <article className="spectator-card">
+            <div className="spectator-card__header">
+              <h2>Spectator details</h2>
+              <span className="spectator-badge">Account</span>
+            </div>
+            <div className="profile-detail-grid">
+              <div><span>Username</span><strong>{displayUser.username}</strong></div>
+              <div><span>Email</span><strong>{displayUser.email}</strong></div>
+              <div><span><MapPin size={13} /> Location</span><strong>{spectator.location}</strong></div>
+              <div><span>Tier</span><strong>{spectator.tier}</strong></div>
+            </div>
+          </article>
 
-        <article className="spectator-card">
-          <div className="spectator-card__header">
-            <h2>Achievements</h2>
-            <span className="spectator-badge spectator-badge--amber">3 Earned</span>
-          </div>
-          <div className="profile-achievements">
-            {achievements.map((item) => (
-              <div key={item.title}>
-                <Trophy size={18} />
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-      </div>
+          <article className="spectator-card">
+            <div className="spectator-card__header">
+              <h2>Active predictions</h2>
+              <span className="spectator-badge">{activePredictions.length} Tracking</span>
+            </div>
+            <ul className="spectator-list">
+              {activePredictions.map((prediction) => (
+                <li className="spectator-list__item profile-prediction-item" key={`${prediction.race}-${prediction.pick}`}>
+                  <span className="spectator-rank">{prediction.stake.replace(" pts", "")}</span>
+                  <div>
+                    <h3>{prediction.race}</h3>
+                    <span className="spectator-meta">Pick: {prediction.pick} - Potential {prediction.potential}</span>
+                  </div>
+                  <span className={`spectator-badge ${prediction.status === "Open" ? "spectator-badge--green" : "spectator-badge--amber"}`}>{prediction.status}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </div>
 
-      <div className="profile-layout">
-        <article className="spectator-card">
-          <div className="spectator-card__header">
-            <h2>Active predictions</h2>
-            <span className="spectator-badge">{activePredictions.length} Tracking</span>
-          </div>
-          <ul className="spectator-list">
-            {activePredictions.map((prediction) => (
-              <li className="spectator-list__item profile-prediction-item" key={`${prediction.race}-${prediction.pick}`}>
-                <span className="spectator-rank">{prediction.stake.replace(" pts", "")}</span>
-                <div>
-                  <h3>{prediction.race}</h3>
-                  <span className="spectator-meta">Pick: {prediction.pick} - Potential {prediction.potential}</span>
-                </div>
-                <span className={`spectator-badge ${prediction.status === "Open" ? "spectator-badge--green" : "spectator-badge--amber"}`}>{prediction.status}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="spectator-card">
+        <article className="spectator-card profile-transactions-card">
           <div className="spectator-card__header">
             <h2>Wallet transactions</h2>
             <button className="spectator-badge profile-refresh-button" disabled={transactionsState.isLoading} type="button" onClick={loadWalletData}>

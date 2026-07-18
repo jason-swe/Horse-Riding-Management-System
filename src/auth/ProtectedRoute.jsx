@@ -19,6 +19,10 @@ function ProtectedRoute({ role, children }) {
     return <Navigate to={getDefaultRoute(auth.roles)} replace />;
   }
 
+  if (role && auth.activeRole !== role) {
+    return <Navigate to="/choose-role" replace state={{ from: location }} />;
+  }
+
   return children;
 }
 
