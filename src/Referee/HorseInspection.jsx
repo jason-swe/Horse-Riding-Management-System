@@ -314,7 +314,7 @@ function HorseInspection() {
               <div className="referee-inspection-card__header-row">
                 <div className="referee-inspection-card__title-group">
                   <p className="admin-panel__eyebrow">
-                    {participant.lane == null ? "Lane not assigned" : `Lane ${participant.lane}`}
+                    {participant.lane == null ? "Draw not assigned" : `Draw ${participant.lane}`}
                   </p>
                   <h2>{participant.horseName}</h2>
                 </div>
@@ -339,8 +339,12 @@ function HorseInspection() {
                   <span>{participant.jockeyName}</span>
                 </div>
                 <div>
-                  <span className="referee-info-label">Weight</span>
+                  <span className="referee-info-label">Horse weight</span>
                   <span>{participant.weight ?? "Not recorded"}</span>
+                </div>
+                <div>
+                  <span className="referee-info-label">Declared gear</span>
+                  <span>{participant.gears?.length ? participant.gears.join(" / ") : "None"}</span>
                 </div>
                 <div>
                   <span className="referee-info-label">Assign</span>

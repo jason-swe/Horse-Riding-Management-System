@@ -32,7 +32,7 @@ const statusClass = (status) => {
 
 function JockeyProfile() {
   const { assignments, error, isLoading, profile, results, schedule, updateProfile, violations } = useJockeyApiData();
-  const [form, setForm] = useState({ height: "", weight: "", experienceYears: "", licenseNumber: "", status: "active" });
+  const [form, setForm] = useState({ height: "", weight: "", experienceYears: "", licenseNumber: "" });
   const [saveMessage, setSaveMessage] = useState("");
   const [isSaveError, setIsSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,9 +60,8 @@ function JockeyProfile() {
       weight: profile.weight,
       experienceYears: profile.experienceYears,
       licenseNumber: profile.licenseNumber,
-      status: profile.apiStatus,
     });
-  }, [profile.apiStatus, profile.experienceYears, profile.height, profile.licenseNumber, profile.weight]);
+  }, [profile.experienceYears, profile.height, profile.licenseNumber, profile.weight]);
 
   const updateField = (field, value) => {
     setSaveMessage("");
@@ -79,10 +78,9 @@ function JockeyProfile() {
     try {
       await updateProfile({
         height: Number(form.height),
-        weight: Number(form.weight),
+        weight_kg: Number(form.weight),
         experience_years: Number(form.experienceYears),
         license_number: form.licenseNumber.trim(),
-        status: form.status,
       });
       setSaveMessage("Athlete profile saved to API.");
     } catch (apiError) {
@@ -262,15 +260,9 @@ function JockeyProfile() {
 
           <form className="jockey-profile-form" onSubmit={handleProfileSubmit}>
             <label>Height (cm)<input min="1" type="number" value={form.height} onChange={(event) => updateField("height", event.target.value)} required /></label>
-            <label>Weight (kg)<input min="1" step="0.1" type="number" value={form.weight} onChange={(event) => updateField("weight", event.target.value)} required /></label>
+            <label>Weight (kg)<input min="30" max="100" step="0.1" type="number" value={form.weight} onChange={(event) => updateField("weight", event.target.value)} required /></label>
             <label>Experience (years)<input min="0" type="number" value={form.experienceYears} onChange={(event) => updateField("experienceYears", event.target.value)} required /></label>
             <label>License number<input value={form.licenseNumber} onChange={(event) => updateField("licenseNumber", event.target.value)} required /></label>
-            <label>Status
-              <select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
-                <option value="active">Available</option>
-                <option value="inactive">Unavailable</option>
-              </select>
-            </label>
             <div className="jockey-profile-form__actions">
               {saveMessage && <span className={isSaveError ? "jockey-form-message jockey-form-message--error" : "jockey-form-message"}>{!isSaveError && <CheckCircle2 size={16} />}{saveMessage}</span>}
               <button className="jockey-button jockey-button--primary" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save Profile"}</button>

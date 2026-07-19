@@ -73,6 +73,8 @@ export function toOwnerHorse(apiHorse) {
     weight: weightValue,
     status: displayStatus,
     healthNote,
+    currentRating: Number(apiHorse.current_rating ?? 50),
+    defaultGears: Array.isArray(apiHorse.default_gears) ? apiHorse.default_gears : [],
     imageUrl: apiHorse.image_url,
     facts: [
       apiHorse.breed ? { label: "Breed", value: apiHorse.breed } : null,
@@ -80,6 +82,10 @@ export function toOwnerHorse(apiHorse) {
       apiHorse.color ? { label: "Color", value: apiHorse.color } : null,
       age !== "Not set" ? { label: "Age", value: `${age} yrs` } : null,
       weightValue ? { label: "Weight", value: weightValue } : null,
+      { label: "Rating", value: String(apiHorse.current_rating ?? 50) },
+      Array.isArray(apiHorse.default_gears) && apiHorse.default_gears.length
+        ? { label: "Gear", value: apiHorse.default_gears.join(" / ") }
+        : null,
     ].filter(Boolean),
     raw: apiHorse,
   };
@@ -108,6 +114,7 @@ export function toOwnerProfilePayload(form) {
     address: form.location,
     license_number: form.licenseNumber,
     status: getApiStatus(form.status),
+    default_gears: form.defaultGears || [],
   };
 }
 

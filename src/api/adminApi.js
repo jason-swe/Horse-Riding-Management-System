@@ -253,12 +253,36 @@ export const adminApi = {
     return apiRequest(`/races/${id}`);
   },
 
+  getRaceModelInputReadiness(id) {
+    return apiRequest(`/races/${id}/model-input-readiness`);
+  },
+
+  finalizeRaceEntries(id) {
+    return apiRequest(`/races/${id}/entries/finalize`, { method: "POST" });
+  },
+
+  updateRaceEntry(id, payload) {
+    return apiRequest(`/registrations/${id}/race-entry`, { method: "PATCH", body: payload });
+  },
+
+  updateHorseRating(id, payload) {
+    return apiRequest(`/admin/horses/${id}/rating`, { method: "PATCH", body: payload });
+  },
+
+  getHorseRatingHistory(id) {
+    return apiRequest(`/admin/horses/${id}/rating-history`);
+  },
+
   generateRaceOdds(id) {
     return apiRequest(`/races/${id}/odds/generate`, { method: "POST" });
   },
 
   getRaceOdds(id) {
     return apiRequest(`/races/${id}/odds`);
+  },
+
+  updateRaceOdds(id, payload) {
+    return apiRequest(`/races/${id}/odds`, { method: "PATCH", body: payload });
   },
 
   openRaceBetting(id, payload = {}) {

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
+import { horseGearOptions } from "../../constants/raceModelInputs";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -75,6 +76,27 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
     </div>
   );
 };
+
+const GearSelector = ({ value = [], onChange, label = "Race gear" }) => (
+  <fieldset className="owner-gear-selector">
+    <legend>{label}</legend>
+    <div className="owner-gear-selector__grid">
+      {horseGearOptions.map((gear) => (
+        <label key={gear.code} title={gear.label}>
+          <input
+            checked={value.includes(gear.code)}
+            onChange={() => onChange(value.includes(gear.code)
+              ? value.filter((code) => code !== gear.code)
+              : [...value, gear.code])}
+            type="checkbox"
+          />
+          <strong>{gear.code}</strong>
+          <span>{gear.label}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+);
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
 
@@ -315,6 +337,7 @@ function OwnerHorseForm({ mode = "new" }) {
     weight: "",
     status: "Ready",
     healthNote: "",
+    defaultGears: [],
     imageFile: null,
     imageFileName: "",
   });
@@ -330,6 +353,7 @@ function OwnerHorseForm({ mode = "new" }) {
       weight: existingHorse.weight,
       status: existingHorse.status,
       healthNote: existingHorse.healthNote,
+      defaultGears: existingHorse.defaultGears || [],
       imageFile: null,
       imageFileName: "",
     });
@@ -434,6 +458,9 @@ function OwnerHorseForm({ mode = "new" }) {
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
               <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
+              <div className="owner-form-span">
+                <GearSelector label="Default race gear" value={form.defaultGears} onChange={(value) => updateField("defaultGears", value)} />
+              </div>
               <label className="owner-form-span">
                 Profile image
                 <input accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
@@ -497,6 +524,8 @@ function OwnerHorseDetail() {
     horse.age !== "Not set" ? { label: "Age", value: `${horse.age} yrs`, icon: HeartPulse } : null,
     horse.breed ? { label: "Breed", value: horse.breed, icon: Flag } : null,
     horse.weight ? { label: "Weight", value: horse.weight, icon: Award } : null,
+    { label: "Rating", value: horse.currentRating, icon: Trophy },
+    horse.defaultGears.length ? { label: "Default gear", value: horse.defaultGears.join(" / "), icon: ShieldCheck } : null,
     registrations.length ? { label: "Registrations", value: registrations.length, icon: ClipboardCheck } : null,
   ].filter(Boolean);
 
@@ -709,6 +738,7 @@ function OwnerRegistrations() {
     tournament: tournaments[0]?.name || "",
     race: "",
     note: "",
+    gears: [],
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
   const selectedTournament = tournaments.find((tournament) => tournament.name === entry.tournament) ?? tournaments[0];
@@ -720,7 +750,7 @@ function OwnerRegistrations() {
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
-    setEntry((current) => ({ ...current, horse: horses[0].name }));
+    setEntry((current) => ({ ...current, horse: horses[0].name, gears: horses[0].defaultGears || [] }));
   }, [entry.horse, horses]);
 
   useEffect(() => {
@@ -777,7 +807,13 @@ function OwnerRegistrations() {
     if (["horse", "tournament", "race"].includes(field)) {
       setTermsAccepted(false);
     }
-    setEntry((current) => ({ ...current, [field]: value }));
+    setEntry((current) => {
+      if (field === "horse") {
+        const horse = horses.find((item) => item.name === value);
+        return { ...current, horse: value, gears: horse?.defaultGears || [] };
+      }
+      return { ...current, [field]: value };
+    });
   };
 
   const handleSubmit = async (event) => {
@@ -807,6 +843,7 @@ function OwnerRegistrations() {
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
         note: entry.note,
+        gears: entry.gears,
         payment_method: "VNPAY",
       });
 
@@ -902,6 +939,7 @@ function OwnerRegistrations() {
           <div className="owner-form-grid owner-form-grid--single">
             <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
             <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
+            <GearSelector label="Declared race gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
             <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
 
@@ -970,6 +1008,7 @@ function OwnerRegistrations() {
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
             <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
             <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
+            <div><span>Declared gear</span><strong>{entry.gears.length ? entry.gears.join(" / ") : "None"}</strong></div>
             <div><span>Payment due</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee required"}</strong></div>
           </div>
 

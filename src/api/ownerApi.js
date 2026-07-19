@@ -85,6 +85,13 @@ export const ownerApi = {
     });
   },
 
+  updateRaceEntryDetails(registrationId, payload) {
+    return apiRequest(`/horse-owner/race-registrations/${registrationId}/entry-details`, {
+      method: "PATCH",
+      body: payload,
+    });
+  },
+
   getRegistrationPayment(orderId) {
     return apiRequest(`/horse-owner/registration-payments/${encodeURIComponent(orderId)}`);
   },
