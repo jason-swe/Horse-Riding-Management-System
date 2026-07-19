@@ -51,7 +51,7 @@ function profileFields(moduleName, profile) {
   if (moduleName === "jockeys") return [
     ["Licence", profile.license_number || "Not set"],
     ["Experience", `${profile.experience_years || 0} years`],
-    ["Weight", profile.weight ? `${profile.weight} kg` : "Not set"],
+    ["Weight", (profile.weight_kg ?? profile.weight) ? `${profile.weight_kg ?? profile.weight} kg` : "Not set"],
     ["Races", String(profile.total_races || 0)],
     ["Wins", String(profile.total_wins || 0)],
     ["Discipline", statusLabel(profile.disciplinary_status)],

@@ -29,14 +29,14 @@ const moduleConfig = {
     icon: UsersRound,
   },
   registrations: {
-    title: "Registration approvals",
+    title: "Race entries",
     eyebrow: "Entry control",
-    description: "Approve or reject horse entries for upcoming races.",
-    tableLabel: "Entry queue",
+    description: "Inspect confirmed horse entries, payment snapshots, and race capacity records.",
+    tableLabel: "Entry ledger",
     search: "Search horse, race, tournament or status...",
-    emptyTitle: "The entry queue is clear",
+    emptyTitle: "No race entries found",
     emptyText: "No registration records match the active filters.",
-    sortHint: "Pending entries first, newest first",
+    sortHint: "Newest entries first",
     icon: ClipboardCheck,
   },
   results: {
@@ -95,7 +95,7 @@ function DetailTable({ table }) {
 
 function actionsFor(moduleName, status, detail) {
   if (moduleName === "users") return status === "Active" ? ["Suspend"] : ["Activate"];
-  if (moduleName === "registrations") return status === "Pending" ? ["Approve", "Reject"] : [];
+  if (moduleName === "registrations") return [];
   if (moduleName === "results") {
     if (status === "Published") return [];
     if (detail?.correctionRequested) return ["Mark Correction Resolved"];
@@ -263,7 +263,7 @@ function AdminCommandModule({ moduleName }) {
                 <tbody>{pagedRows.map((row) => (
                   <tr className={selected?.[0] === row[0] ? "admin-command-row--selected" : ""} key={row[0]}>
                     {row.map((cell, index) => <td key={`${row[0]}-${table.columns[index]}`}>{index === statusIndex || table.columns[index]?.toLowerCase() === "verification" ? <StatusBadge value={cell} /> : index === 0 ? <span className="admin-command-id">{cell}</span> : cell}</td>)}
-                    <td><button className="admin-command-review" type="button" onClick={() => openDetail(row)} aria-label={`Review ${row[1] || row[0]}`}>Review <ArrowRight size={15} aria-hidden="true" /></button></td>
+                    <td><button className="admin-command-review" type="button" onClick={() => openDetail(row)} aria-label={`Inspect ${row[1] || row[0]}`}>Inspect <ArrowRight size={15} aria-hidden="true" /></button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -300,12 +300,11 @@ function AdminCommandModule({ moduleName }) {
               </section>
             )}
 
-            {moduleName === "registrations" && availableActions.length > 0 && <label className="admin-command-note"><span>Decision note</span><textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Record the reason for this approval decision..." /></label>}
             {moduleName === "results" && availableActions.includes("Request Correction") && <label className="admin-command-note"><span>Correction reason</span><textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Explain what must be corrected before this race can be confirmed or published..." /></label>}
 
             <footer>
               {availableActions.map((action) => <button key={action} className={["Reject", "Suspend", "Request Correction"].includes(action) ? "admin-command-action admin-command-action--danger" : "admin-command-action"} disabled={Boolean(actionLoading)} type="button" onClick={() => runAction(action)}>{actionLoading === action ? "Processing..." : action}<Check size={15} aria-hidden="true" /></button>)}
-              {!availableActions.length && <div className="admin-command-locked"><CheckCircle2 size={17} aria-hidden="true" /><span><strong>No actions available</strong><small>This record is complete.</small></span></div>}
+              {!availableActions.length && <div className="admin-command-locked"><CheckCircle2 size={17} aria-hidden="true" /><span><strong>{moduleName === "registrations" ? "Auto-confirmed entry" : "No actions available"}</strong><small>{moduleName === "registrations" ? "Eligibility is decided later by jockey assignment and pre-race inspection." : "This record is complete."}</small></span></div>}
             </footer>
           </aside>
           </div>

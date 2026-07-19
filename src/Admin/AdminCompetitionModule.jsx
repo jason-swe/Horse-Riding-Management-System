@@ -1,8 +1,9 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Lock, Pencil, Plus, RefreshCw, Trash2, Unlock } from "lucide-react";
+import { CalendarDays, CheckCircle2, ListChecks, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Unlock, X } from "lucide-react";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { adminApi } from "../api/adminApi";
 import { betApi } from "../api/betApi";
+import { horseGearOptions, raceClasses, raceCourses, raceGoings, raceSurfaces } from "../constants/raceModelInputs";
 import AdminLayout from "./AdminLayout";
 
 const emptyTournament = {
@@ -21,7 +22,12 @@ const emptyTournament = {
   initial_round_status: "active",
 };
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
-const emptyRace = { tournament_id: "", round_id: "", referee_id: "", name: "", race_date: "", location: "", distance: "", max_participants: "", prize_pool: "", prize_currency: "VND", status: "scheduled" };
+const emptyRace = {
+  tournament_id: "", round_id: "", referee_id: "", name: "", race_no: "1", race_date: "",
+  location: "", venue_code: "ST", distance: "", max_participants: "", course: "B+2",
+  race_class: "5", going: "Good", surface: "Turf", prize_pool: "", prize_currency: "VND",
+  status: "scheduled",
+};
 const defaultBettingConfig = { min_stake: "1", max_stake: "1000", currency: "TOKEN", closes_at: "" };
 const PAGE_SIZE = 20;
 
@@ -240,11 +246,50 @@ function BettingRaceContext({ race }) {
   );
 }
 
-function BettingOddsSnapshot({ market, loading, error }) {
+function BettingOddsSnapshot({ market, loading, error, onSave, saving }) {
   const odds = useMemo(
     () => [...(market?.odds || [])].sort((first, second) => Number(first.probability_rank || 99) - Number(second.probability_rank || 99)),
     [market],
   );
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({});
+  const [adjustmentNote, setAdjustmentNote] = useState("");
+  const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    setEditing(false);
+    setDraft(Object.fromEntries((market?.odds || []).map((item) => [idOf(item.horse_id), String(item.game_odds || "")])));
+    setAdjustmentNote(market?.manual_adjustment_note || "");
+    setEditError("");
+  }, [market?._id, market?.updated_at]);
+
+  const canEdit = String(market?.status || "").toLowerCase() === "generated";
+  const startEditing = () => {
+    setDraft(Object.fromEntries(odds.map((item) => [idOf(item.horse_id), String(item.game_odds || "")])));
+    setEditError("");
+    setEditing(true);
+  };
+  const cancelEditing = () => {
+    setEditing(false);
+    setEditError("");
+  };
+  const saveOdds = async () => {
+    const payloadOdds = odds.map((item) => ({
+      horse_id: idOf(item.horse_id),
+      game_odds: Number(draft[idOf(item.horse_id)]),
+    }));
+    if (payloadOdds.some((item) => !Number.isFinite(item.game_odds) || item.game_odds < 1.01 || item.game_odds > 1000)) {
+      setEditError("Final odds must be between 1.01 and 1000.");
+      return;
+    }
+    setEditError("");
+    try {
+      await onSave({ odds: payloadOdds, adjustment_note: adjustmentNote.trim() });
+      setEditing(false);
+    } catch (saveError) {
+      setEditError(saveError.message || "Unable to save final odds.");
+    }
+  };
 
   if (loading) {
     return <div className="admin-competition__odds-empty">Loading odds snapshot...</div>;
@@ -260,11 +305,21 @@ function BettingOddsSnapshot({ market, loading, error }) {
 
   return (
     <div className="admin-competition__odds-snapshot" aria-label="Win odds snapshot">
-      <div className="admin-competition__odds-meta">
-        <span>{market.model_name || "Probability model"}</span>
-        <span>{market.model_version || "version unknown"}</span>
-        <span>{formatDate(market.generated_at, true)}</span>
+      <div className="admin-competition__odds-toolbar">
+        <div className="admin-competition__odds-meta">
+          <span>Generated {formatDate(market.generated_at, true)}</span>
+          {market.manually_adjusted_at && <span>Adjusted {formatDate(market.manually_adjusted_at, true)}</span>}
+        </div>
+        {canEdit && !editing && <button type="button" onClick={startEditing}><Pencil size={15} aria-hidden="true" /> Edit final odds</button>}
+        {editing && (
+          <div className="admin-competition__odds-edit-actions">
+            <button disabled={saving} type="button" onClick={saveOdds}><Save size={15} aria-hidden="true" /> {saving ? "Saving" : "Save odds"}</button>
+            <button disabled={saving} type="button" onClick={cancelEditing}><X size={15} aria-hidden="true" /> Cancel</button>
+          </div>
+        )}
       </div>
+      {editing && <label className="admin-competition__odds-note"><span>Review note</span><input maxLength="500" value={adjustmentNote} onChange={(event) => setAdjustmentNote(event.target.value)} placeholder="Final market review" /></label>}
+      {editError && <div className="admin-competition__odds-error" role="alert">{editError}</div>}
       {odds.length ? (
         <div className="admin-competition__odds-table-wrap">
           <table className="admin-competition__odds-table">
@@ -274,7 +329,8 @@ function BettingOddsSnapshot({ market, loading, error }) {
                 <th>Runner</th>
                 <th>Win prob.</th>
                 <th>Fair odds</th>
-                <th>Game odds</th>
+                <th>Generated odds</th>
+                <th>Final odds</th>
               </tr>
             </thead>
             <tbody>
@@ -287,7 +343,21 @@ function BettingOddsSnapshot({ market, loading, error }) {
                   </td>
                   <td>{formatPercent(item.win_probability)}</td>
                   <td>{Number(item.fair_odds || 0).toFixed(2)}</td>
-                  <td><strong>{Number(item.game_odds || 0).toFixed(2)}</strong></td>
+                  <td>{Number(item.generated_game_odds || item.game_odds || 0).toFixed(2)}</td>
+                  <td>
+                    {editing ? (
+                      <input
+                        aria-label={`Final odds for ${item.horse_name || `horse ${item.horse_no || index + 1}`}`}
+                        disabled={saving}
+                        min="1.01"
+                        max="1000"
+                        step="0.01"
+                        type="number"
+                        value={draft[idOf(item.horse_id)] ?? ""}
+                        onChange={(event) => setDraft((current) => ({ ...current, [idOf(item.horse_id)]: event.target.value }))}
+                      />
+                    ) : <strong>{Number(item.game_odds || 0).toFixed(2)}</strong>}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -361,13 +431,19 @@ function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, on
       <div className="admin-competition__form-columns">
         <label className="admin-field"><span>Tournament *</span><select required value={value.tournament_id} onChange={(event) => onChange("tournament_id", event.target.value)}><option value="">Select tournament</option>{tournaments.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}</select></label>
         <label className="admin-field"><span>Round *</span><select required disabled={!hasTournament || !hasRounds} value={value.round_id} onChange={(event) => onChange("round_id", event.target.value)}><option value="">{!hasTournament ? "Select tournament first" : hasRounds ? "Select round" : "No rounds in this tournament"}</option>{availableRounds.map((item) => <option key={item._id} value={item._id}>{item.round_order}. {item.name}</option>)}</select></label>
-  <label className="admin-field"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Race 01 - Opening heat" /></label>
+        <label className="admin-field"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Race 01 - Opening heat" /></label>
+        <label className="admin-field"><span>Race number *</span><input required min="1" type="number" value={value.race_no} onChange={(event) => onChange("race_no", event.target.value)} /></label>
         <label className="admin-field"><span>Race date & time</span><input type="datetime-local" value={value.race_date} onChange={(event) => onChange("race_date", event.target.value)} /></label>
         <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Track A" /></label>
+        <label className="admin-field"><span>Venue code *</span><input required maxLength="8" value={value.venue_code} onChange={(event) => onChange("venue_code", event.target.value.toUpperCase())} placeholder="ST" /></label>
         <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
         <label className="admin-field"><span>Race referee</span><select value={value.referee_id} onChange={(event) => onChange("referee_id", event.target.value)}><option value="">Unassigned</option>{referees.map((item) => <option key={getRefereeOptionId(item)} value={getRefereeOptionId(item)}>{getRefereeOptionLabel(item)}</option>)}</select></label>
         <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} placeholder="1600" /></label>
         <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} placeholder="12" /></label>
+        <label className="admin-field"><span>Course</span><select value={value.course} onChange={(event) => onChange("course", event.target.value)}>{raceCourses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label className="admin-field"><span>Race class</span><select value={value.race_class} onChange={(event) => onChange("race_class", event.target.value)}>{raceClasses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label className="admin-field"><span>Going</span><select value={value.going} onChange={(event) => onChange("going", event.target.value)}>{raceGoings.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label className="admin-field"><span>Surface</span><select value={value.surface} onChange={(event) => onChange("surface", event.target.value)}>{raceSurfaces.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         <label className="admin-field"><span>Prize pool</span><input min="0" type="number" value={value.prize_pool} onChange={(event) => onChange("prize_pool", event.target.value)} placeholder="50000000" /></label>
         <label className="admin-field"><span>Prize currency</span><select value={value.prize_currency} onChange={(event) => onChange("prize_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
       </div>
@@ -375,6 +451,170 @@ function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, on
       {!referees.length && <div className="admin-live-state"><strong>No active race referees are available.</strong> Approve or assign a Race Referee role before scheduling race control.</div>}
       <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving || !hasRounds} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
     </form>
+  );
+}
+
+function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
+  const [readiness, setReadiness] = useState(null);
+  const [drafts, setDrafts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [finalizing, setFinalizing] = useState(false);
+  const [savingId, setSavingId] = useState("");
+  const [error, setError] = useState("");
+
+  const applyReadiness = useCallback((next) => {
+    setReadiness(next);
+    setDrafts(Object.fromEntries((next?.participants || []).map((participant) => {
+      const id = idOf(participant.registration_id);
+      return [id, {
+        horse_no: String(participant.horse_no || ""),
+        draw: String(participant.draw || ""),
+        declared_weight_kg: String(participant.declared_weight_kg ?? 54.5),
+        gears: participant.gears?.length ? participant.gears : (participant.default_gears || []),
+        current_rating: String(participant.current_rating ?? 50),
+        rating_reason: "",
+      }];
+    })));
+  }, []);
+
+  const loadReadiness = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      applyReadiness(await adminApi.getRaceModelInputReadiness(race._id));
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load race entries.");
+    } finally {
+      setLoading(false);
+    }
+  }, [applyReadiness, race._id]);
+
+  useEffect(() => { loadReadiness(); }, [loadReadiness]);
+
+  const updateDraft = (id, field, value) => {
+    setDrafts((current) => ({ ...current, [id]: { ...current[id], [field]: value } }));
+  };
+
+  const toggleGear = (id, code) => {
+    const selected = drafts[id]?.gears || [];
+    updateDraft(id, "gears", selected.includes(code)
+      ? selected.filter((item) => item !== code)
+      : [...selected, code]);
+  };
+
+  const finalize = async () => {
+    setFinalizing(true);
+    setError("");
+    try {
+      const result = await adminApi.finalizeRaceEntries(race._id);
+      applyReadiness(result.readiness);
+      onNotice(`Entries finalized for ${race.name}.`);
+      await onChanged();
+    } catch (apiError) {
+      setError(apiError.message || "Unable to finalize race entries.");
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
+  const saveEntry = async (participant) => {
+    const id = idOf(participant.registration_id);
+    const draft = drafts[id];
+    setSavingId(id);
+    setError("");
+    try {
+      const result = await adminApi.updateRaceEntry(id, {
+        horse_no: Number(draft.horse_no),
+        draw: Number(draft.draw),
+        declared_weight_kg: Number(draft.declared_weight_kg),
+        gears: draft.gears,
+      });
+      applyReadiness(result.readiness);
+      onNotice(`${participant.horse_name} entry updated.`);
+      await onChanged();
+    } catch (apiError) {
+      setError(apiError.message || "Unable to update race entry.");
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  const saveRating = async (participant) => {
+    const id = idOf(participant.registration_id);
+    const draft = drafts[id];
+    if (!draft.rating_reason.trim()) {
+      setError(`Rating reason is required for ${participant.horse_name}.`);
+      return;
+    }
+    setSavingId(id);
+    setError("");
+    try {
+      await adminApi.updateHorseRating(idOf(participant.horse_id), {
+        current_rating: Number(draft.current_rating),
+        reason: draft.rating_reason.trim(),
+      });
+      await loadReadiness();
+      onNotice(`${participant.horse_name} rating updated.`);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to update horse rating.");
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  return (
+    <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`Prepare entries for ${race.name}`}>
+      <div className="admin-modal__card admin-competition__entry-modal">
+        <div className="admin-panel__header admin-competition__entry-header">
+          <div><p className="admin-panel__eyebrow">Model input</p><h2>{race.name}</h2></div>
+          <div className="admin-competition__entry-header-actions">
+            {readiness && <StatusBadge value={readiness.ready ? "ready" : readiness.entries_finalized ? "needs review" : "not finalized"} />}
+            <button className="admin-header__button admin-header__button--ghost" type="button" onClick={onClose}>Close</button>
+          </div>
+        </div>
+        {error && <div className="admin-live-state admin-live-state--warning">{error}</div>}
+        {loading ? <LoadingSkeleton ariaLabel="Loading race entries" rows={5} variant="table" /> : (
+          <>
+            <div className="admin-competition__entry-summary">
+              <div><span>Participants</span><strong>{readiness?.participant_count || 0}</strong></div>
+              <div><span>Input version</span><strong>{readiness?.model_input_version || 0}</strong></div>
+              <div><span>Race fields</span><strong>{readiness?.missing_race_fields?.length ? readiness.missing_race_fields.join(", ") : "Complete"}</strong></div>
+            </div>
+            {!readiness?.entries_finalized && (
+              <div className="admin-competition__entry-toolbar">
+                <span>{readiness?.participants?.filter((item) => item.primary_jockey).length || 0}/{readiness?.participant_count || 0} primary jockeys accepted</span>
+                <button className="admin-header__button" disabled={finalizing || Number(readiness?.participant_count || 0) < 2} type="button" onClick={finalize}>
+                  <ListChecks size={16} aria-hidden="true" /> {finalizing ? "Finalizing" : "Finalize entries"}
+                </button>
+              </div>
+            )}
+            <div className="admin-data-table__wrap admin-competition__entry-table-wrap">
+              <table className="admin-data-table admin-competition__entry-table">
+                <thead><tr><th>Runner</th><th>No.</th><th>Draw</th><th>Rating</th><th>Carried kg</th><th>Gear</th><th>Status</th><th><span className="sr-only">Save</span></th></tr></thead>
+                <tbody>{(readiness?.participants || []).map((participant) => {
+                  const id = idOf(participant.registration_id);
+                  const draft = drafts[id] || {};
+                  return (
+                    <tr key={id}>
+                      <td><strong>{participant.horse_name}</strong><small>{participant.primary_jockey?.name || "Primary jockey missing"}</small></td>
+                      <td><input disabled={!readiness.entries_finalized} min="1" type="number" value={draft.horse_no || ""} onChange={(event) => updateDraft(id, "horse_no", event.target.value)} /></td>
+                      <td><input disabled={!readiness.entries_finalized} min="1" type="number" value={draft.draw || ""} onChange={(event) => updateDraft(id, "draw", event.target.value)} /></td>
+                      <td>{readiness.entries_finalized
+                        ? <strong>{participant.rating_snapshot}</strong>
+                        : <div className="admin-competition__rating-edit"><input min="0" max="140" type="number" value={draft.current_rating || ""} onChange={(event) => updateDraft(id, "current_rating", event.target.value)} /><input aria-label={`Rating reason for ${participant.horse_name}`} placeholder="Audit reason" value={draft.rating_reason || ""} onChange={(event) => updateDraft(id, "rating_reason", event.target.value)} /></div>}</td>
+                      <td><input disabled={!readiness.entries_finalized} min="40" max="75" step="0.1" type="number" value={draft.declared_weight_kg || ""} onChange={(event) => updateDraft(id, "declared_weight_kg", event.target.value)} /></td>
+                      <td><div className="admin-competition__gear-codes">{horseGearOptions.map((gear) => <label key={gear.code} title={gear.label}><input disabled={!readiness.entries_finalized} checked={(draft.gears || []).includes(gear.code)} onChange={() => toggleGear(id, gear.code)} type="checkbox" /><span>{gear.code}</span></label>)}</div></td>
+                      <td>{participant.ready ? <span className="admin-competition__entry-ready"><CheckCircle2 size={14} /> Ready</span> : <small>{participant.missing_fields.join(", ")}</small>}</td>
+                      <td><button aria-label={`Save ${participant.horse_name} ${readiness.entries_finalized ? "entry" : "rating"}`} className="admin-competition__entry-save" disabled={savingId === id} type="button" onClick={() => readiness.entries_finalized ? saveEntry(participant) : saveRating(participant)}><Save size={15} aria-hidden="true" /></button></td>
+                    </tr>
+                  );
+                })}</tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -401,6 +641,7 @@ function AdminCompetitionModule({ moduleName }) {
   const [bettingRaceId, setBettingRaceId] = useState("");
   const [bettingConfig, setBettingConfig] = useState(defaultBettingConfig);
   const [bettingOdds, setBettingOdds] = useState({ raceId: "", market: null, loading: false, error: "" });
+  const [entryRace, setEntryRace] = useState(null);
 
   const loadData = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -440,7 +681,15 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "race") {
       const defaultTournamentId = data.tournaments[0]?._id || "";
       const defaultRoundId = data.rounds.find((round) => idOf(round.tournament_id) === defaultTournamentId)?._id || "";
-    next = item ? { tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), referee_id: idOf(item.referee_id), name: item.name || "", race_date: dateValue(item.race_date, true), location: item.location || "", distance: String(item.distance || ""), max_participants: String(item.max_participants || ""), prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND", status: item.status || "scheduled" } : { ...emptyRace, tournament_id: defaultTournamentId, round_id: defaultRoundId };
+      next = item ? {
+        tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), referee_id: idOf(item.referee_id),
+        name: item.name || "", race_no: String(item.race_no || 1), race_date: dateValue(item.race_date, true),
+        location: item.location || "", venue_code: item.venue_code || "ST", distance: String(item.distance || ""),
+        max_participants: String(item.max_participants || ""), course: item.course || "B+2",
+        race_class: String(item.race_class || "5"), going: item.going || "Good", surface: item.surface || "Turf",
+        prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND",
+        status: item.status || "scheduled",
+      } : { ...emptyRace, tournament_id: defaultTournamentId, round_id: defaultRoundId };
     }
     setForm(next);
     setError("");
@@ -489,7 +738,16 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);
     if (!selectedRound || idOf(selectedRound.tournament_id) !== form.tournament_id) throw new Error("The selected round does not belong to this tournament.");
-  return { ...form, referee_id: form.referee_id || null, race_date: form.race_date ? new Date(form.race_date).toISOString() : null, distance: form.distance ? Number(form.distance) : null, max_participants: form.max_participants ? Number(form.max_participants) : null, prize_pool: form.prize_pool ? Number(form.prize_pool) : 0, prize_currency: form.prize_currency || "VND" };
+    return {
+      ...form,
+      race_no: Number(form.race_no),
+      referee_id: form.referee_id || null,
+      race_date: form.race_date ? new Date(form.race_date).toISOString() : null,
+      distance: form.distance ? Number(form.distance) : null,
+      max_participants: form.max_participants ? Number(form.max_participants) : null,
+      prize_pool: form.prize_pool ? Number(form.prize_pool) : 0,
+      prize_currency: form.prize_currency || "VND",
+    };
   };
 
   const submitForm = async (event) => {
@@ -626,6 +884,24 @@ function AdminCompetitionModule({ moduleName }) {
       await loadBettingOdds(raceId);
     } catch (apiError) {
       setError(apiError.message || `Unable to ${action} betting for ${race.name}.`);
+    } finally {
+      setBettingAction("");
+    }
+  };
+
+  const saveManualOdds = async (payload) => {
+    const raceId = bettingControlRace?._id;
+    if (!raceId) throw new Error("Select a race before editing odds.");
+    setBettingAction(`${raceId}:adjust`);
+    setError("");
+    try {
+      await adminApi.updateRaceOdds(raceId, payload);
+      setNotice(`Final odds saved for ${bettingControlRace.name}.`);
+      await loadData(true);
+      await loadBettingOdds(raceId);
+    } catch (apiError) {
+      setError(apiError.message || `Unable to save final odds for ${bettingControlRace.name}.`);
+      throw apiError;
     } finally {
       setBettingAction("");
     }
@@ -770,13 +1046,15 @@ function AdminCompetitionModule({ moduleName }) {
               market={bettingOdds.raceId === bettingControlRace._id ? bettingOdds.market : null}
               loading={bettingOdds.raceId === bettingControlRace._id && bettingOdds.loading}
               error={bettingOdds.raceId === bettingControlRace._id ? bettingOdds.error : ""}
+              onSave={saveManualOdds}
+              saving={bettingAction === `${bettingControlRace._id}:adjust`}
             />
           )}
         </section>
       )}
 
       {isSchedule ? (
-        <section className="admin-panel"><div className="admin-panel__header admin-competition__ledger-heading"><div><p className="admin-panel__eyebrow">Race ledger</p><h2>Scheduled races</h2></div><span>{filteredRaces.length} records - 20 per page</span></div>{!data.tournaments.length || !data.rounds.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>Competition structure required</h3><p>Create a tournament and round first.</p></div></div> : !filteredRaces.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>No races found</h3><p>Create a race or reset the filters.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Race</th><th>Tournament / Round</th><th>Scheduled</th><th>Track</th><th>Referee</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagedRaces.map((race) => <tr key={race._id}><td><strong>{race.name}</strong><small className="admin-competition__id">{race._id}</small></td><td>{race.tournament_id?.name || "Unknown tournament"}<small className="admin-competition__subline">{race.round_id?.name || "Unknown round"}</small></td><td>{formatDate(race.race_date, true)}</td><td>{race.location || "Not set"}</td><td>{race.referee_id?.user_id?.full_name || "Unassigned"}</td><td><StatusBadge value={race.status} /></td><td><RowActions label={race.name} onEdit={() => openForm("race", race)} onDelete={() => setDeleteTarget({ kind: "race", item: race })} /></td></tr>)}</tbody></table></div>}<Pagination page={racePage} totalItems={filteredRaces.length} onChange={setRacePage} label="Race ledger" /></section>
+        <section className="admin-panel"><div className="admin-panel__header admin-competition__ledger-heading"><div><p className="admin-panel__eyebrow">Race ledger</p><h2>Scheduled races</h2></div><span>{filteredRaces.length} records - 20 per page</span></div>{!data.tournaments.length || !data.rounds.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>Competition structure required</h3><p>Create a tournament and round first.</p></div></div> : !filteredRaces.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>No races found</h3><p>Create a race or reset the filters.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Race</th><th>Tournament / Round</th><th>Scheduled</th><th>Track</th><th>Referee</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagedRaces.map((race) => <tr key={race._id}><td><strong>R{race.race_no || 1} · {race.name}</strong><small className="admin-competition__id">Class {race.race_class || 5} · {race.course || "B+2"} · {race.going || "Good"}</small></td><td>{race.tournament_id?.name || "Unknown tournament"}<small className="admin-competition__subline">{race.round_id?.name || "Unknown round"}</small></td><td>{formatDate(race.race_date, true)}</td><td>{race.venue_code || "ST"} · {race.location || "Not set"}</td><td>{race.referee_id?.user_id?.full_name || "Unassigned"}</td><td><StatusBadge value={race.status} /></td><td><RowActions label={race.name} onEdit={() => openForm("race", race)} onDelete={() => setDeleteTarget({ kind: "race", item: race })}><button type="button" onClick={() => setEntryRace(race)}><ListChecks size={15} aria-hidden="true" /> Entries</button></RowActions></td></tr>)}</tbody></table></div>}<Pagination page={racePage} totalItems={filteredRaces.length} onChange={setRacePage} label="Race ledger" /></section>
       ) : (
         <div className="admin-competition__stack">
         <section className="admin-panel"><div className="admin-panel__header admin-competition__ledger-heading"><div><p className="admin-panel__eyebrow">Tournament ledger</p><h2>Tournaments</h2></div><span>{filteredTournaments.length} records - 20 per page</span></div>{!filteredTournaments.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>No tournaments found</h3><p>Create a tournament or reset the filters.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Tournament</th><th>Dates</th><th>Venue</th><th>Entry fee</th><th>Rounds</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagedTournaments.map((tournament) => <tr key={tournament._id}><td><strong>{tournament.name}</strong><small className="admin-competition__id">{tournament._id}</small></td><td>{formatDate(tournament.start_date)}<small className="admin-competition__subline">to {formatDate(tournament.end_date)}</small></td><td>{tournament.location || "Not set"}</td><td>{Number(tournament.entry_fee || 0) > 0 ? formatMoney(tournament.entry_fee, tournament.entry_fee_currency || "VND") : "No fee"}</td><td>{data.rounds.filter((round) => idOf(round.tournament_id) === tournament._id).length}</td><td><StatusBadge value={tournament.status} /></td><td><RowActions label={tournament.name} onEdit={() => openForm("tournament", tournament)} onDelete={() => setDeleteTarget({ kind: "tournament", item: tournament })} /></td></tr>)}</tbody></table></div>}<Pagination page={tournamentPage} totalItems={filteredTournaments.length} onChange={setTournamentPage} label="Tournament ledger" /></section>
@@ -785,6 +1063,7 @@ function AdminCompetitionModule({ moduleName }) {
       )}
 
       {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} referees={data.referees} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
+      {entryRace && <RaceEntryWorkspace race={entryRace} onClose={() => setEntryRace(null)} onChanged={() => loadData(true)} onNotice={setNotice} />}
       {deleteTarget && <div className="admin-modal" role="alertdialog" aria-modal="true" aria-labelledby="competition-delete-title" aria-describedby="competition-delete-copy" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}><div className="admin-modal__card admin-competition__delete-dialog"><Trash2 size={22} aria-hidden="true" /><div><p className="admin-panel__eyebrow">Delete {entityConfig[deleteTarget.kind].title}</p><h2 id="competition-delete-title">{deleteTarget.item.name}</h2><p id="competition-delete-copy">{deleteBlocked ? `Remove ${deleteDependencyCount} linked ${deleteTarget.kind === "tournament" ? "rounds" : "races"} first.` : "This record will be removed from the competition workspace."}</p></div><div className="admin-tool-card__footer"><button className="admin-header__button admin-header__button--red" disabled={deleting || deleteBlocked} type="button" onClick={removeEntity}>{deleting ? "Deleting..." : "Delete"}</button><button className="admin-header__button admin-header__button--ghost" disabled={deleting} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button></div></div></div>}
     </AdminLayout>
   );

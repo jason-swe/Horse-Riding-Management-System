@@ -51,7 +51,7 @@ const initialForms = {
   jockey: {
     license_number: "",
     height: "",
-    weight: "",
+    weight_kg: "",
     experience_years: "",
     medical_clearance: null,
     racing_license_document: null,
@@ -215,7 +215,7 @@ function RoleSpecificFields({ role, form, updateField }) {
           <input min="1" type="number" value={form.height} onChange={(event) => updateField("height", event.target.value)} required />
         </Field>
         <Field label="Weight (kg)">
-          <input min="1" type="number" value={form.weight} onChange={(event) => updateField("weight", event.target.value)} required />
+          <input min="30" max="100" step="0.1" type="number" value={form.weight_kg} onChange={(event) => updateField("weight_kg", event.target.value)} required />
         </Field>
         <Field label="Experience years">
           <input min="0" type="number" value={form.experience_years} onChange={(event) => updateField("experience_years", event.target.value)} required />
@@ -299,7 +299,7 @@ async function buildApplicationPayload(role, form) {
     return {
       license_number: form.license_number.trim(),
       height: Number(form.height),
-      weight: Number(form.weight),
+      weight_kg: Number(form.weight_kg),
       experience_years: Number(form.experience_years),
       medical_clearance_file_data: await readFileAsDataUri(form.medical_clearance),
       racing_license_document_file_data: await readFileAsDataUri(form.racing_license_document),

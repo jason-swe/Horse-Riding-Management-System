@@ -2655,13 +2655,75 @@
   font-weight: 700;
 }
 
+.admin-competition__odds-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.admin-competition__odds-toolbar .admin-competition__odds-meta {
+  padding-left: 0;
+}
+
+.admin-competition__odds-toolbar > button,
+.admin-competition__odds-edit-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.admin-competition__odds-edit-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.admin-competition__odds-note {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 12px;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.admin-competition__odds-note input,
+.admin-competition__odds-table input {
+  min-width: 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 4px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+}
+
+.admin-competition__odds-note input {
+  min-height: 36px;
+  padding: 0 9px;
+}
+
+.admin-competition__odds-error {
+  margin: 0 12px 10px;
+  color: var(--racing-danger);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .admin-competition__odds-table-wrap {
   overflow-x: auto;
 }
 
 .admin-competition__odds-table {
   width: 100%;
-  min-width: 620px;
+  min-width: 740px;
   border-collapse: collapse;
   font-size: 0.75rem;
 }
@@ -2690,6 +2752,31 @@
   margin-top: 3px;
   color: var(--admin-muted);
   font-size: 0.66rem;
+}
+
+.admin-competition__odds-table input {
+  width: 88px;
+  min-height: 34px;
+  padding: 0 7px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .admin-competition__odds-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-competition__odds-edit-actions,
+  .admin-competition__odds-edit-actions button,
+  .admin-competition__odds-toolbar > button {
+    width: 100%;
+  }
+
+  .admin-competition__odds-note {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-competition__row-actions {
@@ -2771,6 +2858,162 @@
 .admin-competition__modal {
   width: min(760px, 100%);
   border-radius: 7px;
+}
+
+.admin-competition__entry-modal {
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  width: min(1180px, 100%);
+}
+
+.admin-competition__entry-header,
+.admin-competition__entry-header-actions,
+.admin-competition__entry-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.admin-competition__entry-summary {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: 140px 140px minmax(220px, 1fr);
+  margin: 14px 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: var(--admin-border);
+}
+
+.admin-competition__entry-summary > div {
+  background: var(--admin-surface);
+  display: grid;
+  gap: 4px;
+  min-height: 66px;
+  padding: 12px;
+}
+
+.admin-competition__entry-summary span,
+.admin-competition__entry-toolbar span {
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+}
+
+.admin-competition__entry-toolbar {
+  border-bottom: 1px solid var(--admin-border);
+  padding: 0 0 14px;
+}
+
+.admin-competition__entry-table-wrap {
+  margin-top: 14px;
+}
+
+.admin-competition__entry-table {
+  min-width: 1030px;
+}
+
+.admin-competition__entry-table td > input {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  color: var(--admin-text);
+  min-height: 34px;
+  padding: 5px 7px;
+  width: 70px;
+}
+
+.admin-competition__entry-table td > input:disabled {
+  background: transparent;
+  border-color: transparent;
+  opacity: 1;
+}
+
+.admin-competition__rating-edit {
+  display: grid;
+  gap: 5px;
+  width: 112px;
+}
+
+.admin-competition__rating-edit input {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  color: var(--admin-text);
+  min-height: 32px;
+  min-width: 0;
+  padding: 5px 7px;
+  width: 100%;
+}
+
+.admin-competition__entry-table td > small,
+.admin-competition__entry-table td > strong + small {
+  color: var(--admin-muted);
+  display: block;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  margin-top: 4px;
+  max-width: 170px;
+}
+
+.admin-competition__gear-codes {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(5, 31px);
+  width: 171px;
+}
+
+.admin-competition__gear-codes label {
+  cursor: pointer;
+  position: relative;
+}
+
+.admin-competition__gear-codes input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.admin-competition__gear-codes span {
+  align-items: center;
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  color: var(--admin-muted);
+  display: flex;
+  font-size: 0.62rem;
+  font-weight: 750;
+  height: 27px;
+  justify-content: center;
+}
+
+.admin-competition__gear-codes input:checked + span {
+  background: rgba(var(--racing-accent-rgb), 0.12);
+  border-color: rgba(var(--racing-accent-rgb), 0.5);
+  color: var(--admin-accent);
+}
+
+.admin-competition__gear-codes input:disabled + span {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.admin-competition__entry-ready {
+  align-items: center;
+  color: #307947;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 750;
+  gap: 4px;
+}
+
+.admin-competition__entry-save {
+  align-items: center;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  width: 34px;
 }
 
 .admin-competition__form {
@@ -3585,6 +3828,16 @@
   }
 
   .admin-competition__form-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-competition__entry-header,
+  .admin-competition__entry-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-competition__entry-summary {
     grid-template-columns: 1fr;
   }
 

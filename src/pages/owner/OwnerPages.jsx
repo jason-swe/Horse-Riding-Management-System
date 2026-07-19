@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
+import { horseGearOptions } from "../../constants/raceModelInputs";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -75,6 +76,27 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
     </div>
   );
 };
+
+const GearSelector = ({ value = [], onChange, label = "Race gear" }) => (
+  <fieldset className="owner-gear-selector">
+    <legend>{label}</legend>
+    <div className="owner-gear-selector__grid">
+      {horseGearOptions.map((gear) => (
+        <label key={gear.code} title={gear.label}>
+          <input
+            checked={value.includes(gear.code)}
+            onChange={() => onChange(value.includes(gear.code)
+              ? value.filter((code) => code !== gear.code)
+              : [...value, gear.code])}
+            type="checkbox"
+          />
+          <strong>{gear.code}</strong>
+          <span>{gear.label}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+);
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
 
@@ -315,6 +337,7 @@ function OwnerHorseForm({ mode = "new" }) {
     weight: "",
     status: "Ready",
     healthNote: "",
+    defaultGears: [],
     imageFile: null,
     imageFileName: "",
   });
@@ -330,6 +353,7 @@ function OwnerHorseForm({ mode = "new" }) {
       weight: existingHorse.weight,
       status: existingHorse.status,
       healthNote: existingHorse.healthNote,
+      defaultGears: existingHorse.defaultGears || [],
       imageFile: null,
       imageFileName: "",
     });
@@ -434,6 +458,9 @@ function OwnerHorseForm({ mode = "new" }) {
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
               <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
+              <div className="owner-form-span">
+                <GearSelector label="Default race gear" value={form.defaultGears} onChange={(value) => updateField("defaultGears", value)} />
+              </div>
               <label className="owner-form-span">
                 Profile image
                 <input accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
@@ -497,6 +524,8 @@ function OwnerHorseDetail() {
     horse.age !== "Not set" ? { label: "Age", value: `${horse.age} yrs`, icon: HeartPulse } : null,
     horse.breed ? { label: "Breed", value: horse.breed, icon: Flag } : null,
     horse.weight ? { label: "Weight", value: horse.weight, icon: Award } : null,
+    { label: "Rating", value: horse.currentRating, icon: Trophy },
+    horse.defaultGears.length ? { label: "Default gear", value: horse.defaultGears.join(" / "), icon: ShieldCheck } : null,
     registrations.length ? { label: "Registrations", value: registrations.length, icon: ClipboardCheck } : null,
   ].filter(Boolean);
 
@@ -703,12 +732,13 @@ function OwnerRegistrations() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [entry, setEntry] = useState({
     horse: horses[0]?.name || "",
     tournament: tournaments[0]?.name || "",
     race: "",
-    paymentMethod: "VNPAY",
     note: "",
+    gears: [],
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
   const selectedTournament = tournaments.find((tournament) => tournament.name === entry.tournament) ?? tournaments[0];
@@ -720,7 +750,7 @@ function OwnerRegistrations() {
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
-    setEntry((current) => ({ ...current, horse: horses[0].name }));
+    setEntry((current) => ({ ...current, horse: horses[0].name, gears: horses[0].defaultGears || [] }));
   }, [entry.horse, horses]);
 
   useEffect(() => {
@@ -737,13 +767,15 @@ function OwnerRegistrations() {
         return;
       }
 
+      setRaces([]);
+      setEntry((current) => ({ ...current, race: "" }));
       setRacesLoading(true);
       setError("");
 
       try {
         const data = await ownerApi.getTournamentRaces(selectedTournament.id);
         if (!cancelled) {
-          const nextRaces = (data.races || []).map(toOwnerRaceOption);
+          const nextRaces = (data.races || []).map(toOwnerRaceOption).filter((race) => race.registrationAvailable);
           setRaces(nextRaces);
           setEntry((current) => ({
             ...current,
@@ -772,7 +804,16 @@ function OwnerRegistrations() {
   const updateEntry = (field, value) => {
     setSaved(false);
     setError("");
-    setEntry((current) => ({ ...current, [field]: value }));
+    if (["horse", "tournament", "race"].includes(field)) {
+      setTermsAccepted(false);
+    }
+    setEntry((current) => {
+      if (field === "horse") {
+        const horse = horses.find((item) => item.name === value);
+        return { ...current, horse: value, gears: horse?.defaultGears || [] };
+      }
+      return { ...current, [field]: value };
+    });
   };
 
   const handleSubmit = async (event) => {
@@ -786,7 +827,12 @@ function OwnerRegistrations() {
     }
 
     if (!selectedRace?.id) {
-      setError("Select a race before submitting. Live tournament races are required.");
+      setError("Select an open race before submitting.");
+      return;
+    }
+
+    if (!termsAccepted) {
+      setError("Confirm the entry and pre-race inspection terms before submitting.");
       return;
     }
 
@@ -796,8 +842,9 @@ function OwnerRegistrations() {
       const result = await ownerApi.registerHorseForRace({
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
-        payment_method: entry.paymentMethod,
         note: entry.note,
+        gears: entry.gears,
+        payment_method: "VNPAY",
       });
 
       if (result.payment_url) {
@@ -805,7 +852,14 @@ function OwnerRegistrations() {
         return;
       }
 
-      await reloadRegistrations();
+      const [, raceData] = await Promise.all([
+        reloadRegistrations(),
+        ownerApi.getTournamentRaces(selectedTournament.id),
+      ]);
+      const nextRaces = (raceData.races || []).map(toOwnerRaceOption).filter((race) => race.registrationAvailable);
+      setRaces(nextRaces);
+      setEntry((current) => ({ ...current, race: nextRaces[0]?.id || "", note: "" }));
+      setTermsAccepted(false);
       setSaved(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to submit race registration.");
@@ -862,11 +916,11 @@ function OwnerRegistrations() {
         <img src={registrationHeroImage} alt="Race track grandstand for tournament registration" />
         <div className="owner-registration-hero__copy">
           <p className="owner-eyebrow">Tournament entries</p>
-          <h1>Register horses and track approvals.</h1>
-          <p>Submit entries, monitor admin review, and keep approval notes visible before each race window closes.</p>
+          <h1>Register horses for open races.</h1>
+          <p>Choose a race with available capacity, confirm the entry fee, and prepare the horse for its pre-race inspection.</p>
         </div>
         <aside className="owner-registration-hero__panel">
-          <span className="owner-badge owner-badge--amber"><ClipboardCheck size={14} /> {pendingCount} need attention</span>
+          <span className="owner-badge owner-badge--green"><ClipboardCheck size={14} /> {approvedCount} confirmed</span>
           <strong>{selectedHorse?.name || "No horse selected"}</strong>
           <p>{selectedHorse?.healthNote || "Select a horse to submit an entry."}</p>
         </aside>
@@ -877,7 +931,7 @@ function OwnerRegistrations() {
           <div className="owner-card__header">
             <div>
               <span className="owner-kicker">New entry</span>
-              <h2>Submit tournament registration</h2>
+              <h2>Confirm race entry</h2>
             </div>
             <Send size={20} />
           </div>
@@ -885,7 +939,7 @@ function OwnerRegistrations() {
           <div className="owner-form-grid owner-form-grid--single">
             <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
             <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
-            <FormSelect label="Payment method" value={entry.paymentMethod} options={["VNPAY", "MOMO", "MOCK"]} onChange={(value) => updateEntry("paymentMethod", value)} />
+            <GearSelector label="Declared race gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
             <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
 
@@ -904,12 +958,11 @@ function OwnerRegistrations() {
               {selectedTournament?.date && <div><span>Tournament dates</span><strong>{selectedTournament.date}</strong></div>}
               <div><span>Tournament prize pool</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
               <div><span>Selected race fee</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee calculated"}</strong></div>
-              <div><span>Payment method</span><strong>{entry.paymentMethod}</strong></div>
               <div><span>Race options</span><strong>{racesLoading ? "Loading" : races.length}</strong></div>
             </div>
 
             {racesLoading && <LoadingSkeleton ariaLabel="Loading tournament races" variant="inline" />}
-            {!racesLoading && races.length === 0 && <div className="owner-empty owner-empty--compact">No races are available for this tournament.</div>}
+            {!racesLoading && races.length === 0 && <div className="owner-empty owner-empty--compact">No races are currently open for registration.</div>}
             {!racesLoading && races.length > 0 && (
               <div className="owner-race-choice-list">
                 {races.map((race) => (
@@ -928,7 +981,7 @@ function OwnerRegistrations() {
                     <div className="owner-race-choice__facts">
                       {race.location && <span><MapPin size={13} /> {race.location}</span>}
                       {race.distance && <span><Flag size={13} /> {race.distance}</span>}
-                      {race.maxParticipants && <span><UsersRound size={13} /> {race.maxParticipants} slots</span>}
+                      {race.remainingSlots !== null && <span><UsersRound size={13} /> {race.remainingSlots} spots left</span>}
                       {race.prizePool > 0 && <span><Trophy size={13} /> {formatMoney(race.prizePool, race.prizeCurrency)}</span>}
                       {race.entryFeeVnd > 0 && <span><CreditCard size={13} /> Fee {formatMoney(race.entryFeeVnd, race.entryFeeCurrency)}</span>}
                       {race.registrationLock && <span><CalendarDays size={13} /> Locks {race.registrationLock}</span>}
@@ -955,6 +1008,7 @@ function OwnerRegistrations() {
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
             <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
             <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
+            <div><span>Declared gear</span><strong>{entry.gears.length ? entry.gears.join(" / ") : "None"}</strong></div>
             <div><span>Payment due</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee required"}</strong></div>
           </div>
 
@@ -968,28 +1022,31 @@ function OwnerRegistrations() {
             </div>
             <div className="owner-registration-payment__grid">
               <div>
-                <span>Auto formula</span>
-                <strong>Prize / slots</strong>
+                <span>Payment method</span>
+                <strong>VNPay</strong>
               </div>
               <div>
                 <span>Registration charge</span>
                 <strong>{formatMoney(registrationFeeVnd, registrationFeeCurrency)}</strong>
               </div>
               <div>
-                <span>After submit</span>
-                <strong>{registrationFeeVnd > 0 ? "Gateway redirect" : "Review queue"}</strong>
+                <span>After payment</span>
+                <strong>Entry confirmed</strong>
               </div>
             </div>
-            {registrationFeeVnd > 0 && (
-              <p className="owner-registration-payment__note">A pending entry is created first, then the payment gateway confirms the VND charge before admin approval.</p>
-            )}
+            <p className="owner-registration-payment__note">You will continue to VNPay. The race entry is confirmed only after VNPay reports a successful payment. Spectator tokens are not used.</p>
           </section>
 
+          <label className="owner-registration-terms">
+            <input checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); setError(""); }} type="checkbox" />
+            <span>I understand that the entry fee is non-refundable if the horse fails or misses the pre-race inspection, and the horse still needs an eligible primary jockey before race start.</span>
+          </label>
+
           <div className="owner-form-actions">
-            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Registration submitted.</span>}
+            {saved && <span className="owner-success"><CheckCircle2 size={16} /> Entry confirmed. Confirmation email queued.</span>}
             {error && <span className="owner-success owner-success--error">{error}</span>}
-            <button className="owner-button owner-button--primary" disabled={isSubmitting || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id} type="submit">
-              {isSubmitting ? "Submitting..." : registrationFeeVnd > 0 ? `Deposit ${formatMoney(registrationFeeVnd, registrationFeeCurrency)}` : "Submit Entry"}
+            <button className="owner-button owner-button--primary" disabled={isSubmitting || racesLoading || !selectedHorse?.id || !selectedTournament?.id || !selectedRace?.id || !termsAccepted} type="submit">
+              {isSubmitting ? "Preparing VNPay..." : registrationFeeVnd > 0 ? `Pay ${formatMoney(registrationFeeVnd, registrationFeeCurrency)} with VNPay` : "Confirm Entry"}
             </button>
           </div>
         </form>
@@ -1006,9 +1063,9 @@ function OwnerRegistrations() {
             <small>Ready for race scheduling</small>
           </div>
           <div className="owner-registration-side__item">
-            <span>Review queue</span>
+            <span>Legacy pending entries</span>
             <strong>{pendingCount}</strong>
-            <small>Needs admin or owner follow-up</small>
+            <small>Entries created before auto-confirm</small>
           </div>
         </aside>
       </section>
@@ -1016,8 +1073,8 @@ function OwnerRegistrations() {
       <article className="owner-registration-board">
         <div className="owner-card__header">
           <div>
-            <span className="owner-kicker">Approval timeline</span>
-            <h2>Current registration queue</h2>
+            <span className="owner-kicker">Entry history</span>
+            <h2>Current race registrations</h2>
           </div>
           <ClipboardCheck size={20} />
         </div>

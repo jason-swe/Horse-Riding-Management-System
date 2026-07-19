@@ -73,6 +73,8 @@ export function toOwnerHorse(apiHorse) {
     weight: weightValue,
     status: displayStatus,
     healthNote,
+    currentRating: Number(apiHorse.current_rating ?? 50),
+    defaultGears: Array.isArray(apiHorse.default_gears) ? apiHorse.default_gears : [],
     imageUrl: apiHorse.image_url,
     facts: [
       apiHorse.breed ? { label: "Breed", value: apiHorse.breed } : null,
@@ -80,6 +82,10 @@ export function toOwnerHorse(apiHorse) {
       apiHorse.color ? { label: "Color", value: apiHorse.color } : null,
       age !== "Not set" ? { label: "Age", value: `${age} yrs` } : null,
       weightValue ? { label: "Weight", value: weightValue } : null,
+      { label: "Rating", value: String(apiHorse.current_rating ?? 50) },
+      Array.isArray(apiHorse.default_gears) && apiHorse.default_gears.length
+        ? { label: "Gear", value: apiHorse.default_gears.join(" / ") }
+        : null,
     ].filter(Boolean),
     raw: apiHorse,
   };
@@ -108,6 +114,7 @@ export function toOwnerProfilePayload(form) {
     address: form.location,
     license_number: form.licenseNumber,
     status: getApiStatus(form.status),
+    default_gears: form.defaultGears || [],
   };
 }
 
@@ -221,7 +228,17 @@ export function toOwnerRaceOption(apiRace, index = 0) {
 
   const prizePool = Number(apiRace.prize_pool || 0);
   const maxParticipants = Number(apiRace.max_participants || 0);
+  const participantCount = Number(apiRace.participant_count || 0);
+  const remainingSlots = apiRace.remaining_slots === null || (apiRace.remaining_slots === undefined && maxParticipants <= 0)
+    ? null
+    : Number(apiRace.remaining_slots ?? Math.max(0, maxParticipants - participantCount));
   const entryFeeVnd = Number(apiRace.entry_fee_vnd ?? (prizePool > 0 && maxParticipants > 0 ? Math.ceil(prizePool / maxParticipants) : 0));
+  const registrationAvailable = apiRace.registration_available !== undefined
+    ? Boolean(apiRace.registration_available)
+    : String(apiRace.status || 'scheduled').toLowerCase() === 'scheduled'
+      && !apiRace.registration_locked
+      && (!hasLockDate || lockDate.getTime() > Date.now())
+      && (maxParticipants <= 0 || remainingSlots > 0);
 
   return {
     id: apiRace._id || apiRace.id || `R-${index + 1}`,
@@ -234,10 +251,14 @@ export function toOwnerRaceOption(apiRace, index = 0) {
     location: apiRace.location || "",
     distance: hasValue(apiRace.distance) ? `${apiRace.distance}m` : "",
     maxParticipants: hasValue(apiRace.max_participants) ? String(apiRace.max_participants) : "",
+    participantCount,
+    remainingSlots,
+    registrationAvailable,
+    registrationUnavailableReason: apiRace.registration_unavailable_reason || "",
     prizePool,
     prizeCurrency: apiRace.prize_currency || "VND",
     entryFeeVnd,
-    entryFeeCurrency: "VND",
+    entryFeeCurrency: apiRace.entry_fee_currency || "VND",
     registrationLock: hasLockDate
       ? `${lockDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}, ${lockDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
       : "",

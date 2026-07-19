@@ -224,7 +224,7 @@ function RaceReport() {
           <div className="admin-data-table__wrap">
             <table className="admin-data-table">
               <thead>
-                <tr><th>Lane</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>License</th></tr>
+                <tr><th>Draw</th><th>Horse</th><th>Owner</th><th>Jockey</th><th>License</th></tr>
               </thead>
               <tbody>
                 {race.participants.filter((participant) => participant.eligible).map((participant) => (
