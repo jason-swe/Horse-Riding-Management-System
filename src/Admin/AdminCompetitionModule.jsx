@@ -1,9 +1,9 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, ListChecks, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Unlock, X } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, ListChecks, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Unlock, X } from "lucide-react";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { adminApi } from "../api/adminApi";
 import { betApi } from "../api/betApi";
-import { horseGearOptions, raceClasses, raceCourses, raceGoings, raceSurfaces } from "../constants/raceModelInputs";
+import { advancedHorseGearOptions, commonHorseGearOptions, raceClasses, raceCourses, raceGoings, raceSurfaces } from "../constants/raceModelInputs";
 import AdminLayout from "./AdminLayout";
 
 const emptyTournament = {
@@ -454,6 +454,33 @@ function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, on
   );
 }
 
+function CompactGearSelector({ value = [], disabled, onToggle }) {
+  const [showMore, setShowMore] = useState(false);
+  const advancedSelectedCount = advancedHorseGearOptions.filter((gear) => value.includes(gear.code)).length;
+  const renderOptions = (options) => options.map((gear) => (
+    <label key={gear.code} title={gear.label}>
+      <input disabled={disabled} checked={value.includes(gear.code)} onChange={() => onToggle(gear.code)} type="checkbox" />
+      <span>{gear.code}</span>
+    </label>
+  ));
+
+  return (
+    <div className="admin-competition__gear-selector">
+      <div className="admin-competition__gear-codes">{renderOptions(commonHorseGearOptions)}</div>
+      <button
+        aria-expanded={showMore}
+        className="admin-competition__gear-more"
+        onClick={() => setShowMore((current) => !current)}
+        type="button"
+      >
+        <ChevronDown className={showMore ? "is-open" : ""} size={13} aria-hidden="true" />
+        More{advancedSelectedCount ? ` (${advancedSelectedCount})` : ""}
+      </button>
+      {showMore && <div className="admin-competition__gear-codes admin-competition__gear-codes--advanced">{renderOptions(advancedHorseGearOptions)}</div>}
+    </div>
+  );
+}
+
 function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
   const [readiness, setReadiness] = useState(null);
   const [drafts, setDrafts] = useState({});
@@ -603,7 +630,7 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
                         ? <strong>{participant.rating_snapshot}</strong>
                         : <div className="admin-competition__rating-edit"><input min="0" max="140" type="number" value={draft.current_rating || ""} onChange={(event) => updateDraft(id, "current_rating", event.target.value)} /><input aria-label={`Rating reason for ${participant.horse_name}`} placeholder="Audit reason" value={draft.rating_reason || ""} onChange={(event) => updateDraft(id, "rating_reason", event.target.value)} /></div>}</td>
                       <td><input disabled={!readiness.entries_finalized} min="40" max="75" step="0.1" type="number" value={draft.declared_weight_kg || ""} onChange={(event) => updateDraft(id, "declared_weight_kg", event.target.value)} /></td>
-                      <td><div className="admin-competition__gear-codes">{horseGearOptions.map((gear) => <label key={gear.code} title={gear.label}><input disabled={!readiness.entries_finalized} checked={(draft.gears || []).includes(gear.code)} onChange={() => toggleGear(id, gear.code)} type="checkbox" /><span>{gear.code}</span></label>)}</div></td>
+                      <td><CompactGearSelector disabled={!readiness.entries_finalized} value={draft.gears || []} onToggle={(code) => toggleGear(id, code)} /></td>
                       <td>{participant.ready ? <span className="admin-competition__entry-ready"><CheckCircle2 size={14} /> Ready</span> : <small>{participant.missing_fields.join(", ")}</small>}</td>
                       <td><button aria-label={`Save ${participant.horse_name} ${readiness.entries_finalized ? "entry" : "rating"}`} className="admin-competition__entry-save" disabled={savingId === id} type="button" onClick={() => readiness.entries_finalized ? saveEntry(participant) : saveRating(participant)}><Save size={15} aria-hidden="true" /></button></td>
                     </tr>

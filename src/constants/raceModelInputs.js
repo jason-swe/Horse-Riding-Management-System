@@ -20,3 +20,8 @@ export const horseGearOptions = [
   { code: "XB", label: "Cross nose band" },
   { code: "CC", label: "Chin strap" },
 ];
+
+const commonHorseGearCodes = new Set(["B", "V", "TT", "CP", "H", "XB"]);
+
+export const commonHorseGearOptions = horseGearOptions.filter((gear) => commonHorseGearCodes.has(gear.code));
+export const advancedHorseGearOptions = horseGearOptions.filter((gear) => !commonHorseGearCodes.has(gear.code));
