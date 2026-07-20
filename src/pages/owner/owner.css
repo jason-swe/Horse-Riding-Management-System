@@ -5828,3 +5828,31 @@
   font-size: 0.72rem;
   line-height: 1.2;
 }
+
+.owner-gear-selector__more {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #356547;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 700;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 3px 0;
+}
+
+.owner-gear-selector__more svg {
+  transition: transform 160ms ease;
+}
+
+.owner-gear-selector__more svg.is-open {
+  transform: rotate(180deg);
+}
+
+.owner-gear-selector__grid--advanced {
+  border-top: 1px solid #e1e7e3;
+  margin-top: 8px;
+  padding-top: 10px;
+}

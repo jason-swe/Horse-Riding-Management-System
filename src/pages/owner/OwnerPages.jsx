@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
-import { horseGearOptions } from "../../constants/raceModelInputs";
+import { advancedHorseGearOptions, commonHorseGearOptions } from "../../constants/raceModelInputs";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -77,26 +77,48 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
   );
 };
 
-const GearSelector = ({ value = [], onChange, label = "Race gear" }) => (
-  <fieldset className="owner-gear-selector">
-    <legend>{label}</legend>
-    <div className="owner-gear-selector__grid">
-      {horseGearOptions.map((gear) => (
-        <label key={gear.code} title={gear.label}>
-          <input
-            checked={value.includes(gear.code)}
-            onChange={() => onChange(value.includes(gear.code)
-              ? value.filter((code) => code !== gear.code)
-              : [...value, gear.code])}
-            type="checkbox"
-          />
-          <strong>{gear.code}</strong>
-          <span>{gear.label}</span>
-        </label>
-      ))}
-    </div>
-  </fieldset>
+const GearOption = ({ gear, selected, onToggle }) => (
+  <label title={gear.label}>
+    <input checked={selected} onChange={onToggle} type="checkbox" />
+    <strong>{gear.code}</strong>
+    <span>{gear.label}</span>
+  </label>
 );
+
+const GearSelector = ({ value = [], onChange, label = "Race gear" }) => {
+  const [showMore, setShowMore] = useState(false);
+  const advancedSelectedCount = advancedHorseGearOptions.filter((gear) => value.includes(gear.code)).length;
+  const toggleGear = (code) => onChange(value.includes(code)
+    ? value.filter((item) => item !== code)
+    : [...value, code]);
+
+  return (
+    <fieldset className="owner-gear-selector">
+      <legend>{label}</legend>
+      <div className="owner-gear-selector__grid">
+        {commonHorseGearOptions.map((gear) => (
+          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
+        ))}
+      </div>
+      <button
+        aria-expanded={showMore}
+        className="owner-gear-selector__more"
+        onClick={() => setShowMore((current) => !current)}
+        type="button"
+      >
+        <ChevronDown className={showMore ? "is-open" : ""} size={15} aria-hidden="true" />
+        More gear{advancedSelectedCount ? ` (${advancedSelectedCount})` : ""}
+      </button>
+      {showMore && (
+        <div className="owner-gear-selector__grid owner-gear-selector__grid--advanced">
+          {advancedHorseGearOptions.map((gear) => (
+            <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
+          ))}
+        </div>
+      )}
+    </fieldset>
+  );
+};
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
 
