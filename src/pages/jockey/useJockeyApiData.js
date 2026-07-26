@@ -126,6 +126,12 @@ export function useJockeyApiData() {
     await loadJockeyData();
   }, [loadJockeyData]);
 
+  const respondToTerms = useCallback(async (id, accepted) => {
+    const action = accepted ? jockeyApi.confirmTerms : jockeyApi.rejectTerms;
+    await action(id, accepted ? "Terms confirmed" : "Terms need changes");
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
   const respondToContract = useCallback(async (id, accepted) => {
     const action = accepted ? jockeyApi.confirmContract : jockeyApi.rejectContract;
     await action(id, accepted ? "Contract confirmed" : "Contract rejected");
@@ -143,6 +149,7 @@ export function useJockeyApiData() {
     error,
     reload: loadJockeyData,
     respondToMeeting,
+    respondToTerms,
     respondToContract,
     updateProfile,
   };

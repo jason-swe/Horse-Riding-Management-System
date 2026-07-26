@@ -75,6 +75,20 @@ export const jockeyApi = {
     });
   },
 
+  confirmTerms(id, responseMessage = "Terms confirmed") {
+    return apiRequest(`/jockey-assignments/${id}/confirm-terms`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
+  rejectTerms(id, responseMessage = "Terms need changes") {
+    return apiRequest(`/jockey-assignments/${id}/reject-terms`, {
+      method: "POST",
+      body: { response_message: responseMessage },
+    });
+  },
+
   confirmContract(id, responseMessage = "Contract confirmed") {
     return apiRequest(`/jockey-assignments/${id}/confirm-contract`, {
       method: "POST",

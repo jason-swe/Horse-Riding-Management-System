@@ -21,7 +21,7 @@ const statusClass = (status) => {
   if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
-  if (["Rejected", "Expired", "Meeting rejected", "Appointment rejected", "Contract rejected", "Cancelled"].includes(status)) {
+  if (["Rejected", "Expired", "Meeting rejected", "Appointment rejected", "Terms rejected", "Contract rejected", "Cancelled"].includes(status)) {
     return "jockey-badge--muted";
   }
   return "jockey-badge--amber";
@@ -32,9 +32,11 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
     ? "Review the standby appointment details and respond to the owner's backup invitation."
     : "Review the offline appointment details and respond to the owner's invitation.",
   meeting_accepted: isBackup
-    ? "Standby appointment accepted. The owner will send the terms and contract for your review."
-    : "Appointment accepted. The owner will send the terms and contract for your review.",
-  terms_agreed: "The owner is preparing the contract for your review.",
+    ? "Standby appointment accepted. The owner will send terms for your confirmation before the contract."
+    : "Appointment accepted. The owner will send terms for your confirmation before the contract.",
+  terms_pending_confirmation: "Review the terms below. Confirm them before the owner can send the contract.",
+  terms_agreed: "You confirmed the terms. The owner can now send the contract.",
+  terms_rejected: "You requested changes to the terms. Wait for the owner to resend them.",
   contract_uploaded: isBackup
     ? "Review the terms and contract. Confirming accepts the standby assignment or promoted primary contract."
     : "Review the terms and contract. Confirming the contract accepts the assignment.",
@@ -48,7 +50,9 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
 const getStatusGroup = (rawStatus) => ({
   meeting_invited: "Appointment",
   meeting_accepted: "Appointment",
-  terms_agreed: "Contract",
+  terms_pending_confirmation: "Terms",
+  terms_agreed: "Terms",
+  terms_rejected: "Terms",
   contract_uploaded: "Contract",
   accepted: "Accepted",
 }[rawStatus] || "Closed");
@@ -57,7 +61,7 @@ function JockeyInvitations() {
   const [filter, setFilter] = useState("All");
   const [actionError, setActionError] = useState("");
   const [activeActionId, setActiveActionId] = useState("");
-  const { error, invitations, isLoading, respondToContract, respondToMeeting } = useJockeyApiData();
+  const { error, invitations, isLoading, respondToContract, respondToMeeting, respondToTerms } = useJockeyApiData();
 
   const visibleInvitations = useMemo(
     () => invitations.filter((invite) => filter === "All" || getStatusGroup(invite.rawStatus) === filter),
@@ -66,7 +70,7 @@ function JockeyInvitations() {
 
   const pendingCount = invitations.filter((invite) => invite.rawStatus === "meeting_invited").length;
   const acceptedCount = invitations.filter((invite) => invite.status === "Accepted").length;
-  const reviewCount = invitations.filter((invite) => invite.rawStatus === "contract_uploaded").length;
+  const reviewCount = invitations.filter((invite) => ["terms_pending_confirmation", "contract_uploaded"].includes(invite.rawStatus)).length;
   const featuredInvite = invitations.find((invite) => invite.rawStatus === "meeting_invited") ?? invitations[0];
 
   const updateInvitation = async (id, action) => {
@@ -76,6 +80,8 @@ function JockeyInvitations() {
     try {
       if (action === "accept-appointment" || action === "reject-appointment") {
         await respondToMeeting(id, action === "accept-appointment");
+      } else if (action === "confirm-terms" || action === "reject-terms") {
+        await respondToTerms(id, action === "confirm-terms");
       } else {
         await respondToContract(id, action === "confirm-contract");
       }
@@ -124,7 +130,7 @@ function JockeyInvitations() {
       <section className="jockey-invitation-stats" aria-label="Invitation summary">
         {[
           { label: "Appointments", value: pendingCount, note: "Waiting for your response", icon: Send },
-          { label: "Contract review", value: reviewCount, note: "Needs your confirmation", icon: FileText },
+          { label: "Reviews", value: reviewCount, note: "Terms or contract to confirm", icon: FileText },
           { label: "Accepted", value: acceptedCount, note: "Added to race plan", icon: CheckCircle2 },
           { label: "Total invites", value: invitations.length, note: "Owner requests", icon: CalendarDays },
         ].map((item) => {
@@ -147,7 +153,7 @@ function JockeyInvitations() {
             <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
           </div>
           <div className="jockey-segmented">
-              {["All", "Appointment", "Contract", "Accepted", "Closed"].map((item) => (
+              {["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>
@@ -220,6 +226,16 @@ function JockeyInvitations() {
                       </button>
                       <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "accept-appointment")} type="button">
                         <ShieldCheck size={17} /> {activeActionId === invite.id ? "Updating..." : "Accept appointment"}
+                      </button>
+                    </>
+                  )}
+                  {invite.rawStatus === "terms_pending_confirmation" && (
+                    <>
+                      <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-terms")} type="button">
+                        <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Request changes"}
+                      </button>
+                      <button className="jockey-button jockey-button--primary" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "confirm-terms")} type="button">
+                        <CheckCircle2 size={17} /> {activeActionId === invite.id ? "Updating..." : "Confirm terms"}
                       </button>
                     </>
                   )}
