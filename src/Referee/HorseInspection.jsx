@@ -343,10 +343,6 @@ function HorseInspection() {
                   <span>{participant.weight ?? "Not recorded"}</span>
                 </div>
                 <div>
-                  <span className="referee-info-label">Declared gear</span>
-                  <span>{participant.gears?.length ? participant.gears.join(" / ") : "None"}</span>
-                </div>
-                <div>
                   <span className="referee-info-label">Assign</span>
                   <span>{formatStatus(participant.assignmentStatus)}</span>
                 </div>

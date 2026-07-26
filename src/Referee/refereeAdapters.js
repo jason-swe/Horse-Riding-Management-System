@@ -75,7 +75,6 @@ function adaptParticipant(item) {
     assignmentId: getId(assignment),
     assignmentStatus: assignment?.status || "unassigned",
     lane: registration.draw ?? registration.lane ?? assignment?.lane ?? null,
-    gears: asArray(registration.gears),
     declaredWeightKg: registration.declared_weight_kg ?? null,
     eligible: item.eligible === true,
     blockers: asArray(item.blockers),

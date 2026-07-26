@@ -1,9 +1,10 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDownToLine, CalendarDays, CheckCircle2, ChevronDown, Eye, ListChecks, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Unlock, X } from "lucide-react";
+import { ArrowDownToLine, CalendarDays, CheckCircle2, Image as ImageIcon, Eye, ListChecks, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Unlock, Upload, X } from "lucide-react";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { adminApi } from "../api/adminApi";
 import { betApi } from "../api/betApi";
-import { advancedHorseGearOptions, commonHorseGearOptions, raceClasses, raceCourses, raceGoings, raceSurfaces } from "../constants/raceModelInputs";
+import { raceClasses, raceCourses, raceGoings, raceSurfaces } from "../constants/raceModelInputs";
+import { readFileAsDataUri } from "../utils/fileData";
 import AdminLayout from "./AdminLayout";
 
 const emptyTournament = {
@@ -11,25 +12,26 @@ const emptyTournament = {
   description: "",
   location: "",
   image_url: "",
+  image_file_data: "",
+  image_preview: "",
+  image_file_name: "",
   entry_fee: "",
   entry_fee_currency: "VND",
   start_date: "",
   end_date: "",
   status: "draft",
-  initial_round_name: "Round 1: Opening Card",
-  initial_round_order: "1",
-  initial_round_description: "Opening round for the tournament schedule.",
-  initial_round_status: "active",
 };
 const emptyRound = { tournament_id: "", name: "", round_order: "", description: "", status: "draft" };
 const emptyRace = {
-  tournament_id: "", round_id: "", referee_id: "", name: "", race_no: "1", race_date: "",
-  location: "", venue_code: "ST", distance: "", max_participants: "", course: "B+2",
-  race_class: "5", going: "Good", surface: "Turf", prize_pool: "", prize_currency: "VND",
+  tournament_id: "", round_id: "", referee_id: "", name: "", race_no: "", race_date: "",
+  image_url: "", image_file_data: "", image_preview: "", image_file_name: "",
+  location: "", venue_code: "", distance: "", max_participants: "", course: "",
+  race_class: "", going: "", surface: "", prize_pool: "", prize_currency: "",
   status: "scheduled",
 };
 const defaultBettingConfig = { min_stake: "1", max_stake: "1000", currency: "TOKEN", closes_at: "" };
 const PAGE_SIZE = 20;
+const MAX_IMAGE_FILE_SIZE = 3 * 1024 * 1024;
 
 const entityConfig = {
   tournament: { title: "Tournament", create: adminApi.createTournament, update: adminApi.updateTournament, remove: adminApi.deleteTournament },
@@ -376,33 +378,91 @@ function Pagination({ page, totalItems, onChange, label }) {
   return <nav className="admin-command-pagination" aria-label={`${label} pages`}><span>Page {page} of {totalPages}</span><div><button disabled={page === 1} type="button" onClick={() => onChange(page - 1)}>Previous</button>{Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => <button key={number} className={number === page ? "active" : ""} type="button" aria-current={number === page ? "page" : undefined} onClick={() => onChange(number)}>{number}</button>)}<button disabled={page === totalPages} type="button" onClick={() => onChange(page + 1)}>Next</button></div></nav>;
 }
 
+function ImageFileField({ value, onChange, label }) {
+  const [fileError, setFileError] = useState("");
+  const preview = value.image_preview || value.image_url;
+
+  const selectImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    setFileError("");
+
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFileError("Please select a PNG, JPG, WEBP, or other image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_FILE_SIZE) {
+      setFileError("The image must be 3 MB or smaller.");
+      return;
+    }
+
+    try {
+      const imageData = await readFileAsDataUri(file);
+      onChange("image_file_data", imageData);
+      onChange("image_preview", imageData);
+      onChange("image_file_name", file.name);
+    } catch (error) {
+      setFileError(error.message || "Unable to read the selected image.");
+    }
+  };
+
+  const resetSelection = () => {
+    onChange("image_file_data", "");
+    onChange("image_preview", value.image_url || "");
+    onChange("image_file_name", "");
+    setFileError("");
+  };
+
+  return (
+    <div className="admin-field admin-competition__image-field">
+      <span>{label}</span>
+      <div className="admin-competition__image-picker">
+        <div className="admin-competition__image-thumb">
+          {preview ? <img src={preview} alt="Selected image preview" /> : <ImageIcon size={25} aria-hidden="true" />}
+        </div>
+        <div>
+          <label className="admin-header__button admin-header__button--ghost admin-competition__upload-button">
+            <Upload size={15} aria-hidden="true" />
+            Choose image
+            <input accept="image/*" type="file" onChange={selectImage} />
+          </label>
+          <small>{value.image_file_name || (preview ? "Current image" : "PNG, JPG, WEBP - maximum 3 MB")}</small>
+          {value.image_file_data && <button className="admin-competition__image-reset" type="button" onClick={resetSelection}>Reset selection</button>}
+          {fileError && <small className="admin-competition__image-error" role="alert">{fileError}</small>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TournamentForm({ value, onChange, onSubmit, onCancel, saving, mode }) {
   return (
     <form className="admin-form-grid admin-competition__form" onSubmit={onSubmit}>
-      <div className="admin-competition__form-columns">
-        <label className="admin-field"><span>Name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Spring Championship 2026" /></label>
-        <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Saigon Racecourse" /></label>
-        <label className="admin-field"><span>Image URL</span><input type="url" value={value.image_url} onChange={(event) => onChange("image_url", event.target.value)} placeholder="https://example.com/tournament.jpg" /></label>
-        <label className="admin-field"><span>Entry fee pool</span><input min="0" type="number" value={value.entry_fee} onChange={(event) => onChange("entry_fee", event.target.value)} placeholder="12000000" /></label>
-        <label className="admin-field"><span>Fee currency</span><select value={value.entry_fee_currency} onChange={(event) => onChange("entry_fee_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
-        <label className="admin-field"><span>Start date</span><input type="date" value={value.start_date} onChange={(event) => onChange("start_date", event.target.value)} /></label>
-        <label className="admin-field"><span>End date</span><input type="date" value={value.end_date} min={value.start_date || undefined} onChange={(event) => onChange("end_date", event.target.value)} /></label>
-        <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="draft">Draft</option><option value="planning">Planning</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
-      </div>
-      {value.image_url && <div className="admin-competition__image-preview"><img src={value.image_url} alt="" /><span>Image preview</span></div>}
-      <label className="admin-field"><span>Description</span><textarea value={value.description} onChange={(event) => onChange("description", event.target.value)} placeholder="Competition format and operating notes" /></label>
-      {mode === "create" && (
-        <section className="admin-live-state">
-          <strong>Initial round</strong>
+      <div className="admin-competition__form-intro"><strong>Set up the tournament</strong><span>Only the name is required. Add rounds separately when the tournament is ready.</span></div>
+      <section className="admin-competition__form-section admin-competition__form-section--primary" aria-labelledby="tournament-basics-title">
+        <div className="admin-competition__form-section-heading"><div><h3 id="tournament-basics-title">Tournament details</h3><p>Name, venue, and dates.</p></div><span>Required fields are marked *</span></div>
+        <div className="admin-competition__form-columns">
+          <label className="admin-field admin-competition__field--full"><span>Name *</span><input autoFocus required value={value.name} onChange={(event) => onChange("name", event.target.value)} /></label>
+          <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} /></label>
+          <div className="admin-competition__field-note">A location can be added now or when the race schedule is confirmed.</div>
+          <label className="admin-field"><span>Start date</span><input type="date" value={value.start_date} onChange={(event) => onChange("start_date", event.target.value)} /></label>
+          <label className="admin-field"><span>End date</span><input type="date" value={value.end_date} min={value.start_date || undefined} onChange={(event) => onChange("end_date", event.target.value)} /></label>
+        </div>
+      </section>
+      <details className="admin-competition__form-disclosure" open={mode === "edit"}>
+        <summary><span><strong>Optional details</strong><small>Image, description, and entry fee</small></span></summary>
+        <div className="admin-competition__form-disclosure-body">
           <div className="admin-competition__form-columns">
-            <label className="admin-field"><span>Round name *</span><input required value={value.initial_round_name} onChange={(event) => onChange("initial_round_name", event.target.value)} placeholder="Round 1: Opening Card" /></label>
-            <label className="admin-field"><span>Order *</span><input required min="1" type="number" value={value.initial_round_order} onChange={(event) => onChange("initial_round_order", event.target.value)} /></label>
-            <label className="admin-field"><span>Status</span><select value={value.initial_round_status} onChange={(event) => onChange("initial_round_status", event.target.value)}><option value="draft">Draft</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
+            <ImageFileField label="Tournament image" value={value} onChange={onChange} />
+            <label className="admin-field"><span>Entry fee</span><input min="0" inputMode="decimal" type="number" value={value.entry_fee} onChange={(event) => onChange("entry_fee", event.target.value)} /></label>
+            <label className="admin-field"><span>Fee currency</span><select value={value.entry_fee_currency} onChange={(event) => onChange("entry_fee_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
+            {mode === "edit" && <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="draft">Draft</option><option value="planning">Planning</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>}
+            <label className="admin-field admin-competition__field--full"><span>Description</span><textarea value={value.description} onChange={(event) => onChange("description", event.target.value)} /></label>
           </div>
-          <label className="admin-field"><span>Round description</span><textarea value={value.initial_round_description} onChange={(event) => onChange("initial_round_description", event.target.value)} placeholder="Round rules and qualification notes" /></label>
-        </section>
-      )}
-      <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} tournament`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
+        </div>
+      </details>
+      <div className="admin-tool-card__footer admin-competition__form-actions"><button className="admin-header__button" disabled={saving} type="submit">{saving ? `${mode === "edit" ? "Saving" : "Creating"}...` : `${mode === "edit" ? "Save changes" : "Create tournament"}`}</button><button className="admin-header__button admin-header__button--ghost" disabled={saving} type="button" onClick={onCancel}>Cancel</button></div>
     </form>
   );
 }
@@ -428,56 +488,45 @@ function RaceForm({ value, tournaments, rounds, referees, onChange, onSubmit, on
   const hasRounds = availableRounds.length > 0;
   return (
     <form className="admin-form-grid admin-competition__form" onSubmit={onSubmit}>
-      <div className="admin-competition__form-columns">
-        <label className="admin-field"><span>Tournament *</span><select required value={value.tournament_id} onChange={(event) => onChange("tournament_id", event.target.value)}><option value="">Select tournament</option>{tournaments.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}</select></label>
-        <label className="admin-field"><span>Round *</span><select required disabled={!hasTournament || !hasRounds} value={value.round_id} onChange={(event) => onChange("round_id", event.target.value)}><option value="">{!hasTournament ? "Select tournament first" : hasRounds ? "Select round" : "No rounds in this tournament"}</option>{availableRounds.map((item) => <option key={item._id} value={item._id}>{item.round_order}. {item.name}</option>)}</select></label>
-        <label className="admin-field"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} placeholder="Race 01 - Opening heat" /></label>
-        <label className="admin-field"><span>Race number *</span><input required min="1" type="number" value={value.race_no} onChange={(event) => onChange("race_no", event.target.value)} /></label>
-        <label className="admin-field"><span>Race date & time</span><input type="datetime-local" value={value.race_date} onChange={(event) => onChange("race_date", event.target.value)} /></label>
-        <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} placeholder="Track A" /></label>
-        <label className="admin-field"><span>Venue code *</span><input required maxLength="8" value={value.venue_code} onChange={(event) => onChange("venue_code", event.target.value.toUpperCase())} placeholder="ST" /></label>
-        <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
-        <label className="admin-field"><span>Race referee</span><select value={value.referee_id} onChange={(event) => onChange("referee_id", event.target.value)}><option value="">Unassigned</option>{referees.map((item) => <option key={getRefereeOptionId(item)} value={getRefereeOptionId(item)}>{getRefereeOptionLabel(item)}</option>)}</select></label>
-        <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} placeholder="1600" /></label>
-        <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} placeholder="12" /></label>
-        <label className="admin-field"><span>Course</span><select value={value.course} onChange={(event) => onChange("course", event.target.value)}>{raceCourses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label className="admin-field"><span>Race class</span><select value={value.race_class} onChange={(event) => onChange("race_class", event.target.value)}>{raceClasses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label className="admin-field"><span>Going</span><select value={value.going} onChange={(event) => onChange("going", event.target.value)}>{raceGoings.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label className="admin-field"><span>Surface</span><select value={value.surface} onChange={(event) => onChange("surface", event.target.value)}>{raceSurfaces.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label className="admin-field"><span>Prize pool</span><input min="0" type="number" value={value.prize_pool} onChange={(event) => onChange("prize_pool", event.target.value)} placeholder="50000000" /></label>
-        <label className="admin-field"><span>Prize currency</span><select value={value.prize_currency} onChange={(event) => onChange("prize_currency", event.target.value)}><option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
-      </div>
-      {hasTournament && !hasRounds && <div className="admin-live-state admin-live-state--warning"><strong>This tournament has no rounds yet.</strong> Create a round for the tournament before scheduling races.</div>}
-      {!referees.length && <div className="admin-live-state"><strong>No active race referees are available.</strong> Approve or assign a Race Referee role before scheduling race control.</div>}
-      <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={saving || !hasRounds} type="submit">{saving ? "Saving..." : `${mode === "edit" ? "Save" : "Create"} race`}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={onCancel}>Cancel</button></div>
+      <div className="admin-competition__form-intro"><strong>Place the race in the schedule</strong><span>Choose an existing tournament and round, then add the race name.</span></div>
+      <section className="admin-competition__form-section admin-competition__form-section--primary" aria-labelledby="race-basics-title">
+        <div className="admin-competition__form-section-heading"><div><h3 id="race-basics-title">Race placement</h3><p>Tournament, round, and race name.</p></div><span>Required fields are marked *</span></div>
+        <div className="admin-competition__form-columns">
+          <label className="admin-field"><span>Tournament *</span><select autoFocus required value={value.tournament_id} onChange={(event) => onChange("tournament_id", event.target.value)}><option value="">Select tournament</option>{tournaments.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}</select></label>
+          <label className="admin-field"><span>Round *</span><select required disabled={!hasTournament || !hasRounds} value={value.round_id} onChange={(event) => onChange("round_id", event.target.value)}><option value="">{!hasTournament ? "Select a tournament first" : hasRounds ? "Select round" : "No rounds are available"}</option>{availableRounds.map((item) => <option key={item._id} value={item._id}>{item.round_order}. {item.name}</option>)}</select></label>
+          <label className="admin-field admin-competition__field--full"><span>Race name *</span><input required value={value.name} onChange={(event) => onChange("name", event.target.value)} /></label>
+          <label className="admin-field"><span>Scheduled at</span><input type="datetime-local" value={value.race_date} onChange={(event) => onChange("race_date", event.target.value)} /></label>
+          <label className="admin-field"><span>Race number</span><input min="1" type="number" value={value.race_no} onChange={(event) => onChange("race_no", event.target.value)} /><small>Leave empty to use the system default.</small></label>
+        </div>
+      </section>
+      <section className="admin-competition__form-section" aria-labelledby="race-logistics-title">
+        <div className="admin-competition__form-section-heading"><div><h3 id="race-logistics-title">Venue and officiating</h3><p>Optional operational details.</p></div></div>
+        <div className="admin-competition__form-columns">
+          <label className="admin-field"><span>Location</span><input value={value.location} onChange={(event) => onChange("location", event.target.value)} /></label>
+          <label className="admin-field"><span>Venue code</span><input maxLength="8" value={value.venue_code} onChange={(event) => onChange("venue_code", event.target.value.toUpperCase())} /></label>
+          {referees.length ? <label className="admin-field"><span>Race referee</span><select value={value.referee_id} onChange={(event) => onChange("referee_id", event.target.value)}><option value="">Assign later</option>{referees.map((item) => <option key={getRefereeOptionId(item)} value={getRefereeOptionId(item)}>{getRefereeOptionLabel(item)}</option>)}</select></label> : <div className="admin-competition__field-note">No active race referee is available. You can assign one later.</div>}
+          <ImageFileField label="Race image" value={value} onChange={onChange} />
+        </div>
+      </section>
+      <details className="admin-competition__form-disclosure" open={mode === "edit"}>
+        <summary><span><strong>Race conditions and prize</strong><small>Optional. System defaults are used when no condition is selected.</small></span></summary>
+        <div className="admin-competition__form-disclosure-body">
+          <div className="admin-competition__form-columns">
+            <label className="admin-field"><span>Distance (metres)</span><input min="1" type="number" value={value.distance} onChange={(event) => onChange("distance", event.target.value)} /></label>
+            <label className="admin-field"><span>Maximum participants</span><input min="1" type="number" value={value.max_participants} onChange={(event) => onChange("max_participants", event.target.value)} /></label>
+            <label className="admin-field"><span>Course</span><select value={value.course} onChange={(event) => onChange("course", event.target.value)}>{mode === "create" && <option value="">Use system default</option>}{raceCourses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+            <label className="admin-field"><span>Race class</span><select value={value.race_class} onChange={(event) => onChange("race_class", event.target.value)}>{mode === "create" && <option value="">Use system default</option>}{raceClasses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+            <label className="admin-field"><span>Going</span><select value={value.going} onChange={(event) => onChange("going", event.target.value)}>{mode === "create" && <option value="">Use system default</option>}{raceGoings.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+            <label className="admin-field"><span>Surface</span><select value={value.surface} onChange={(event) => onChange("surface", event.target.value)}>{mode === "create" && <option value="">Use system default</option>}{raceSurfaces.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+            <label className="admin-field"><span>Prize pool</span><input min="0" inputMode="decimal" type="number" value={value.prize_pool} onChange={(event) => onChange("prize_pool", event.target.value)} /></label>
+            <label className="admin-field"><span>Prize currency</span><select value={value.prize_currency} onChange={(event) => onChange("prize_currency", event.target.value)}>{mode === "create" && <option value="">Use system default</option>}<option value="VND">VND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
+            {mode === "edit" && <label className="admin-field"><span>Status</span><select value={value.status} onChange={(event) => onChange("status", event.target.value)}><option value="scheduled">Scheduled</option><option value="running">Running</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>}
+          </div>
+        </div>
+      </details>
+      {hasTournament && !hasRounds && <div className="admin-live-state admin-live-state--warning"><strong>This tournament has no rounds yet.</strong><span>Create a round before scheduling a race.</span></div>}
+      <div className="admin-tool-card__footer admin-competition__form-actions"><button className="admin-header__button" disabled={saving || !hasRounds} type="submit">{saving ? `${mode === "edit" ? "Saving" : "Creating"}...` : `${mode === "edit" ? "Save changes" : "Create race"}`}</button><button className="admin-header__button admin-header__button--ghost" disabled={saving} type="button" onClick={onCancel}>Cancel</button></div>
     </form>
-  );
-}
-
-function CompactGearSelector({ value = [], disabled, onToggle }) {
-  const [showMore, setShowMore] = useState(false);
-  const advancedSelectedCount = advancedHorseGearOptions.filter((gear) => value.includes(gear.code)).length;
-  const renderOptions = (options) => options.map((gear) => (
-    <label key={gear.code} title={gear.label}>
-      <input disabled={disabled} checked={value.includes(gear.code)} onChange={() => onToggle(gear.code)} type="checkbox" />
-      <span>{gear.code}</span>
-    </label>
-  ));
-
-  return (
-    <div className="admin-competition__gear-selector">
-      <div className="admin-competition__gear-codes">{renderOptions(commonHorseGearOptions)}</div>
-      <button
-        aria-expanded={showMore}
-        className="admin-competition__gear-more"
-        onClick={() => setShowMore((current) => !current)}
-        type="button"
-      >
-        <ChevronDown className={showMore ? "is-open" : ""} size={13} aria-hidden="true" />
-        More{advancedSelectedCount ? ` (${advancedSelectedCount})` : ""}
-      </button>
-      {showMore && <div className="admin-competition__gear-codes admin-competition__gear-codes--advanced">{renderOptions(advancedHorseGearOptions)}</div>}
-    </div>
   );
 }
 
@@ -497,7 +546,6 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
         horse_no: String(participant.horse_no || ""),
         draw: String(participant.draw || ""),
         declared_weight_kg: String(participant.declared_weight_kg ?? 54.5),
-        gears: participant.gears?.length ? participant.gears : (participant.default_gears || []),
         current_rating: String(participant.current_rating ?? 50),
         rating_reason: "",
       }];
@@ -520,13 +568,6 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
 
   const updateDraft = (id, field, value) => {
     setDrafts((current) => ({ ...current, [id]: { ...current[id], [field]: value } }));
-  };
-
-  const toggleGear = (id, code) => {
-    const selected = drafts[id]?.gears || [];
-    updateDraft(id, "gears", selected.includes(code)
-      ? selected.filter((item) => item !== code)
-      : [...selected, code]);
   };
 
   const finalize = async () => {
@@ -557,7 +598,6 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
           ? { rating_snapshot: Number(draft.current_rating) }
           : {}),
         declared_weight_kg: Number(draft.declared_weight_kg),
-        gears: draft.gears,
       });
       applyReadiness(result.readiness);
       onNotice(`${participant.horse_name} entry updated.`);
@@ -620,7 +660,7 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
             )}
             <div className="admin-data-table__wrap admin-competition__entry-table-wrap">
               <table className="admin-data-table admin-competition__entry-table">
-                <thead><tr><th>Runner</th><th>No.</th><th>Draw</th><th>Rating</th><th>Carried kg</th><th>Gear</th><th>Status</th><th><span className="sr-only">Save</span></th></tr></thead>
+                <thead><tr><th>Runner</th><th>No.</th><th>Draw</th><th>Rating</th><th>Carried kg</th><th>Status</th><th><span className="sr-only">Save</span></th></tr></thead>
                 <tbody>{(readiness?.participants || []).map((participant) => {
                   const id = idOf(participant.registration_id);
                   const draft = drafts[id] || {};
@@ -633,7 +673,6 @@ function RaceEntryWorkspace({ race, onClose, onChanged, onNotice }) {
                         ? <strong>{participant.rating_snapshot}</strong>
                         : <div className="admin-competition__rating-edit"><input min="0" max="140" type="number" value={draft.current_rating || ""} onChange={(event) => updateDraft(id, "current_rating", event.target.value)} /><input aria-label={`Rating reason for ${participant.horse_name}`} placeholder="Audit reason" value={draft.rating_reason || ""} onChange={(event) => updateDraft(id, "rating_reason", event.target.value)} /></div>}</td>
                       <td><input disabled={!readiness.entries_finalized} min="40" max="75" step="0.1" type="number" value={draft.declared_weight_kg || ""} onChange={(event) => updateDraft(id, "declared_weight_kg", event.target.value)} /></td>
-                      <td><CompactGearSelector disabled={!readiness.entries_finalized} value={draft.gears || []} onToggle={(code) => toggleGear(id, code)} /></td>
                       <td>{participant.ready ? <span className="admin-competition__entry-ready"><CheckCircle2 size={14} /> Ready</span> : <small>{participant.missing_fields.join(", ")}</small>}</td>
                       <td><button aria-label={`Save ${participant.horse_name} ${readiness.entries_finalized ? "entry" : "rating"}`} className="admin-competition__entry-save" disabled={savingId === id} type="button" onClick={() => readiness.entries_finalized ? saveEntry(participant) : saveRating(participant)}><Save size={15} aria-hidden="true" /></button></td>
                     </tr>
@@ -708,23 +747,30 @@ function AdminCompetitionModule({ moduleName }) {
     const timer = window.setTimeout(() => setNotice(""), 4500);
     return () => window.clearTimeout(timer);
   }, [notice]);
+  useEffect(() => {
+    if (!modal || saving) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setModal(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [modal, saving]);
 
   const openForm = (kind, item = null) => {
     let next;
-    if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", entry_fee: String(item.entry_fee || ""), entry_fee_currency: item.entry_fee_currency || "VND", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
+    if (kind === "tournament") next = item ? { name: item.name || "", description: item.description || "", location: item.location || "", image_url: item.image_url || "", image_file_data: "", image_preview: item.image_url || "", image_file_name: "", entry_fee: String(item.entry_fee || ""), entry_fee_currency: item.entry_fee_currency || "VND", start_date: dateValue(item.start_date), end_date: dateValue(item.end_date), status: item.status || "draft" } : { ...emptyTournament };
     if (kind === "round") next = item ? { tournament_id: idOf(item.tournament_id), name: item.name || "", round_order: String(item.round_order || ""), description: item.description || "", status: item.status || "draft" } : { ...emptyRound, tournament_id: data.tournaments[0]?._id || "" };
     if (kind === "race") {
-      const defaultTournamentId = data.tournaments[0]?._id || "";
-      const defaultRoundId = data.rounds.find((round) => idOf(round.tournament_id) === defaultTournamentId)?._id || "";
       next = item ? {
         tournament_id: idOf(item.tournament_id), round_id: idOf(item.round_id), referee_id: idOf(item.referee_id),
         name: item.name || "", race_no: String(item.race_no || 1), race_date: dateValue(item.race_date, true),
+        image_url: item.image_url || "", image_file_data: "", image_preview: item.image_url || "", image_file_name: "",
         location: item.location || "", venue_code: item.venue_code || "ST", distance: String(item.distance || ""),
         max_participants: String(item.max_participants || ""), course: item.course || "B+2",
         race_class: String(item.race_class || "5"), going: item.going || "Good", surface: item.surface || "Turf",
         prize_pool: String(item.prize_pool || ""), prize_currency: item.prize_currency || "VND",
         status: item.status || "scheduled",
-      } : { ...emptyRace, tournament_id: defaultTournamentId, round_id: defaultRoundId };
+      } : { ...emptyRace };
     }
     setForm(next);
     setError("");
@@ -746,24 +792,18 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "tournament") {
       if (form.start_date && form.end_date && form.end_date < form.start_date) throw new Error("End date must be on or after the start date.");
       const {
-        initial_round_name,
-        initial_round_order,
-        initial_round_description,
-        initial_round_status,
+        image_url,
+        image_preview,
+        image_file_name,
+        image_file_data,
+        status,
         ...tournamentPayload
       } = form;
 
-      if (modal?.mode === "create" && !String(initial_round_name || "").trim()) {
-        throw new Error("Initial round name is required.");
-      }
-
-      if (modal?.mode === "create" && Number(initial_round_order) < 1) {
-        throw new Error("Initial round order must be at least 1.");
-      }
-
       return {
         ...tournamentPayload,
-        image_url: tournamentPayload.image_url?.trim() || "",
+        ...(image_file_data ? { image_file_data } : {}),
+        ...(modal?.mode === "edit" ? { status } : {}),
         entry_fee: tournamentPayload.entry_fee ? Number(tournamentPayload.entry_fee) : 0,
         entry_fee_currency: tournamentPayload.entry_fee_currency || "VND",
         start_date: tournamentPayload.start_date || null,
@@ -773,15 +813,38 @@ function AdminCompetitionModule({ moduleName }) {
     if (kind === "round") return { ...form, round_order: Number(form.round_order) };
     const selectedRound = data.rounds.find((round) => round._id === form.round_id);
     if (!selectedRound || idOf(selectedRound.tournament_id) !== form.tournament_id) throw new Error("The selected round does not belong to this tournament.");
+    const {
+      image_url,
+      image_preview,
+      image_file_name,
+      image_file_data,
+      race_no,
+      race_date,
+      referee_id,
+      distance,
+      max_participants,
+      course,
+      race_class,
+      going,
+      surface,
+      prize_pool,
+      prize_currency,
+      status,
+      ...racePayload
+    } = form;
     return {
-      ...form,
-      race_no: Number(form.race_no),
-      referee_id: form.referee_id || null,
-      race_date: form.race_date ? new Date(form.race_date).toISOString() : null,
-      distance: form.distance ? Number(form.distance) : null,
-      max_participants: form.max_participants ? Number(form.max_participants) : null,
-      prize_pool: form.prize_pool ? Number(form.prize_pool) : 0,
-      prize_currency: form.prize_currency || "VND",
+      ...racePayload,
+      ...(image_file_data ? { image_file_data } : {}),
+      ...(race_no ? { race_no: Number(race_no) } : {}),
+      ...(race_date ? { race_date: new Date(race_date).toISOString() } : {}),
+      ...(modal?.mode === "edit" ? { referee_id: referee_id || null, status } : referee_id ? { referee_id } : {}),
+      ...(distance ? { distance: Number(distance) } : {}),
+      ...(max_participants ? { max_participants: Number(max_participants) } : {}),
+      ...(course ? { course } : {}),
+      ...(race_class ? { race_class } : {}),
+      ...(going ? { going } : {}),
+      ...(surface ? { surface } : {}),
+      ...(prize_pool ? { prize_pool: Number(prize_pool), prize_currency: prize_currency || "VND" } : {}),
     };
   };
 
@@ -794,25 +857,12 @@ function AdminCompetitionModule({ moduleName }) {
       const payload = payloadFor(modal.kind);
       if (modal.mode === "edit") {
         await config.update(modal.item._id, payload);
-      } else if (modal.kind === "tournament") {
-        const created = await config.create(payload);
-        const tournamentId = created?.tournament?._id;
-
-        if (!tournamentId) {
-          throw new Error("Tournament was created, but the response did not include its id.");
-        }
-
-        await adminApi.createRound({
-          tournament_id: tournamentId,
-          name: form.initial_round_name.trim(),
-          round_order: Number(form.initial_round_order),
-          description: form.initial_round_description || "",
-          status: form.initial_round_status || "active",
-        });
       } else {
         await config.create(payload);
       }
-      setNotice(`${config.title} ${modal.mode === "edit" ? "updated" : "created"}.`);
+      setNotice(modal.mode === "create" && modal.kind === "tournament"
+        ? "Tournament created. Add a round when you are ready to schedule races."
+        : `${config.title} ${modal.mode === "edit" ? "updated" : "created"}.`);
       setModal(null);
       setForm(null);
       await loadData(true);
@@ -1043,7 +1093,7 @@ function AdminCompetitionModule({ moduleName }) {
   if (loading) return <AdminLayout title={title} eyebrow="Competition planning" description={description}><LoadingSkeleton ariaLabel={`Loading ${title}`} rows={6} variant="table" /></AdminLayout>;
 
   return (
-    <AdminLayout title={title} eyebrow="Competition planning" description={description} actions={<><button className="admin-header__button" type="button" onClick={() => openForm(isSchedule ? "race" : "tournament")}><Plus size={17} aria-hidden="true" /> {isSchedule ? "Create race" : "Create tournament"}</button>{isSchedule && <><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(true)}><Unlock size={17} aria-hidden="true" /> {registrationModeLoading === "on" ? "Turning on" : "Turn on entries"}</button><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(false)}><Lock size={17} aria-hidden="true" /> {registrationModeLoading === "off" ? "Turning off" : "Turn off entries"}</button></>}{!isSchedule && <button className="admin-header__button admin-header__button--ghost" disabled={!data.tournaments.length} type="button" onClick={() => openForm("round")}><Plus size={17} aria-hidden="true" /> Add round</button>}</>}>
+    <AdminLayout title={title} eyebrow="Competition planning" description={description} actions={<><button className="admin-header__button" disabled={isSchedule && (!data.tournaments.length || !data.rounds.length)} title={isSchedule && (!data.tournaments.length || !data.rounds.length) ? "Create a tournament and round first" : undefined} type="button" onClick={() => openForm(isSchedule ? "race" : "tournament")}><Plus size={17} aria-hidden="true" /> {isSchedule ? "Create race" : "Create tournament"}</button>{isSchedule && <><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(true)}><Unlock size={17} aria-hidden="true" /> {registrationModeLoading === "on" ? "Turning on" : "Turn on entries"}</button><button className="admin-header__button admin-header__button--ghost" disabled={Boolean(registrationModeLoading)} type="button" onClick={() => setOwnerRegistrationMode(false)}><Lock size={17} aria-hidden="true" /> {registrationModeLoading === "off" ? "Turning off" : "Turn off entries"}</button></>}{!isSchedule && <button className="admin-header__button admin-header__button--ghost" disabled={!data.tournaments.length} type="button" onClick={() => openForm("round")}><Plus size={17} aria-hidden="true" /> Add round</button>}</>}>
       <section className="admin-metrics admin-metrics--module" aria-label="Competition summary">
         {isSchedule ? <><article className="admin-metric-card"><p className="admin-metric-card__label">Total races</p><div className="admin-metric-card__value">{data.races.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Scheduled</p><div className="admin-metric-card__value">{scheduledCount}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Rounds</p><div className="admin-metric-card__value">{data.rounds.length}</div></article></> : <><article className="admin-metric-card"><p className="admin-metric-card__label">Tournaments</p><div className="admin-metric-card__value">{data.tournaments.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Rounds</p><div className="admin-metric-card__value">{data.rounds.length}</div></article><article className="admin-metric-card"><p className="admin-metric-card__label">Active</p><div className="admin-metric-card__value">{data.tournaments.filter((item) => item.status === "active").length}</div></article></>}
       </section>
@@ -1121,7 +1171,7 @@ function AdminCompetitionModule({ moduleName }) {
         </div>
       )}
 
-      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={`${modal.mode} ${modal.kind}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2>{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} referees={data.referees} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
+      {modal && <div className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="competition-form-title" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}><div className="admin-modal__card admin-competition__modal"><div className="admin-panel__header admin-competition__modal-header"><div><p className="admin-panel__eyebrow">{modal.mode === "edit" ? "Edit record" : "Create record"}</p><h2 id="competition-form-title">{modal.mode === "edit" ? "Update" : "New"} {entityConfig[modal.kind].title}</h2></div><button aria-label="Close form" className="admin-competition__modal-close" disabled={saving} type="button" onClick={() => setModal(null)}><X size={18} aria-hidden="true" /></button></div>{error && <div className="admin-live-state admin-live-state--warning">{error}</div>}{modal.kind === "tournament" && <TournamentForm value={form} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "round" && <RoundForm value={form} tournaments={data.tournaments} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}{modal.kind === "race" && <RaceForm value={form} tournaments={data.tournaments} rounds={data.rounds} referees={data.referees} onChange={changeField} onSubmit={submitForm} onCancel={() => setModal(null)} saving={saving} mode={modal.mode} />}</div></div>}
       {raceToastTournament && <div className="admin-modal admin-race-window" role="dialog" aria-modal="true" aria-labelledby="race-window-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setRaceToastTournament(null); }}><div className="admin-modal__card admin-race-window__card"><div className="admin-panel__header admin-competition__section-header"><div><p className="admin-panel__eyebrow">Race programme</p><h2 id="race-window-title">{raceToastTournament.name}</h2><span>{detailRace ? "Race overview and operational details." : "Select a race to open its full operational details."}</span></div><button className="admin-header__button admin-header__button--ghost" type="button" onClick={() => { setRaceToastTournament(null); setDetailRace(null); }}><X size={15} aria-hidden="true" /> Close</button></div><div className="admin-race-window__meta"><span>{data.races.filter((race) => idOf(race.tournament_id) === raceToastTournament._id).length} races</span><span>{data.rounds.filter((round) => idOf(round.tournament_id) === raceToastTournament._id).length} rounds</span><span>{raceToastTournament.location || "Venue not set"}</span></div><div className="admin-race-window__list">{data.races.filter((race) => idOf(race.tournament_id) === raceToastTournament._id).length ? data.races.filter((race) => idOf(race.tournament_id) === raceToastTournament._id).map((race) => <button key={race._id} className={`admin-race-window__item${detailRace?._id === race._id ? " is-selected" : ""}`} type="button" onClick={() => openRaceDetails(race)}><span className="admin-race-window__number">R{race.race_no || 1}</span><span className="admin-race-window__copy"><strong>{race.name}</strong><small>{race.round_id?.name || "Round not assigned"} · {formatDate(race.race_date, true)}</small><small>{race.location || race.venue_code || "Track not set"} · Class {race.race_class || 5} · {race.distance ? `${race.distance}m` : "Distance pending"}</small></span><StatusBadge value={race.status} /><ArrowDownToLine size={16} aria-hidden="true" /></button>) : <div className="admin-race-window__empty"><CalendarDays size={24} aria-hidden="true" /><strong>No races scheduled</strong><span>Create a race to make it available in this programme.</span></div>}</div>{detailRace && <section className="admin-race-window__detail" ref={(node) => { raceWindowDetailRef.current = node; }} tabIndex="-1" aria-labelledby="race-window-detail-title"><div className="admin-race-window__detail-header"><div><p className="admin-panel__eyebrow">Race details</p><h3 id="race-window-detail-title">R{detailRace.race_no || 1} · {detailRace.name}</h3><span>{detailRace.round_id?.name || "Round not assigned"}</span></div><button type="button" onClick={() => setDetailRace(null)}><X size={15} aria-hidden="true" /> Clear</button></div><div className="admin-race-window__detail-grid"><div><span>Scheduled</span><strong>{formatDate(detailRace.race_date, true)}</strong></div><div><span>Track</span><strong>{detailRace.venue_code || "ST"} · {detailRace.location || "Not set"}</strong></div><div><span>Format</span><strong>Class {detailRace.race_class || 5} · {detailRace.distance ? `${detailRace.distance}m` : "Distance pending"}</strong></div><div><span>Conditions</span><strong>{detailRace.going || "Good"} · {detailRace.surface || "Turf"}</strong></div><div><span>Prize pool</span><strong>{Number(detailRace.prize_pool || 0) > 0 ? formatMoney(detailRace.prize_pool, detailRace.prize_currency || "VND") : "Not configured"}</strong></div><div><span>Participants</span><strong>{detailRace.max_participants || "Open field"}</strong></div><div><span>Referee</span><strong>{detailRace.referee_id?.user_id?.full_name || "Unassigned"}</strong></div><div><span>Status</span><strong><StatusBadge value={detailRace.status} /></strong></div></div></section>}</div></div>}
       {entryRace && <RaceEntryWorkspace race={entryRace} onClose={() => setEntryRace(null)} onChanged={() => loadData(true)} onNotice={setNotice} />}
       {deleteTarget && <div className="admin-modal" role="alertdialog" aria-modal="true" aria-labelledby="competition-delete-title" aria-describedby="competition-delete-copy" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}><div className="admin-modal__card admin-competition__delete-dialog"><Trash2 size={22} aria-hidden="true" /><div><p className="admin-panel__eyebrow">Delete {entityConfig[deleteTarget.kind].title}</p><h2 id="competition-delete-title">{deleteTarget.item.name}</h2><p id="competition-delete-copy">{deleteBlocked ? `Remove ${deleteDependencyCount} linked ${deleteTarget.kind === "tournament" ? "rounds" : "races"} first.` : "This record will be removed from the competition workspace."}</p></div><div className="admin-tool-card__footer"><button className="admin-header__button admin-header__button--red" disabled={deleting || deleteBlocked} type="button" onClick={removeEntity}>{deleting ? "Deleting..." : "Delete"}</button><button className="admin-header__button admin-header__button--ghost" disabled={deleting} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button></div></div></div>}

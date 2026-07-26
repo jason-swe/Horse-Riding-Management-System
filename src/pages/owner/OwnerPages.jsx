@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
-import { advancedHorseGearOptions, commonHorseGearOptions } from "../../constants/raceModelInputs";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -79,38 +78,6 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
   );
 };
 
-const GearOption = ({ gear, selected, onToggle }) => (
-  <label className={`owner-gear-option${selected ? " is-selected" : ""}`} title={gear.label}>
-    <input checked={selected} onChange={onToggle} type="checkbox" aria-label={gear.label} />
-    <span className="owner-gear-option__check" aria-hidden="true" />
-    <strong>{gear.code}</strong>
-    <span className="owner-gear-option__label">{gear.label}</span>
-  </label>
-);
-
-const GearSelector = ({ value = [], onChange, label = "Race gear" }) => {
-  const toggleGear = (code) => onChange(value.includes(code)
-    ? value.filter((item) => item !== code)
-    : [...value, code]);
-
-  return (
-    <fieldset className="owner-gear-selector">
-      <legend>{label}</legend>
-      <div className="owner-gear-selector__grid">
-        {commonHorseGearOptions.map((gear) => (
-          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
-        ))}
-      </div>
-      <p className="owner-gear-selector__group-title">Additional gear</p>
-      <div className="owner-gear-selector__grid owner-gear-selector__grid--advanced">
-        {advancedHorseGearOptions.map((gear) => (
-          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
-        ))}
-      </div>
-    </fieldset>
-  );
-};
-
 const formatInvitationDate = (value) => {
   if (!value) return "Not scheduled";
   const date = new Date(value);
@@ -122,6 +89,11 @@ const formatInvitationDate = (value) => {
 };
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
+
+// Keep an owner's open invitation workspace in sync with jockey responses without
+// interrupting the form they may be completing. This also works when the jockey
+// responds from a different browser or device, where client-only events cannot help.
+const ASSIGNMENT_REFRESH_INTERVAL_MS = 5000;
 
 const compactRecordCode = (prefix, value) => {
   if (!value) return prefix;
@@ -138,13 +110,25 @@ const assignmentStatusLabel = (status) => ({
   meeting_invited: "Appointment invitation sent",
   meeting_accepted: "Appointment accepted",
   meeting_rejected: "Appointment rejected",
-  terms_agreed: "Terms recorded",
+  terms_agreed: "Contract preparation",
   contract_uploaded: "Contract awaiting jockey",
   contract_rejected: "Contract rejected",
   accepted: "Accepted",
   replaced: "Replaced",
   cancelled: "Cancelled",
 }[status] || status || "Unknown");
+
+const assignmentStageLabel = (status) => ({
+  meeting_invited: "Invite",
+  meeting_accepted: "Appointment",
+  terms_agreed: "Contract",
+  contract_uploaded: "Contract",
+  contract_rejected: "Contract",
+  accepted: "Accepted",
+  meeting_rejected: "Closed",
+  replaced: "Closed",
+  cancelled: "Closed",
+}[status] || "Pending");
 
 const activeAssignmentStatuses = ["meeting_invited", "meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"];
 
@@ -360,7 +344,6 @@ function OwnerHorseForm({ mode = "new" }) {
     weight: "",
     status: "Ready",
     healthNote: "",
-    defaultGears: [],
     imageFile: null,
     imageFileName: "",
   });
@@ -376,7 +359,6 @@ function OwnerHorseForm({ mode = "new" }) {
       weight: existingHorse.weight,
       status: existingHorse.status,
       healthNote: existingHorse.healthNote,
-      defaultGears: existingHorse.defaultGears || [],
       imageFile: null,
       imageFileName: "",
     });
@@ -481,9 +463,6 @@ function OwnerHorseForm({ mode = "new" }) {
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
               <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
-              <div className="owner-form-span">
-                <GearSelector label="Default race gear" value={form.defaultGears} onChange={(value) => updateField("defaultGears", value)} />
-              </div>
               <label className="owner-form-span owner-profile-image-field">
                 <span className="owner-profile-image-field__title">Profile image</span>
                 <input className="owner-profile-image-field__input" accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
@@ -548,7 +527,6 @@ function OwnerHorseDetail() {
     horse.breed ? { label: "Breed", value: horse.breed, icon: Flag } : null,
     horse.weight ? { label: "Weight", value: horse.weight, icon: Award } : null,
     { label: "Rating", value: horse.currentRating, icon: Trophy },
-    horse.defaultGears.length ? { label: "Default gear", value: horse.defaultGears.join(" / "), icon: ShieldCheck } : null,
     registrations.length ? { label: "Registrations", value: registrations.length, icon: ClipboardCheck } : null,
   ].filter(Boolean);
 
@@ -762,7 +740,6 @@ function OwnerRegistrations() {
     tournament: tournaments[0]?.id || "",
     race: "",
     note: "",
-    gears: [],
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
   const selectedTournament = tournaments.find((tournament) => tournament.id === entry.tournament) ?? tournaments[0];
@@ -779,7 +756,7 @@ function OwnerRegistrations() {
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
-    setEntry((current) => ({ ...current, horse: horses[0].name, gears: horses[0].defaultGears || [] }));
+    setEntry((current) => ({ ...current, horse: horses[0].name }));
   }, [entry.horse, horses]);
 
   useEffect(() => {
@@ -838,8 +815,7 @@ function OwnerRegistrations() {
     }
     setEntry((current) => {
       if (field === "horse") {
-        const horse = horses.find((item) => item.name === value);
-        return { ...current, horse: value, gears: horse?.defaultGears || [] };
+        return { ...current, horse: value };
       }
       return { ...current, [field]: value };
     });
@@ -883,7 +859,6 @@ function OwnerRegistrations() {
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
         note: entry.note,
-        gears: entry.gears,
         payment_method: "VNPAY",
       });
 
@@ -1094,27 +1069,12 @@ function OwnerRegistrations() {
             )}
           </section>
 
-          <section className="owner-entry-gear">
-            <div className="owner-entry-gear__header">
-              <div>
-                <span className="owner-kicker">Step 3 · Gear declaration</span>
-                <h3>Choose approved gear</h3>
-                <p>Select only the equipment this horse will wear in the chosen race. The declaration is sent with this entry.</p>
-              </div>
-              {entry.gears.length > 0 && (
-                <button onClick={() => updateEntry("gears", [])} type="button">Clear all</button>
-              )}
-            </div>
-            <GearSelector label="Available gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
-          </section>
-
           <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
 
           <div className="owner-registration-preview">
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
             <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
             <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
-            <div><span>Declared gear</span><strong>{entry.gears.length ? entry.gears.join(" / ") : "None"}</strong></div>
             <div><span>Payment due</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee required"}</strong></div>
           </div>
 
@@ -1288,7 +1248,7 @@ function OwnerRaceDetail() {
           <span className="owner-kicker">Registration status</span>
           <h2>{race.registrationAvailable ? "This race is accepting entries" : "Registration is closed"}</h2>
           <p>{race.registrationAvailable
-            ? "Return to the registration workspace to select a horse, declare gear, and confirm payment."
+            ? "Return to the registration workspace to select a horse and confirm payment."
             : race.registrationUnavailableReason || "You can still review this race, but a new horse entry cannot be submitted."}</p>
         </div>
         {race.registrationAvailable && <Link className="owner-button owner-button--primary" to="/owner/registrations">Register a horse</Link>}
@@ -1415,26 +1375,69 @@ function OwnerJockeys() {
 
   useEffect(() => {
     let cancelled = false;
+    let isRequestInFlight = false;
+    let refreshTimer = null;
 
-    async function loadAssignments() {
+    async function loadAssignments({ initial = false } = {}) {
       if (!liveHorses.length) {
-        setAssignmentsLoading(false);
+        if (initial) setAssignmentsLoading(false);
         return;
       }
 
-      setAssignmentsLoading(true);
+      // A focus event can occur while the scheduled refresh is still pending.
+      // Keep only one request active so an older response cannot overwrite newer data.
+      if (isRequestInFlight) return;
+      isRequestInFlight = true;
+      if (initial) setAssignmentsLoading(true);
+
       try {
         const data = await ownerApi.getJockeyAssignments();
         if (!cancelled) setExistingAssignments(data.assignments || []);
       } catch (apiError) {
-        if (!cancelled) setAssignmentError(apiError.message || "Unable to load existing jockey assignments.");
+        if (!cancelled && initial) {
+          setAssignmentError(apiError.message || "Unable to load existing jockey assignments.");
+        }
       } finally {
-        if (!cancelled) setAssignmentsLoading(false);
+        isRequestInFlight = false;
+        if (!cancelled && initial) setAssignmentsLoading(false);
       }
     }
 
-    loadAssignments();
-    return () => { cancelled = true; };
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") loadAssignments();
+    };
+
+    const startBackgroundRefresh = () => {
+      if (refreshTimer || document.visibilityState !== "visible") return;
+      refreshTimer = window.setInterval(refreshIfVisible, ASSIGNMENT_REFRESH_INTERVAL_MS);
+    };
+
+    const stopBackgroundRefresh = () => {
+      if (!refreshTimer) return;
+      window.clearInterval(refreshTimer);
+      refreshTimer = null;
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadAssignments();
+        startBackgroundRefresh();
+      } else {
+        stopBackgroundRefresh();
+      }
+    };
+
+    loadAssignments({ initial: true });
+    startBackgroundRefresh();
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      stopBackgroundRefresh();
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [liveHorses.length]);
 
   const updateAssignment = (field, value) => {
@@ -1469,37 +1472,18 @@ function OwnerJockeys() {
     } : item));
   };
 
-  const submitTerms = async (item) => {
-    const id = item._id;
-    const draft = workflowDrafts[id] || {};
-    if (!draft.agreedTerms?.trim()) {
-      setAssignmentError("Enter the agreed terms before continuing.");
-      return;
-    }
-
-    setWorkflowActionId(id);
-    setAssignmentError("");
-    setWorkflowMessage("");
-    try {
-      const data = await ownerApi.updateJockeyAssignmentTerms(id, {
-        agreed_terms: draft.agreedTerms.trim(),
-        meeting_note: draft.meetingNote?.trim() || "",
-        agreed_at: new Date().toISOString(),
-      });
-      replaceAssignment(data.assignment);
-      setWorkflowMessage("Terms recorded. You can now upload the contract.");
-    } catch (apiError) {
-      setAssignmentError(apiError.message || "Unable to record the agreed terms.");
-    } finally {
-      setWorkflowActionId("");
-    }
-  };
-
   const uploadContract = async (item) => {
     const id = item._id;
     const draft = workflowDrafts[id] || {};
     const file = draft.contractFile;
+    const agreedTerms = draft.agreedTerms ?? item.terms?.agreed_terms ?? "";
+    const meetingNote = draft.meetingNote ?? item.terms?.meeting_note ?? "";
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+
+    if (!agreedTerms.trim()) {
+      setAssignmentError("Enter the agreed terms before sending the contract.");
+      return;
+    }
 
     if (!file || !allowedTypes.includes(file.type)) {
       setAssignmentError("Choose a PDF, JPG, PNG, or WEBP contract file.");
@@ -1515,15 +1499,15 @@ function OwnerJockeys() {
     setWorkflowMessage("");
     try {
       const data = await ownerApi.uploadJockeyAssignmentContract(id, {
-        contract_number: draft.contractNumber?.trim() || "",
-        title: draft.contractTitle?.trim() || `${assignmentPartyName(item.horse_id, "Horse")} jockey agreement`,
+        agreed_terms: agreedTerms.trim(),
+        meeting_note: meetingNote.trim(),
+        agreed_at: new Date().toISOString(),
         file_data: await readFileAsDataUri(file),
         file_type: file.type,
         file_name: file.name,
-        note: draft.contractNote?.trim() || "",
       });
       replaceAssignment(data.assignment);
-      setWorkflowMessage("Contract sent to the jockey for confirmation.");
+      setWorkflowMessage("Terms and contract sent to the jockey for confirmation.");
     } catch (apiError) {
       setAssignmentError(apiError.message || "Unable to upload the contract.");
     } finally {
@@ -1937,7 +1921,7 @@ function OwnerJockeys() {
                         <strong>{horseName} / {jockeyName}</strong>
                         <small>{raceName} / {(item.assignment_type || "primary") === "backup" ? `Backup${item.backup_priority ? ` #${item.backup_priority}` : ""}` : "Primary"}</small>
                       </span>
-                      <span className={`owner-badge ${statusClass(assignmentStatusLabel(item.status))}`}>{assignmentStatusLabel(item.status)}</span>
+                      <span className={`owner-badge owner-assignment-workflow__stage ${statusClass(assignmentStageLabel(item.status))}`}>{assignmentStageLabel(item.status)}</span>
                     </button>
                   );
                 })}
@@ -1974,8 +1958,7 @@ function OwnerJockeys() {
                     <div className="owner-assignment-steps" aria-label={`Assignment status: ${assignmentStatusLabel(status)}`}>
                       <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Appointment invite</span>
                       <span className={["meeting_accepted", "terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Appointment accepted</span>
-                      <span className={["terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "meeting_accepted" ? "is-current" : ""}>Terms</span>
-                      <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "terms_agreed" ? "is-current" : ""}>Contract</span>
+                      <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : ["meeting_accepted", "terms_agreed"].includes(status) ? "is-current" : ""}>Contract review</span>
                       <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
                     </div>
 
@@ -1997,35 +1980,15 @@ function OwnerJockeys() {
                         )}
                       </div>
                     )}
-                    {status === "meeting_accepted" && (
-                      <div className="owner-assignment-workflow__form">
+                    {["meeting_accepted", "terms_agreed"].includes(status) && (
+                      <div className="owner-assignment-workflow__form owner-assignment-workflow__form--contract">
                         <label className="owner-field owner-field--full">
-                          <span>Agreed terms <em>Required</em></span>
-                          <textarea maxLength={5000} value={draft.agreedTerms || ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the appointment." />
+                          <span>Terms included with contract <em>Required</em></span>
+                          <textarea maxLength={5000} value={draft.agreedTerms ?? item.terms?.agreed_terms ?? ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the appointment." />
                         </label>
                         <label className="owner-field owner-field--full">
                           <span>Appointment note <small>Optional</small></span>
-                          <textarea maxLength={2000} value={draft.meetingNote || ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short appointment summary." />
-                        </label>
-                        <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => submitTerms(item)} type="button">
-                          <Save size={16} /> {isBusy ? "Saving terms..." : "Save agreed terms"}
-                        </button>
-                      </div>
-                    )}
-
-                    {status === "terms_agreed" && (
-                      <div className="owner-assignment-workflow__form owner-assignment-workflow__form--contract">
-                        <div className="owner-assignment-workflow__terms">
-                          <span>Recorded terms</span>
-                          <p>{item.terms?.agreed_terms}</p>
-                        </div>
-                        <label className="owner-field">
-                          <span>Contract number <small>Optional</small></span>
-                          <input value={draft.contractNumber || ""} onChange={(event) => updateWorkflowDraft(id, "contractNumber", event.target.value)} placeholder="JOC-CON-001" />
-                        </label>
-                        <label className="owner-field">
-                          <span>Contract title <small>Optional</small></span>
-                          <input value={draft.contractTitle || ""} onChange={(event) => updateWorkflowDraft(id, "contractTitle", event.target.value)} placeholder={`${horseName} jockey agreement`} />
+                          <textarea maxLength={2000} value={draft.meetingNote ?? item.terms?.meeting_note ?? ""} onChange={(event) => updateWorkflowDraft(id, "meetingNote", event.target.value)} placeholder="Add a short appointment summary." />
                         </label>
                         <label className={`owner-contract-upload owner-field--full ${draft.contractFile ? "has-file" : ""}`}>
                           <input accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" type="file" onChange={(event) => updateWorkflowDraft(id, "contractFile", event.target.files?.[0] || null)} />
@@ -2036,12 +1999,8 @@ function OwnerJockeys() {
                           </span>
                           <span className="owner-contract-upload__action">Browse</span>
                         </label>
-                        <label className="owner-field owner-field--full">
-                          <span>Contract note <small>Optional</small></span>
-                          <textarea maxLength={1000} value={draft.contractNote || ""} onChange={(event) => updateWorkflowDraft(id, "contractNote", event.target.value)} placeholder="Add signing or payment details for the jockey." />
-                        </label>
                         <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => uploadContract(item)} type="button">
-                          <Upload size={16} /> {isBusy ? "Uploading contract..." : "Send contract to jockey"}
+                          <Upload size={16} /> {isBusy ? "Sending contract..." : "Send terms and contract"}
                         </button>
                       </div>
                     )}
@@ -2049,8 +2008,20 @@ function OwnerJockeys() {
                     {status === "contract_uploaded" && <p className="owner-assignment-workflow__note">Contract sent. The assignment becomes accepted only after the jockey confirms it.</p>}
                     {status === "cancelled" && <p className="owner-assignment-workflow__note">This jockey invitation was cancelled and can no longer be accepted.</p>}
                     {status === "accepted" && (
-                      <div className="owner-assignment-workflow__form">
-                        <p className="owner-assignment-workflow__note is-success"><CheckCircle2 size={16} /> {isBackupAssignment ? "The jockey accepted this standby assignment." : "The jockey confirmed the contract and accepted this assignment."}</p>
+                      <div className="owner-assignment-workflow__form owner-assignment-workflow__form--accepted">
+                        <div className="owner-assignment-confirmation" role="status">
+                          <span className="owner-assignment-confirmation__icon" aria-hidden="true"><CheckCircle2 size={21} strokeWidth={2.4} /></span>
+                          <div className="owner-assignment-confirmation__copy">
+                            <span className="owner-assignment-confirmation__eyebrow">{isBackupAssignment ? "Standby assignment accepted" : "Contract accepted"}</span>
+                            <strong>{isBackupAssignment ? `${jockeyName} is confirmed as a standby rider.` : `${jockeyName} is confirmed to ride ${horseName}.`}</strong>
+                            <span className="owner-assignment-confirmation__meta">{raceName} · {isBackupAssignment ? `Backup${item.backup_priority ? ` #${item.backup_priority}` : ""}` : "Primary assignment"}</span>
+                          </div>
+                          {item.contract?.file_url && (
+                            <a className="owner-assignment-confirmation__contract" href={item.contract.file_url} rel="noreferrer" target="_blank">
+                              <FileText size={16} /> <span>View signed contract</span>
+                            </a>
+                          )}
+                        </div>
                         {isBackupAssignment && (
                           <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => promoteBackupAssignment(item)} type="button">
                             <RotateCcw size={16} /> {isBusy ? "Promoting..." : "Promote to primary"}
@@ -2061,7 +2032,7 @@ function OwnerJockeys() {
                     {status === "replaced" && <p className="owner-assignment-workflow__note">This primary assignment was replaced by a promoted backup jockey.</p>}
                     {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the offline appointment invitation.</p>}
                     {status === "contract_rejected" && <p className="owner-assignment-workflow__note">The jockey rejected the contract. This assignment was not accepted.</p>}
-                    {item.contract?.file_url && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
+                    {item.contract?.file_url && status !== "accepted" && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
                   </article>
                 );
               })() : (

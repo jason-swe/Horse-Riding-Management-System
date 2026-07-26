@@ -32,7 +32,7 @@ function JockeyLayout() {
     ...contractReviews.slice(0, 2).map((item) => ({
       icon: FileText,
       title: `${item.horse} contract is ready for review.`,
-      meta: item.contractTitle || item.race,
+      meta: item.contractFileName || item.race,
       to: "/jockey/invitations",
     })),
     ...(nextRace ? [{
