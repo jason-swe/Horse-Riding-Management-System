@@ -114,7 +114,6 @@ function mapAssignment(item, index = 0) {
     contractTitle: contract.title || item.contract_title || "Jockey agreement",
     contractUrl: contract.file_url || item.contract_url || item.contract_link || "",
     contractFileName: contract.file_name || item.contract_file_name || "",
-    contractNumber: contract.contract_number || item.contract_number || "",
     contractNote: contract.note || "",
     terms: item.terms?.agreed_terms || item.agreed_terms || "",
     meetingNote: item.terms?.meeting_note || "",

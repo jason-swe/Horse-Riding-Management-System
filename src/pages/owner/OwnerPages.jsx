@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
-import { advancedHorseGearOptions, commonHorseGearOptions } from "../../constants/raceModelInputs";
 import { readFileAsDataUri } from "../../utils/fileData";
 import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
@@ -76,38 +75,6 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
         </span>
       ))}
     </div>
-  );
-};
-
-const GearOption = ({ gear, selected, onToggle }) => (
-  <label className={`owner-gear-option${selected ? " is-selected" : ""}`} title={gear.label}>
-    <input checked={selected} onChange={onToggle} type="checkbox" aria-label={gear.label} />
-    <span className="owner-gear-option__check" aria-hidden="true" />
-    <strong>{gear.code}</strong>
-    <span className="owner-gear-option__label">{gear.label}</span>
-  </label>
-);
-
-const GearSelector = ({ value = [], onChange, label = "Race gear" }) => {
-  const toggleGear = (code) => onChange(value.includes(code)
-    ? value.filter((item) => item !== code)
-    : [...value, code]);
-
-  return (
-    <fieldset className="owner-gear-selector">
-      <legend>{label}</legend>
-      <div className="owner-gear-selector__grid">
-        {commonHorseGearOptions.map((gear) => (
-          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
-        ))}
-      </div>
-      <p className="owner-gear-selector__group-title">Additional gear</p>
-      <div className="owner-gear-selector__grid owner-gear-selector__grid--advanced">
-        {advancedHorseGearOptions.map((gear) => (
-          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
-        ))}
-      </div>
-    </fieldset>
   );
 };
 
@@ -360,7 +327,6 @@ function OwnerHorseForm({ mode = "new" }) {
     weight: "",
     status: "Ready",
     healthNote: "",
-    defaultGears: [],
     imageFile: null,
     imageFileName: "",
   });
@@ -376,7 +342,6 @@ function OwnerHorseForm({ mode = "new" }) {
       weight: existingHorse.weight,
       status: existingHorse.status,
       healthNote: existingHorse.healthNote,
-      defaultGears: existingHorse.defaultGears || [],
       imageFile: null,
       imageFileName: "",
     });
@@ -481,9 +446,6 @@ function OwnerHorseForm({ mode = "new" }) {
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
               <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
-              <div className="owner-form-span">
-                <GearSelector label="Default race gear" value={form.defaultGears} onChange={(value) => updateField("defaultGears", value)} />
-              </div>
               <label className="owner-form-span owner-profile-image-field">
                 <span className="owner-profile-image-field__title">Profile image</span>
                 <input className="owner-profile-image-field__input" accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
@@ -548,7 +510,6 @@ function OwnerHorseDetail() {
     horse.breed ? { label: "Breed", value: horse.breed, icon: Flag } : null,
     horse.weight ? { label: "Weight", value: horse.weight, icon: Award } : null,
     { label: "Rating", value: horse.currentRating, icon: Trophy },
-    horse.defaultGears.length ? { label: "Default gear", value: horse.defaultGears.join(" / "), icon: ShieldCheck } : null,
     registrations.length ? { label: "Registrations", value: registrations.length, icon: ClipboardCheck } : null,
   ].filter(Boolean);
 
@@ -762,7 +723,6 @@ function OwnerRegistrations() {
     tournament: tournaments[0]?.id || "",
     race: "",
     note: "",
-    gears: [],
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
   const selectedTournament = tournaments.find((tournament) => tournament.id === entry.tournament) ?? tournaments[0];
@@ -779,7 +739,7 @@ function OwnerRegistrations() {
 
   useEffect(() => {
     if (!horses.length || entry.horse) return;
-    setEntry((current) => ({ ...current, horse: horses[0].name, gears: horses[0].defaultGears || [] }));
+    setEntry((current) => ({ ...current, horse: horses[0].name }));
   }, [entry.horse, horses]);
 
   useEffect(() => {
@@ -838,8 +798,7 @@ function OwnerRegistrations() {
     }
     setEntry((current) => {
       if (field === "horse") {
-        const horse = horses.find((item) => item.name === value);
-        return { ...current, horse: value, gears: horse?.defaultGears || [] };
+        return { ...current, horse: value };
       }
       return { ...current, [field]: value };
     });
@@ -883,7 +842,6 @@ function OwnerRegistrations() {
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
         note: entry.note,
-        gears: entry.gears,
         payment_method: "VNPAY",
       });
 
@@ -1094,27 +1052,12 @@ function OwnerRegistrations() {
             )}
           </section>
 
-          <section className="owner-entry-gear">
-            <div className="owner-entry-gear__header">
-              <div>
-                <span className="owner-kicker">Step 3 · Gear declaration</span>
-                <h3>Choose approved gear</h3>
-                <p>Select only the equipment this horse will wear in the chosen race. The declaration is sent with this entry.</p>
-              </div>
-              {entry.gears.length > 0 && (
-                <button onClick={() => updateEntry("gears", [])} type="button">Clear all</button>
-              )}
-            </div>
-            <GearSelector label="Available gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
-          </section>
-
           <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
 
           <div className="owner-registration-preview">
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
             <div><span>Horse code</span><strong>{selectedHorse?.registrationNumber || compactRecordCode("Horse", selectedHorse?.id)}</strong></div>
             <div><span>Selected race</span><strong>{selectedRace?.name || "No race loaded"}</strong></div>
-            <div><span>Declared gear</span><strong>{entry.gears.length ? entry.gears.join(" / ") : "None"}</strong></div>
             <div><span>Payment due</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee required"}</strong></div>
           </div>
 
@@ -1288,7 +1231,7 @@ function OwnerRaceDetail() {
           <span className="owner-kicker">Registration status</span>
           <h2>{race.registrationAvailable ? "This race is accepting entries" : "Registration is closed"}</h2>
           <p>{race.registrationAvailable
-            ? "Return to the registration workspace to select a horse, declare gear, and confirm payment."
+            ? "Return to the registration workspace to select a horse and confirm payment."
             : race.registrationUnavailableReason || "You can still review this race, but a new horse entry cannot be submitted."}</p>
         </div>
         {race.registrationAvailable && <Link className="owner-button owner-button--primary" to="/owner/registrations">Register a horse</Link>}
@@ -1515,7 +1458,6 @@ function OwnerJockeys() {
     setWorkflowMessage("");
     try {
       const data = await ownerApi.uploadJockeyAssignmentContract(id, {
-        contract_number: draft.contractNumber?.trim() || "",
         title: draft.contractTitle?.trim() || `${assignmentPartyName(item.horse_id, "Horse")} jockey agreement`,
         file_data: await readFileAsDataUri(file),
         file_type: file.type,
@@ -2019,10 +1961,6 @@ function OwnerJockeys() {
                           <span>Recorded terms</span>
                           <p>{item.terms?.agreed_terms}</p>
                         </div>
-                        <label className="owner-field">
-                          <span>Contract number <small>Optional</small></span>
-                          <input value={draft.contractNumber || ""} onChange={(event) => updateWorkflowDraft(id, "contractNumber", event.target.value)} placeholder="JOC-CON-001" />
-                        </label>
                         <label className="owner-field">
                           <span>Contract title <small>Optional</small></span>
                           <input value={draft.contractTitle || ""} onChange={(event) => updateWorkflowDraft(id, "contractTitle", event.target.value)} placeholder={`${horseName} jockey agreement`} />
