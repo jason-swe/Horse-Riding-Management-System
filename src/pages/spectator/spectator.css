@@ -7679,8 +7679,11 @@
 .payment-return-balance {
   display: grid;
   align-content: end;
+  align-self: center;
   gap: 12px;
-  min-height: 260px;
+  height: fit-content;
+  min-width: 0;
+  min-height: 0;
   padding: clamp(18px, 3vw, 28px);
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.26);
   border-radius: 8px;
@@ -7699,11 +7702,18 @@
 }
 
 .payment-return-balance strong {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   color: var(--racing-accent-soft);
   font-family: "Sora", sans-serif;
-  font-size: clamp(2.4rem, 5vw, 4.45rem);
+  font-size: clamp(1.65rem, 3.6vw, 3rem);
   line-height: 0.95;
+  letter-spacing: -0.065em;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: nowrap;
 }
 
 .payment-return-balance small {
@@ -7768,9 +7778,13 @@
 }
 
 .payment-return-result strong {
+  min-width: 0;
+  max-width: 100%;
   color: inherit;
   font-family: "Sora", sans-serif;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .payment-return-details {
@@ -8009,7 +8023,7 @@
   }
 
   .payment-return-balance {
-    min-height: 180px;
+    min-height: 0;
   }
 }
 

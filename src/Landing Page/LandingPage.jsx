@@ -16,9 +16,9 @@ const testimonialPortraits = [
 
 const navItems = [
   { label: "Home", to: "/" },
-  { label: "Tournaments", to: "/spectator/tournaments" },
-  { label: "Results", to: "/spectator/results" },
-  { label: "Leaderboard", to: "/spectator/leaderboard" },
+  { label: "Tournament", to: "/spectator/tournaments" },
+  { label: "Prediction", to: "/spectator/predictions" },
+  { label: "Rewards", to: "/spectator/rewards" },
 ];
 
 const horseFacts = [
@@ -316,10 +316,10 @@ function LandingPage() {
           <nav className="footer-links" aria-label="Footer navigation">
             <p className="footer-label">Explore</p>
             <ul>
-              <li><Link to="/spectator/tournaments"><span>01</span>Tournaments</Link></li>
-              <li><Link to="/spectator/predictions"><span>02</span>Predictions</Link></li>
-              <li><Link to="/spectator/results"><span>03</span>Official results</Link></li>
-              <li><Link to="/spectator/leaderboard"><span>04</span>Leaderboard</Link></li>
+              <li><Link to="/"><span>01</span>Home</Link></li>
+              <li><Link to="/spectator/tournaments"><span>02</span>Tournament</Link></li>
+              <li><Link to="/spectator/predictions"><span>03</span>Prediction</Link></li>
+              <li><Link to="/spectator/rewards"><span>04</span>Rewards</Link></li>
             </ul>
           </nav>
 

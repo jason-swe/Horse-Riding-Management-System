@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import LogoutButton from "../auth/LogoutButton";
 import { useAuth } from "../auth/AuthContext";
+import RoleSwitcher from "../auth/RoleSwitcher";
 import "../App.css";
 
 const MainLayout = () => {
@@ -47,10 +48,7 @@ const MainLayout = () => {
         </nav>
 
         <div className="header-actions">
-          <Link className="user-profile-pill" to="/spectator/profile" aria-label="View user profile">
-            <div className="avatar-small" />
-            <span className="user-name">{displayName}</span>
-          </Link>
+          <RoleSwitcher profileTo="/spectator/profile" triggerClassName="user-profile-pill" />
           <LogoutButton className="logout-btn">Logout</LogoutButton>
         </div>
       </header>

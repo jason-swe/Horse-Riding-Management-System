@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Award,
@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   CreditCard,
   Edit3,
+  ExternalLink,
   FileText,
   Filter,
   Flag,
@@ -28,6 +29,7 @@ import {
   Upload,
   UserRound,
   UsersRound,
+  X,
 } from "lucide-react";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
@@ -78,16 +80,15 @@ const FactPills = ({ facts, emptyText = "No optional profile data recorded yet."
 };
 
 const GearOption = ({ gear, selected, onToggle }) => (
-  <label title={gear.label}>
-    <input checked={selected} onChange={onToggle} type="checkbox" />
+  <label className={`owner-gear-option${selected ? " is-selected" : ""}`} title={gear.label}>
+    <input checked={selected} onChange={onToggle} type="checkbox" aria-label={gear.label} />
+    <span className="owner-gear-option__check" aria-hidden="true" />
     <strong>{gear.code}</strong>
-    <span>{gear.label}</span>
+    <span className="owner-gear-option__label">{gear.label}</span>
   </label>
 );
 
 const GearSelector = ({ value = [], onChange, label = "Race gear" }) => {
-  const [showMore, setShowMore] = useState(false);
-  const advancedSelectedCount = advancedHorseGearOptions.filter((gear) => value.includes(gear.code)).length;
   const toggleGear = (code) => onChange(value.includes(code)
     ? value.filter((item) => item !== code)
     : [...value, code]);
@@ -100,24 +101,24 @@ const GearSelector = ({ value = [], onChange, label = "Race gear" }) => {
           <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
         ))}
       </div>
-      <button
-        aria-expanded={showMore}
-        className="owner-gear-selector__more"
-        onClick={() => setShowMore((current) => !current)}
-        type="button"
-      >
-        <ChevronDown className={showMore ? "is-open" : ""} size={15} aria-hidden="true" />
-        More gear{advancedSelectedCount ? ` (${advancedSelectedCount})` : ""}
-      </button>
-      {showMore && (
-        <div className="owner-gear-selector__grid owner-gear-selector__grid--advanced">
-          {advancedHorseGearOptions.map((gear) => (
-            <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
-          ))}
-        </div>
-      )}
+      <p className="owner-gear-selector__group-title">Additional gear</p>
+      <div className="owner-gear-selector__grid owner-gear-selector__grid--advanced">
+        {advancedHorseGearOptions.map((gear) => (
+          <GearOption key={gear.code} gear={gear} selected={value.includes(gear.code)} onToggle={() => toggleGear(gear.code)} />
+        ))}
+      </div>
     </fieldset>
   );
+};
+
+const formatInvitationDate = (value) => {
+  if (!value) return "Not scheduled";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 };
 
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
@@ -234,7 +235,7 @@ const registrationHeroImage = "https://i.pinimg.com/1200x/3d/ff/a1/3dffa140ed55c
 const jockeyHeroImage = "https://i.pinimg.com/1200x/00/b2/be/00b2be2f7811cfb0a83ae76b43671681.jpg";
 const scheduleHeroImage = "https://i.pinimg.com/1200x/ae/08/50/ae0850e67c950abd7e962008bc7ae3fb.jpg";
 const resultsHeroImage = "https://i.pinimg.com/1200x/30/d4/ec/30d4ec1fb8d7efed15adf856c338efe6.jpg";
-const profileHeroImage = "https://i.pinimg.com/736x/39/2c/9d/392c9d4b357cdaf40df26e13f32c083e.jpg";
+const profileFallbackAvatar = "https://avatarhub.edu.vn/wp-content/uploads/2025/12/avatar-mac-dinh-cua-fb-4.jpg";
 const profileStableImage = "https://i.pinimg.com/1200x/a9/46/9e/a9469ee3363098f154678502a9eeef9b.jpg";
 const jockeyImages = [
   "https://i.pinimg.com/1200x/3f/55/e7/3f55e7e4639c7c2ee3cdbcf489a6d5e2.jpg",
@@ -483,9 +484,9 @@ function OwnerHorseForm({ mode = "new" }) {
               <div className="owner-form-span">
                 <GearSelector label="Default race gear" value={form.defaultGears} onChange={(value) => updateField("defaultGears", value)} />
               </div>
-              <label className="owner-form-span">
-                Profile image
-                <input accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
+              <label className="owner-form-span owner-profile-image-field">
+                <span className="owner-profile-image-field__title">Profile image</span>
+                <input className="owner-profile-image-field__input" accept="image/*" type="file" onChange={(event) => updateImageFile(event.target.files?.[0] || null)} />
                 {form.imageFileName && <small className="owner-form-hint">Selected: {form.imageFileName}</small>}
               </label>
             </div>
@@ -746,7 +747,6 @@ function OwnerRegistrations() {
   const horses = liveHorses;
   const tournaments = liveTournaments;
   const registrations = liveRegistrations;
-  const pendingCount = registrations.filter((item) => item.status === "Pending" || item.status === "Review").length;
   const approvedCount = registrations.filter((item) => item.status === "Approved").length;
   const [races, setRaces] = useState([]);
   const [racesLoading, setRacesLoading] = useState(false);
@@ -755,16 +755,23 @@ function OwnerRegistrations() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [tournamentQuery, setTournamentQuery] = useState("");
+  const tournamentDetailRef = useRef(null);
   const [entry, setEntry] = useState({
     horse: horses[0]?.name || "",
-    tournament: tournaments[0]?.name || "",
+    tournament: tournaments[0]?.id || "",
     race: "",
     note: "",
     gears: [],
   });
   const selectedHorse = horses.find((horse) => horse.name === entry.horse) ?? horses[0];
-  const selectedTournament = tournaments.find((tournament) => tournament.name === entry.tournament) ?? tournaments[0];
-  const selectedRace = races.find((race) => race.id === entry.race) ?? races[0];
+  const selectedTournament = tournaments.find((tournament) => tournament.id === entry.tournament) ?? tournaments[0];
+  const selectedRace = races.find((race) => race.id === entry.race) ?? null;
+  const filteredTournaments = tournaments.filter((tournament) => (
+    `${tournament.name} ${tournament.location} ${tournament.date} ${tournament.status}`
+      .toLowerCase()
+      .includes(tournamentQuery.trim().toLowerCase())
+  ));
   const tournamentPrizePool = selectedTournament?.prizePool || races.reduce((total, race) => total + Number(race.prizePool || 0), 0);
   const tournamentPrizeCurrency = selectedTournament?.prizeCurrency || selectedRace?.prizeCurrency || "VND";
   const registrationFeeVnd = Number(selectedRace?.entryFeeVnd || 0);
@@ -777,7 +784,7 @@ function OwnerRegistrations() {
 
   useEffect(() => {
     if (!tournaments.length || entry.tournament) return;
-    setEntry((current) => ({ ...current, tournament: tournaments[0].name }));
+    setEntry((current) => ({ ...current, tournament: tournaments[0].id }));
   }, [entry.tournament, tournaments]);
 
   useEffect(() => {
@@ -797,11 +804,11 @@ function OwnerRegistrations() {
       try {
         const data = await ownerApi.getTournamentRaces(selectedTournament.id);
         if (!cancelled) {
-          const nextRaces = (data.races || []).map(toOwnerRaceOption).filter((race) => race.registrationAvailable);
+          const nextRaces = (data.races || []).map(toOwnerRaceOption);
           setRaces(nextRaces);
           setEntry((current) => ({
             ...current,
-            race: nextRaces[0]?.id || "",
+            race: nextRaces.find((race) => race.registrationAvailable)?.id || "",
           }));
         }
       } catch (apiError) {
@@ -836,6 +843,17 @@ function OwnerRegistrations() {
       }
       return { ...current, [field]: value };
     });
+  };
+
+  const scrollTo = (ref) => {
+    window.requestAnimationFrame(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const selectTournament = (tournamentId) => {
+    updateEntry("tournament", tournamentId);
+    scrollTo(tournamentDetailRef);
   };
 
   const handleSubmit = async (event) => {
@@ -878,9 +896,13 @@ function OwnerRegistrations() {
         reloadRegistrations(),
         ownerApi.getTournamentRaces(selectedTournament.id),
       ]);
-      const nextRaces = (raceData.races || []).map(toOwnerRaceOption).filter((race) => race.registrationAvailable);
+      const nextRaces = (raceData.races || []).map(toOwnerRaceOption);
       setRaces(nextRaces);
-      setEntry((current) => ({ ...current, race: nextRaces[0]?.id || "", note: "" }));
+      setEntry((current) => ({
+        ...current,
+        race: nextRaces.find((race) => race.registrationAvailable)?.id || "",
+        note: "",
+      }));
       setTermsAccepted(false);
       setSaved(true);
     } catch (apiError) {
@@ -960,15 +982,60 @@ function OwnerRegistrations() {
 
           <div className="owner-form-grid owner-form-grid--single">
             <FormSelect label="Horse" value={entry.horse || "No horse available"} options={horses.map((horse) => horse.name)} onChange={(value) => updateEntry("horse", value)} />
-            <FormSelect label="Tournament" value={entry.tournament || "No tournament available"} options={tournaments.map((tournament) => tournament.name)} onChange={(value) => updateEntry("tournament", value)} />
-            <GearSelector label="Declared race gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
-            <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
           </div>
 
-          <section className="owner-race-picker" aria-label="Race choices">
+          <section className="owner-tournament-browser" aria-label="Available tournaments">
+            <div className="owner-tournament-browser__header">
+              <div>
+                <span className="owner-kicker">Step 1 · Tournament</span>
+                <h3>Choose where you want to enter</h3>
+                <p>Start with the date and venue. Selecting a tournament opens its full race programme below.</p>
+              </div>
+              <label className="owner-tournament-search">
+                <Search size={16} aria-hidden="true" />
+                <span className="sr-only">Search tournaments</span>
+                <input
+                  onChange={(event) => setTournamentQuery(event.target.value)}
+                  placeholder="Search tournament or venue"
+                  type="search"
+                  value={tournamentQuery}
+                />
+              </label>
+            </div>
+            <div className="owner-tournament-list">
+              {filteredTournaments.map((tournament) => (
+                <button
+                  aria-pressed={selectedTournament?.id === tournament.id}
+                  className={`owner-tournament-choice${selectedTournament?.id === tournament.id ? " is-selected" : ""}`}
+                  key={tournament.id}
+                  onClick={() => selectTournament(tournament.id)}
+                  type="button"
+                >
+                  <span className="owner-tournament-choice__top">
+                    <span className="owner-registration__id">{compactRecordCode("TOUR", tournament.id)}</span>
+                    <span className={`owner-badge ${statusClass(tournament.status)}`}>{tournament.status}</span>
+                  </span>
+                  <strong>{tournament.name}</strong>
+                  <span className="owner-tournament-choice__meta">
+                    <span><CalendarDays size={14} /> {tournament.date || "Dates pending"}</span>
+                    <span><MapPin size={14} /> {tournament.location || "Venue pending"}</span>
+                  </span>
+                  <span className="owner-tournament-choice__footer">
+                    <span>{tournament.raceCount ? `${tournament.raceCount} races` : "Race programme available"}</span>
+                    <span>{tournament.prizePool > 0 ? formatMoney(tournament.prizePool, tournament.prizeCurrency) : "Prize pending"}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {!filteredTournaments.length && (
+              <div className="owner-empty owner-empty--compact">No tournaments match “{tournamentQuery}”.</div>
+            )}
+          </section>
+
+          <section className="owner-race-picker" aria-label="Race choices" ref={tournamentDetailRef} tabIndex="-1">
             <div className="owner-race-picker__header">
               <div>
-                <span className="owner-kicker">Race selection</span>
+                <span className="owner-kicker">Step 2 · Race programme</span>
                 <h3>{selectedTournament?.name || "No tournament selected"}</h3>
                 {selectedTournament?.description && <p>{selectedTournament.description}</p>}
               </div>
@@ -984,47 +1051,64 @@ function OwnerRegistrations() {
             </div>
 
             {racesLoading && <LoadingSkeleton ariaLabel="Loading tournament races" variant="inline" />}
-            {!racesLoading && races.length === 0 && <div className="owner-empty owner-empty--compact">No races are currently open for registration.</div>}
+            {!racesLoading && races.length === 0 && <div className="owner-empty owner-empty--compact">This tournament does not have a race programme yet.</div>}
             {!racesLoading && races.length > 0 && (
               <div className="owner-race-choice-list">
                 {races.map((race) => (
-                  <button
-                    aria-pressed={selectedRace?.id === race.id}
-                    className={`owner-race-choice${selectedRace?.id === race.id ? " is-selected" : ""}`}
-                    key={race.id}
-                    onClick={() => updateEntry("race", race.id)}
-                    type="button"
-                  >
-                    <div className="owner-race-choice__main">
-                      <span className="owner-registration__id">{compactRecordCode("RACE", race.id)}</span>
-                      <strong>{race.name}</strong>
-                      <small>{[race.round, race.date, race.clock].filter(Boolean).join(" / ") || "Schedule unavailable"}</small>
+                  <article className={`owner-race-choice${selectedRace?.id === race.id ? " is-selected" : ""}${!race.registrationAvailable ? " is-unavailable" : ""}`} key={race.id}>
+                    <button
+                      aria-pressed={selectedRace?.id === race.id}
+                      className="owner-race-choice__select"
+                      disabled={!race.registrationAvailable}
+                      onClick={() => updateEntry("race", race.id)}
+                      type="button"
+                    >
+                      <div className="owner-race-choice__main">
+                        <span className="owner-registration__id">{compactRecordCode("RACE", race.id)}</span>
+                        <strong>{race.name}</strong>
+                        <small>{[race.round, race.date, race.clock].filter(Boolean).join(" / ") || "Schedule unavailable"}</small>
+                      </div>
+                      <div className="owner-race-choice__facts">
+                        {race.location && <span><MapPin size={13} /> {race.location}</span>}
+                        {race.distance && <span><Flag size={13} /> {race.distance}</span>}
+                        {race.remainingSlots !== null && <span><UsersRound size={13} /> {race.remainingSlots} spots left</span>}
+                        {race.prizePool > 0 && <span><Trophy size={13} /> {formatMoney(race.prizePool, race.prizeCurrency)}</span>}
+                        {race.entryFeeVnd > 0 && <span><CreditCard size={13} /> Fee {formatMoney(race.entryFeeVnd, race.entryFeeCurrency)}</span>}
+                        {race.registrationLock && <span><CalendarDays size={13} /> Locks {race.registrationLock}</span>}
+                      </div>
+                      <span className={`owner-badge ${statusClass(race.status)}`}>{race.registrationAvailable ? race.status : "Registration closed"}</span>
+                    </button>
+                    <div className="owner-race-choice__footer">
+                      <span>{race.registrationAvailable ? "Select this race to continue" : race.registrationUnavailableReason || "This race is shown for programme context only."}</span>
+                      <a
+                        href={`/owner/tournaments/${encodeURIComponent(selectedTournament.id)}/races/${encodeURIComponent(race.id)}`}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        View race details <ExternalLink size={14} aria-hidden="true" />
+                      </a>
                     </div>
-                    <div className="owner-race-choice__facts">
-                      {race.location && <span><MapPin size={13} /> {race.location}</span>}
-                      {race.distance && <span><Flag size={13} /> {race.distance}</span>}
-                      {race.remainingSlots !== null && <span><UsersRound size={13} /> {race.remainingSlots} spots left</span>}
-                      {race.prizePool > 0 && <span><Trophy size={13} /> {formatMoney(race.prizePool, race.prizeCurrency)}</span>}
-                      {race.entryFeeVnd > 0 && <span><CreditCard size={13} /> Fee {formatMoney(race.entryFeeVnd, race.entryFeeCurrency)}</span>}
-                      {race.registrationLock && <span><CalendarDays size={13} /> Locks {race.registrationLock}</span>}
-                    </div>
-                    <div className="owner-race-choice__awards" aria-label={`${race.name} prize split`}>
-                      {race.prizePool > 0 ? (
-                        <>
-                          <span>Winner {formatMoney(race.prizePool * 0.6, race.prizeCurrency)}</span>
-                          <span>2nd {formatMoney(race.prizePool * 0.2, race.prizeCurrency)}</span>
-                          <span>3rd {formatMoney(race.prizePool * 0.11, race.prizeCurrency)}</span>
-                        </>
-                      ) : (
-                        <span>Prize not configured</span>
-                      )}
-                    </div>
-                    <span className={`owner-badge ${statusClass(race.status)}`}>{race.status}</span>
-                  </button>
+                  </article>
                 ))}
               </div>
             )}
           </section>
+
+          <section className="owner-entry-gear">
+            <div className="owner-entry-gear__header">
+              <div>
+                <span className="owner-kicker">Step 3 · Gear declaration</span>
+                <h3>Choose approved gear</h3>
+                <p>Select only the equipment this horse will wear in the chosen race. The declaration is sent with this entry.</p>
+              </div>
+              {entry.gears.length > 0 && (
+                <button onClick={() => updateEntry("gears", [])} type="button">Clear all</button>
+              )}
+            </div>
+            <GearSelector label="Available gear" value={entry.gears} onChange={(value) => updateEntry("gears", value)} />
+          </section>
+
+          <label className="owner-form-note">Owner note<textarea value={entry.note} onChange={(event) => updateEntry("note", event.target.value)} placeholder="Add readiness, preferred jockey, or scheduling note..." /></label>
 
           <div className="owner-registration-preview">
             <div><span>Horse status</span><strong>{selectedHorse?.status || "N/A"}</strong></div>
@@ -1073,23 +1157,6 @@ function OwnerRegistrations() {
           </div>
         </form>
 
-        <aside className="owner-registration-side">
-          <div className="owner-registration-side__item">
-            <span>Available tournaments</span>
-            <strong>{tournaments.length}</strong>
-            <small>Open choices in the entry dropdown</small>
-          </div>
-          <div className="owner-registration-side__item">
-            <span>Approved entries</span>
-            <strong>{approvedCount}</strong>
-            <small>Ready for race scheduling</small>
-          </div>
-          <div className="owner-registration-side__item">
-            <span>Legacy pending entries</span>
-            <strong>{pendingCount}</strong>
-            <small>Entries created before auto-confirm</small>
-          </div>
-        </aside>
       </section>
 
       <article className="owner-registration-board">
@@ -1144,6 +1211,92 @@ function OwnerRegistrations() {
   );
 }
 
+function OwnerRaceDetail() {
+  const { tournamentId, raceId } = useParams();
+  const { tournaments, isLoading: tournamentsLoading, error: tournamentsError } = useOwnerTournaments();
+  const [race, setRace] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const tournament = tournaments.find((item) => String(item.id) === String(tournamentId));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRace() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const data = await ownerApi.getTournamentRaces(tournamentId);
+        const nextRace = (data.races || [])
+          .map(toOwnerRaceOption)
+          .find((item) => String(item.id) === String(raceId));
+
+        if (!cancelled) {
+          setRace(nextRace || null);
+          if (!nextRace) setError("Race information is unavailable.");
+        }
+      } catch (apiError) {
+        if (!cancelled) setError(apiError.message || "Unable to load race information.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadRace();
+    return () => {
+      cancelled = true;
+    };
+  }, [raceId, tournamentId]);
+
+  if (isLoading || tournamentsLoading) {
+    return <div className="owner-race-detail-page"><LoadingSkeleton ariaLabel="Loading race details" variant="detail" /></div>;
+  }
+
+  if (error || tournamentsError || !race) {
+    return (
+      <div className="owner-race-detail-page">
+        <Link className="owner-detail-back" to="/owner/registrations">Back to registration</Link>
+        <div className="owner-empty owner-empty--error">{error || tournamentsError || "Race information is unavailable."}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="owner-race-detail-page">
+      <Link className="owner-detail-back" to="/owner/registrations">Back to registration</Link>
+      <header className="owner-race-detail-hero">
+        <div>
+          <p className="owner-eyebrow">{tournament?.name || "Tournament race"}</p>
+          <h1>{race.name}</h1>
+          <p>{[race.round, race.date, race.clock].filter(Boolean).join(" · ") || "Schedule pending"}</p>
+        </div>
+        <span className={`owner-badge ${statusClass(race.status)}`}>{race.status}</span>
+      </header>
+
+      <section className="owner-race-detail-facts" aria-label="Race information">
+        <article><MapPin size={18} /><span>Venue</span><strong>{race.location || tournament?.location || "Pending"}</strong></article>
+        <article><Flag size={18} /><span>Distance</span><strong>{race.distance || "Pending"}</strong></article>
+        <article><UsersRound size={18} /><span>Capacity</span><strong>{race.remainingSlots === null ? race.maxParticipants || "Open" : `${race.remainingSlots} spots left`}</strong></article>
+        <article><Trophy size={18} /><span>Race prize</span><strong>{race.prizePool > 0 ? formatMoney(race.prizePool, race.prizeCurrency) : "Pending"}</strong></article>
+        <article><CreditCard size={18} /><span>Entry fee</span><strong>{race.entryFeeVnd > 0 ? formatMoney(race.entryFeeVnd, race.entryFeeCurrency) : "No fee"}</strong></article>
+        <article><CalendarDays size={18} /><span>Registration lock</span><strong>{race.registrationLock || "Not configured"}</strong></article>
+      </section>
+
+      <section className="owner-race-detail-entry">
+        <div>
+          <span className="owner-kicker">Registration status</span>
+          <h2>{race.registrationAvailable ? "This race is accepting entries" : "Registration is closed"}</h2>
+          <p>{race.registrationAvailable
+            ? "Return to the registration workspace to select a horse, declare gear, and confirm payment."
+            : race.registrationUnavailableReason || "You can still review this race, but a new horse entry cannot be submitted."}</p>
+        </div>
+        {race.registrationAvailable && <Link className="owner-button owner-button--primary" to="/owner/registrations">Register a horse</Link>}
+      </section>
+    </div>
+  );
+}
+
 function OwnerJockeys() {
   const { jockeys: liveJockeys, isLoading, error } = useOwnerJockeys();
   const { horses: liveHorses, isLoading: horsesLoading, error: horsesError } = useOwnerHorses();
@@ -1155,14 +1308,23 @@ function OwnerJockeys() {
   const [localStatuses, setLocalStatuses] = useState({});
   const [selectedJockeyId, setSelectedJockeyId] = useState("");
   const [selectedJockeyDetail, setSelectedJockeyDetail] = useState(null);
+  const [isEntryPickerOpen, setIsEntryPickerOpen] = useState(false);
+  const [isJockeyPickerOpen, setIsJockeyPickerOpen] = useState(false);
+  const [jockeyPreview, setJockeyPreview] = useState(null);
+  const [jockeyPreviewPosition, setJockeyPreviewPosition] = useState(null);
+  const [isJockeyInfoPinned, setIsJockeyInfoPinned] = useState(false);
+  const jockeyHoverTimerRef = useRef(null);
   const [detailLoadingId, setDetailLoadingId] = useState("");
   const [assignmentSaved, setAssignmentSaved] = useState(false);
   const [assignmentError, setAssignmentError] = useState("");
+  const [pendingInvitation, setPendingInvitation] = useState(null);
+  const [invitationToast, setInvitationToast] = useState(null);
   const [existingAssignments, setExistingAssignments] = useState([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(true);
   const [isAssigning, setIsAssigning] = useState(false);
   const [workflowDrafts, setWorkflowDrafts] = useState({});
   const [workflowActionId, setWorkflowActionId] = useState("");
+  const [cancelAssignmentId, setCancelAssignmentId] = useState("");
   const [workflowMessage, setWorkflowMessage] = useState("");
   const [isWorkflowOpen, setIsWorkflowOpen] = useState(false);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState("");
@@ -1181,10 +1343,21 @@ function OwnerJockeys() {
     contactName: "",
     contactPhone: "",
   });
-  const jockeys = liveJockeys.map((jockey) => ({
-    ...jockey,
-    status: localStatuses[jockey.id] || jockey.status,
-  }));
+  const jockeys = liveJockeys
+    .map((jockey, index) => ({
+      ...jockey,
+      status: localStatuses[jockey.id] || jockey.status,
+      demoOrder: index,
+    }))
+    .sort((left, right) => {
+      const priority = (name) => {
+        const normalized = String(name || "").toLowerCase();
+        if (normalized.includes("alpha")) return 0;
+        if (normalized.includes("belta") || normalized.includes("beta") || normalized.includes("bravo")) return 1;
+        return 2;
+      };
+      return priority(left.name) - priority(right.name) || left.demoOrder - right.demoOrder;
+    });
   const horses = liveHorses;
   const updateStatus = (id, status) => setLocalStatuses((current) => ({ ...current, [id]: status }));
   const selectedJockey = jockeys.find((jockey) => jockey.id === selectedJockeyId) ?? jockeys[0];
@@ -1238,6 +1411,8 @@ function OwnerJockeys() {
     setSelectedJockeyId(jockeys[0].id);
   }, [jockeys, selectedJockeyId]);
 
+  useEffect(() => () => clearTimeout(jockeyHoverTimerRef.current), []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1266,6 +1441,11 @@ function OwnerJockeys() {
     setAssignmentSaved(false);
     setAssignmentError("");
     setAssignment((current) => ({ ...current, [field]: value }));
+  };
+
+  const selectRaceEntry = (entryId) => {
+    updateAssignment("registrationId", entryId);
+    setIsEntryPickerOpen(false);
   };
 
   const updateWorkflowDraft = (id, field, value) => {
@@ -1374,6 +1554,97 @@ function OwnerJockeys() {
     }
   };
 
+  const sendInvitation = async ({ payload, summary }) => {
+    setPendingInvitation(null);
+    setIsAssigning(true);
+    setAssignmentError("");
+
+    try {
+      const data = await ownerApi.createJockeyAssignment(payload);
+      if (data.assignment) {
+        setExistingAssignments((current) => [{
+          ...data.assignment,
+          assignment_type: data.assignment.assignment_type || summary.assignmentType,
+          horse_id: summary.horse,
+          race_id: summary.race,
+          jockey_id: summary.jockey,
+        }, ...current]);
+      }
+      updateStatus(summary.jockeyId, "Pending");
+      setAssignmentSaved(true);
+      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the offline appointment.");
+      setInvitationToast({
+        ...summary,
+        invitationId: data.assignment?._id ? compactRecordCode("INV", data.assignment._id) : "Pending assignment ID",
+      });
+    } catch (apiError) {
+      setAssignmentError(apiError.status === 409
+        ? `This horse already has an active primary jockey assignment for ${summary.race.name}. Choose backup mode or another race entry.`
+        : apiError.message || "Unable to create jockey assignment.");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const cancelJockeyInvitation = async (item) => {
+    const id = item._id;
+    setWorkflowActionId(id);
+    setCancelAssignmentId("");
+    setAssignmentError("");
+    setWorkflowMessage("");
+
+    try {
+      const data = await ownerApi.cancelJockeyAssignment(id);
+      replaceAssignment(data.assignment);
+      setWorkflowMessage("Jockey invitation cancelled. The race entry is available for another invitation.");
+    } catch (apiError) {
+      setAssignmentError(apiError.message || "Unable to cancel this jockey invitation.");
+    } finally {
+      setWorkflowActionId("");
+    }
+  };
+
+  const setJockeyPreviewAnchor = (event) => {
+    if (!event) return;
+    const cardWidth = 540;
+    const cardHeight = 360;
+    const offset = 16;
+    const placeOnRight = event.clientX + offset + cardWidth <= window.innerWidth - 12;
+    const placeBelow = event.clientY + offset + cardHeight <= window.innerHeight - 12;
+
+    setJockeyPreviewPosition({
+      top: placeBelow ? event.clientY + offset : Math.max(12, event.clientY - cardHeight - offset),
+      left: placeOnRight ? event.clientX + offset : Math.max(12, event.clientX - cardWidth - offset),
+    });
+  };
+
+  const openJockeyInfo = async (jockey, event) => {
+    setJockeyPreview(jockey);
+    setJockeyPreviewAnchor(event);
+    setIsJockeyInfoPinned(false);
+    await selectJockey(jockey);
+  };
+
+  const startJockeyHoverPreview = (jockey, event) => {
+    clearTimeout(jockeyHoverTimerRef.current);
+    setJockeyPreviewAnchor(event);
+    jockeyHoverTimerRef.current = setTimeout(() => {
+      setJockeyPreview(jockey);
+      setIsJockeyInfoPinned(false);
+    }, 2000);
+  };
+
+  const endJockeyHoverPreview = () => {
+    clearTimeout(jockeyHoverTimerRef.current);
+    setJockeyPreview(null);
+    setJockeyPreviewPosition(null);
+    setIsJockeyInfoPinned(false);
+  };
+
+  const moveJockeyPreview = (jockey, event) => {
+    if (jockeyPreview?.id === jockey.id) setJockeyPreviewAnchor(event);
+  };
+
   const submitAssignment = async (event) => {
     event.preventDefault();
     setAssignmentSaved(false);
@@ -1441,10 +1712,7 @@ function OwnerJockeys() {
       return;
     }
 
-    setIsAssigning(true);
-
-    try {
-      const payload = {
+    const payload = {
         horse_id: selectedHorse.id,
         race_id: selectedRace.id,
         jockey_id: selectedJockey.id,
@@ -1468,26 +1736,22 @@ function OwnerJockeys() {
         },
       };
 
-      const data = await ownerApi.createJockeyAssignment(payload);
-      if (data.assignment) {
-        setExistingAssignments((current) => [{
-          ...data.assignment,
-          assignment_type: data.assignment.assignment_type || assignment.assignmentType,
-          horse_id: selectedHorse,
-          race_id: selectedRace,
-          jockey_id: selectedJockey.raw || selectedJockey,
-        }, ...current]);
-      }
-      updateStatus(selectedJockey.id, "Pending");
-      setAssignmentSaved(true);
-      setWorkflowMessage("Invitation sent. Contract steps unlock after the jockey accepts the offline appointment.");
-    } catch (apiError) {
-      setAssignmentError(apiError.status === 409
-        ? `This horse already has an active primary jockey assignment for ${selectedRace.name}. Choose backup mode or another race entry.`
-        : apiError.message || "Unable to create jockey assignment.");
-    } finally {
-      setIsAssigning(false);
-    }
+    setPendingInvitation({
+      payload,
+      summary: {
+        assignmentType: assignment.assignmentType,
+        horse: selectedHorse,
+        race: selectedRace,
+        jockey: selectedJockey.raw || selectedJockey,
+        jockeyId: selectedJockey.id,
+        jockeyName: selectedJockeyDetail?.name || selectedJockey.name,
+        meetingTitle: assignment.meetingTitle.trim(),
+        meetingTime: assignment.meetingTime,
+        locationName: assignment.locationName.trim(),
+        address: [assignment.address, assignment.ward, assignment.district, assignment.city].filter(Boolean).join(", "),
+        message: payload.invitation_message,
+      },
+    });
   };
 
   const promoteBackupAssignment = async (item) => {
@@ -1523,6 +1787,56 @@ function OwnerJockeys() {
 
   return (
     <div className="owner-jockey-page">
+      {pendingInvitation && (
+        <section className="owner-invitation-toast owner-invitation-toast--confirm" role="dialog" aria-modal="false" aria-labelledby="owner-invitation-confirm-title">
+          <div className="owner-invitation-toast__header">
+            <div className="owner-invitation-toast__icon"><Send size={18} /></div>
+            <div>
+              <span className="owner-kicker">Review before sending</span>
+              <h2 id="owner-invitation-confirm-title">Send jockey invitation?</h2>
+            </div>
+            <button className="owner-invitation-toast__close" type="button" onClick={() => setPendingInvitation(null)} aria-label="Cancel invitation confirmation">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="owner-invitation-toast__summary">
+            <div><span>Jockey</span><strong>{pendingInvitation.summary.jockeyName}</strong></div>
+            <div><span>Horse / race</span><strong>{pendingInvitation.summary.horse.name} / {pendingInvitation.summary.race.name}</strong></div>
+            <div><span>Appointment</span><strong>{pendingInvitation.summary.meetingTitle}</strong><small>{formatInvitationDate(pendingInvitation.summary.meetingTime)}</small></div>
+            <div><span>Location</span><strong>{pendingInvitation.summary.locationName}</strong><small>{pendingInvitation.summary.address}</small></div>
+          </div>
+          <p className="owner-invitation-toast__note">The jockey will receive this appointment invitation and can accept or reject it.</p>
+          <div className="owner-invitation-toast__actions">
+            <button className="owner-button" type="button" onClick={() => setPendingInvitation(null)}>Go back</button>
+            <button className="owner-button owner-button--primary" type="button" onClick={() => sendInvitation(pendingInvitation)}>
+              <Send size={16} /> Send invitation
+            </button>
+          </div>
+        </section>
+      )}
+
+      {invitationToast && (
+        <section className="owner-invitation-toast owner-invitation-toast--success" role="status" aria-live="polite" aria-labelledby="owner-invitation-success-title">
+          <div className="owner-invitation-toast__header">
+            <div className="owner-invitation-toast__icon"><CheckCircle2 size={18} /></div>
+            <div>
+              <span className="owner-kicker">Invitation sent</span>
+              <h2 id="owner-invitation-success-title">{invitationToast.jockeyName} has been invited.</h2>
+            </div>
+            <button className="owner-invitation-toast__close" type="button" onClick={() => setInvitationToast(null)} aria-label="Dismiss invitation confirmation">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="owner-invitation-toast__summary">
+            <div><span>Invitation</span><strong>{invitationToast.invitationId}</strong></div>
+            <div><span>Assignment</span><strong>{invitationToast.assignmentType === "backup" ? "Backup jockey" : "Primary jockey"}</strong></div>
+            <div><span>Horse / race</span><strong>{invitationToast.horse.name} / {invitationToast.race.name}</strong></div>
+            <div><span>Appointment</span><strong>{formatInvitationDate(invitationToast.meetingTime)}</strong><small>{invitationToast.locationName} · {invitationToast.address}</small></div>
+          </div>
+          <p className="owner-invitation-toast__note">Status: awaiting jockey response. Contract steps unlock after the appointment is accepted.</p>
+        </section>
+      )}
+
       {(error || horsesError || registrationsError) && (
         <section className="admin-live-state admin-live-state--warning" aria-live="polite">
           {error || horsesError || registrationsError}
@@ -1665,7 +1979,24 @@ function OwnerJockeys() {
                       <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
                     </div>
 
-                    {status === "meeting_invited" && <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the offline appointment invitation.</p>}
+                    {status === "meeting_invited" && (
+                      <div className="owner-assignment-workflow__invite-actions">
+                        <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the offline appointment invitation.</p>
+                        {cancelAssignmentId === id ? (
+                          <div className="owner-assignment-workflow__cancel-confirm" role="group" aria-label="Confirm invitation cancellation">
+                            <span>Cancel this invitation?</span>
+                            <button className="owner-button" disabled={isBusy} onClick={() => setCancelAssignmentId("")} type="button">Keep invitation</button>
+                            <button className="owner-button owner-button--danger" disabled={isBusy} onClick={() => cancelJockeyInvitation(item)} type="button">
+                              {isBusy ? "Cancelling..." : "Cancel invitation"}
+                            </button>
+                          </div>
+                        ) : (
+                          <button className="owner-button owner-button--danger" disabled={isBusy} onClick={() => setCancelAssignmentId(id)} type="button">
+                            Cancel invitation
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {status === "meeting_accepted" && (
                       <div className="owner-assignment-workflow__form">
                         <label className="owner-field owner-field--full">
@@ -1716,6 +2047,7 @@ function OwnerJockeys() {
                     )}
 
                     {status === "contract_uploaded" && <p className="owner-assignment-workflow__note">Contract sent. The assignment becomes accepted only after the jockey confirms it.</p>}
+                    {status === "cancelled" && <p className="owner-assignment-workflow__note">This jockey invitation was cancelled and can no longer be accepted.</p>}
                     {status === "accepted" && (
                       <div className="owner-assignment-workflow__form">
                         <p className="owner-assignment-workflow__note is-success"><CheckCircle2 size={16} /> {isBackupAssignment ? "The jockey accepted this standby assignment." : "The jockey confirmed the contract and accepted this assignment."}</p>
@@ -1761,7 +2093,10 @@ function OwnerJockeys() {
             <button
               className={assignment.assignmentType === item.value ? "owner-segmented__active" : ""}
               key={item.value}
-              onClick={() => setAssignment((current) => ({ ...current, assignmentType: item.value, registrationId: "" }))}
+              onClick={() => {
+                setAssignment((current) => ({ ...current, assignmentType: item.value, registrationId: "" }));
+                setIsEntryPickerOpen(false);
+              }}
               type="button"
             >
               {item.label}
@@ -1779,26 +2114,47 @@ function OwnerJockeys() {
           </div>
 
           {assignableRaceEntries.length ? (
-            <div className="owner-approved-entry-list" role="listbox" aria-label={isBackupInvitation ? "Approved race entries with primary jockey assignments" : "Approved race entries without primary jockey assignments"}>
-              {assignableRaceEntries.map((entry) => (
-                <button
-                  aria-selected={selectedEntry?.id === entry.id}
-                  className={`owner-approved-entry ${selectedEntry?.id === entry.id ? "is-selected" : ""}`}
-                  key={entry.id}
-                  onClick={() => updateAssignment("registrationId", entry.id)}
-                  role="option"
-                  type="button"
-                >
-                  <span className="owner-approved-entry__main">
-                    <strong>{entry.horse}</strong>
-                    <small>{entry.race} / {entry.tournament}</small>
-                  </span>
-                  <span className="owner-approved-entry__meta">
-                    <small>{entry.submitted}</small>
-                    <BadgeCheck size={16} />
-                  </span>
-                </button>
-              ))}
+            <div className="owner-entry-picker">
+              <button
+                aria-expanded={isEntryPickerOpen}
+                className={`owner-entry-picker__trigger ${isEntryPickerOpen ? "is-open" : ""}`}
+                onClick={() => setIsEntryPickerOpen((current) => !current)}
+                type="button"
+              >
+                <span className="owner-entry-picker__trigger-copy">
+                  <span>Selected race entry</span>
+                  <strong>{selectedEntry?.horse || "Choose a horse"}</strong>
+                  <small>{selectedEntry ? `${selectedEntry.race} / ${selectedEntry.tournament}` : "Select an approved entry"}</small>
+                </span>
+                <span className="owner-entry-picker__trigger-meta">
+                  <span>{selectedEntry ? "Change" : "Choose"}</span>
+                  <ChevronDown size={18} />
+                </span>
+              </button>
+
+              {isEntryPickerOpen && (
+                <div className="owner-approved-entry-list" role="listbox" aria-label={isBackupInvitation ? "Approved race entries with primary jockey assignments" : "Approved race entries without primary jockey assignments"}>
+                  {assignableRaceEntries.map((entry) => (
+                    <button
+                      aria-selected={selectedEntry?.id === entry.id}
+                      className={`owner-approved-entry ${selectedEntry?.id === entry.id ? "is-selected" : ""}`}
+                      key={entry.id}
+                      onClick={() => selectRaceEntry(entry.id)}
+                      role="option"
+                      type="button"
+                    >
+                      <span className="owner-approved-entry__main">
+                        <strong>{entry.horse}</strong>
+                        <small>{entry.race} / {entry.tournament}</small>
+                      </span>
+                      <span className="owner-approved-entry__meta">
+                        <small>{entry.submitted}</small>
+                        <BadgeCheck size={16} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="owner-assignment-empty" role="status">
@@ -1811,15 +2167,121 @@ function OwnerJockeys() {
           )}
         </section>
 
+        <section className="owner-jockey-picker" aria-label="Choose jockey" onMouseLeave={endJockeyHoverPreview}>
+          <div className="owner-jockey-picker__header">
+            <div>
+              <span className="owner-kicker">Jockey selection</span>
+              <h3>Choose a jockey for this race entry</h3>
+            </div>
+            <span className="owner-badge owner-badge--green">{jockeys.length} available</span>
+          </div>
+
+          {jockeys.length ? (
+            <div className="owner-entry-picker">
+              <button
+                aria-expanded={isJockeyPickerOpen}
+                className={`owner-entry-picker__trigger ${isJockeyPickerOpen ? "is-open" : ""}`}
+                onClick={() => setIsJockeyPickerOpen((current) => !current)}
+                type="button"
+              >
+                <span className="owner-entry-picker__trigger-copy">
+                  <span>Selected jockey</span>
+                  <strong>{selectedJockey?.name || "Choose a jockey"}</strong>
+                  <small>{selectedJockey?.licenseNumber || "Select an available jockey"}</small>
+                </span>
+                <span className="owner-entry-picker__trigger-meta">
+                  <span>{selectedJockey ? "Change" : "Choose"}</span>
+                  <ChevronDown size={18} />
+                </span>
+              </button>
+
+              {isJockeyPickerOpen && (
+                <div className="owner-jockey-picker__list" role="listbox" aria-label="Available jockeys">
+                  {jockeys.map((jockey) => (
+                    <div
+                      className={`owner-jockey-picker__option ${selectedJockey?.id === jockey.id ? "is-selected" : ""}`}
+                      key={jockey.id}
+                      onMouseEnter={(event) => startJockeyHoverPreview(jockey, event)}
+                      onMouseMove={(event) => moveJockeyPreview(jockey, event)}
+                      role="option"
+                      aria-selected={selectedJockey?.id === jockey.id}
+                    >
+                      <button
+                        className="owner-jockey-picker__select"
+                        disabled={detailLoadingId === jockey.id}
+                        onClick={() => {
+                          selectJockey(jockey);
+                          setIsJockeyPickerOpen(false);
+                          setJockeyPreview(null);
+                          setIsJockeyInfoPinned(false);
+                        }}
+                        type="button"
+                      >
+                        <span className="owner-jockey-picker__avatar">
+                          <img src={jockeyImages[imageIndexForId(jockey.id, jockeyImages.length)]} alt={`${jockey.name} profile`} />
+                        </span>
+                        <span className="owner-jockey-picker__copy">
+                          <strong>{jockey.name}</strong>
+                          <small>{jockey.licenseNumber || "License not set"} · {jockey.assignedHorse || "No current pairing"}</small>
+                        </span>
+                        {selectedJockey?.id === jockey.id && <Check size={17} />}
+                      </button>
+                      <button
+                        className="owner-jockey-picker__info"
+                        onClick={(event) => openJockeyInfo(jockey, event)}
+                        type="button"
+                      >
+                        Info
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="owner-assignment-empty" role="status">
+              <UserRound size={18} />
+              <div><strong>No active jockey profiles are available for invitation.</strong></div>
+            </div>
+          )}
+
+          {jockeyPreview && jockeyPreviewPosition && (
+            <aside
+              className="owner-jockey-card owner-jockey-card--preview"
+              role="status"
+              style={{ top: jockeyPreviewPosition.top, left: jockeyPreviewPosition.left }}
+            >
+              <div className="owner-jockey-card__media">
+                <img src={jockeyImages[imageIndexForId(jockeyPreview.id, jockeyImages.length)]} alt={`${jockeyPreview.name} jockey profile`} />
+                <span className={`owner-badge ${statusClass(jockeyPreview.status)}`}>{jockeyPreview.status}</span>
+              </div>
+              <div className="owner-jockey-card__body">
+                <div className="owner-jockey-card__header">
+                  <span className="owner-kicker">{compactRecordCode("License", jockeyPreview.licenseNumber || jockeyPreview.id)}</span>
+                  <h2>{jockeyPreview.name}</h2>
+                </div>
+                <div className="owner-jockey-pairing owner-jockey-pairing--compact">
+                  <UserRound size={18} />
+                  <div>
+                    <span>Current pairing</span>
+                    <strong>{jockeyPreview.assignedHorse || "Unassigned"}</strong>
+                  </div>
+                </div>
+                <div className="owner-jockey-metrics">
+                  <div><span>Wins</span><strong>{jockeyPreview.wins ?? 0}</strong></div>
+                  <div><span>Race starts</span><strong>{jockeyPreview.races ?? 0}</strong></div>
+                  <div><span>License</span><strong>{jockeyPreview.licenseNumber || "Not set"}</strong></div>
+                </div>
+              </div>
+            </aside>
+          )}
+        </section>
+
         <div className="owner-invitation-context" aria-label="Invitation selection">
           <div><span>Horse</span><strong>{selectedHorse?.name || "Not selected"}</strong></div>
           <div><span>Race</span><strong>{selectedRace?.name || "Not selected"}</strong></div>
           <div><span>Jockey</span><strong>{selectedJockeyDetail?.name || selectedJockey?.name || "Not selected"}</strong></div>
           <div><span>Role</span><strong>{isBackupInvitation ? `Backup #${backupAssignments.length + 1}` : "Primary"}</strong></div>
-          <span className={`owner-invitation-gate ${selectedEntry ? "is-ready" : ""}`}>
-            {selectedEntry ? <CheckCircle2 size={16} /> : <ClipboardCheck size={16} />}
-            {selectedEntry ? "Entry approved" : "Entry required"}
-          </span>
         </div>
 
         <div className="owner-invitation-fields">
@@ -1913,60 +2375,6 @@ function OwnerJockeys() {
         </div>
       </form>
 
-      <section className="owner-jockey-board">
-        {jockeys.map((jockey, index) => {
-          const isSelected = selectedJockeyId === jockey.id;
-          return (
-            <article className={`owner-jockey-card ${isSelected ? "is-selected" : ""}`} key={jockey.id}>
-              <div className="owner-jockey-card__media">
-                <img src={jockeyImages[index % jockeyImages.length]} alt={`${jockey.name} jockey profile`} />
-                <span className={`owner-badge ${statusClass(jockey.status)}`}>{jockey.status}</span>
-                {isSelected && <span className="owner-jockey-card__selected"><Check size={15} /> Selected</span>}
-              </div>
-              <div className="owner-jockey-card__body">
-                <div className="owner-jockey-card__header">
-                  <div>
-                    <span className="owner-kicker">{compactRecordCode("License", jockey.licenseNumber || jockey.id)}</span>
-                    <h2>{jockey.name}</h2>
-                  </div>
-                </div>
-
-                <div className="owner-jockey-pairing owner-jockey-pairing--compact">
-                  <UserRound size={18} />
-                  <div>
-                    <span>Current pairing</span>
-                    <strong>{jockey.assignedHorse}</strong>
-                  </div>
-                </div>
-
-                <div className="owner-jockey-metrics">
-                  <div><span>Wins</span><strong>{jockey.wins}</strong></div>
-                  <div><span>Race starts</span><strong>{jockey.races}</strong></div>
-                  <div><span>License</span><strong>{jockey.licenseNumber || "Not set"}</strong></div>
-                </div>
-
-                <div className="owner-jockey-card__actions">
-                  <button
-                    aria-pressed={isSelected}
-                    className={`owner-button owner-jockey-select ${isSelected ? "is-selected" : "owner-button--primary"}`}
-                    disabled={detailLoadingId === jockey.id}
-                    type="button"
-                    onClick={() => selectJockey(jockey)}
-                  >
-                    {isSelected ? <Check size={17} /> : <UserRound size={17} />}
-                    {detailLoadingId === jockey.id ? "Loading jockey..." : isSelected ? "Selected for invitation" : "Select jockey"}
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-        {jockeys.length === 0 && (
-          <div className="owner-empty" role="status">
-            No active jockey profiles are available for invitation.
-          </div>
-        )}
-      </section>
     </div>
   );
 }
@@ -2193,6 +2601,8 @@ function OwnerProfile() {
   const [message, setMessage] = useState("");
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [avatarError, setAvatarError] = useState("");
 
   useEffect(() => {
     if (!profile) return;
@@ -2204,6 +2614,10 @@ function OwnerProfile() {
       status: profile.status,
     });
   }, [profile]);
+
+  useEffect(() => {
+    setAvatarPreview(profile?.avatarUrl || "");
+  }, [profile?.avatarUrl]);
 
   if (isLoading) {
     return <div className="owner-profile-page"><LoadingSkeleton ariaLabel="Loading owner profile" variant="detail" /></div>;
@@ -2250,6 +2664,34 @@ function OwnerProfile() {
     }
   };
 
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Avatar must be 5 MB or smaller.");
+      return;
+    }
+
+    setAvatarError("");
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const imageData = String(reader.result || "");
+      setAvatarPreview(imageData);
+      try {
+        await ownerApi.updateProfile({ avatar_file_data: imageData });
+        await reload();
+      } catch (apiError) {
+        setAvatarError(apiError.message || "Unable to save avatar.");
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
   return (
     <div className="owner-profile-page">
       <section className="owner-profile-hero">
@@ -2260,25 +2702,26 @@ function OwnerProfile() {
           <p>{profile.stable}</p>
           <div className="owner-profile-hero__meta">
             <span><MapPin size={15} /> {profile.location}</span>
-            <span><CalendarDays size={15} /> {profile.joined}</span>
           </div>
         </div>
         <aside className="owner-profile-card" aria-label="Verified owner identity">
-          <img src={profileHeroImage} alt={`${profile.name} owner portrait`} />
+          <label className="owner-profile-avatar-upload" title="Change avatar">
+            <img src={avatarPreview || profileFallbackAvatar} alt={`${profile.name} owner avatar`} />
+            <span>Change photo</span>
+            <input accept="image/*" type="file" onChange={handleAvatarChange} />
+          </label>
           <div>
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
             <strong>{profile.licenseNumber}</strong>
             <small>Owner license</small>
+            {avatarError && <small className="owner-form-error">{avatarError}</small>}
           </div>
         </aside>
       </section>
 
       <section className="owner-profile-stats" aria-label="Owner account summary">
-        {[
-          { label: "Season", value: profile.season, note: "No season aggregate", icon: CalendarDays },
-          { label: "Win rate", value: profile.winRate, note: "No owner result access", icon: Trophy },
+        {[ 
           { label: "Earnings", value: formatMoney(ownerPrizeTotal, ownerPrizeCurrency), note: `${awards.length} prize award${awards.length === 1 ? "" : "s"}`, icon: Award },
-          { label: "Status", value: profile.status, note: "Account access", icon: ShieldCheck },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -2321,7 +2764,7 @@ function OwnerProfile() {
           </div>
           <div className="owner-profile-verify__body">
             <span className="owner-badge owner-badge--green"><ShieldCheck size={14} /> Verified Owner</span>
-            <strong>{profile.season}</strong>
+            <strong>Verified</strong>
             <p>Account can submit horse registrations, manage jockey assignments, and review prize awards after published race results.</p>
           </div>
         </aside>
@@ -2382,6 +2825,7 @@ export {
   OwnerHorses,
   OwnerJockeys,
   OwnerProfile,
+  OwnerRaceDetail,
   OwnerRegistrations,
   OwnerResults,
   OwnerSchedule,

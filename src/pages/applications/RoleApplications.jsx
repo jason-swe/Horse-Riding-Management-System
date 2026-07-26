@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   BadgeCheck,
   BriefcaseBusiness,
   ClipboardCheck,
+  Eye,
   FileText,
   Loader2,
+  Pencil,
   Send,
   ShieldCheck,
   UserRoundCheck,
@@ -95,6 +97,29 @@ function hasApprovedApplication(applications, role) {
   ));
 }
 
+function getLatestRoleApplication(applications, role) {
+  return applications
+    .filter((application) => application.requested_role === role)
+    .sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0))[0] || null;
+}
+
+function hydrateFormFromApplication(role, application) {
+  const applicationData = application?.application_data || {};
+  const baseForm = initialForms[role] || {};
+
+  return Object.keys(baseForm).reduce((nextForm, fieldName) => {
+    const currentValue = baseForm[fieldName];
+
+    if (currentValue === null) {
+      nextForm[fieldName] = null;
+      return nextForm;
+    }
+
+    nextForm[fieldName] = applicationData[fieldName] ?? currentValue;
+    return nextForm;
+  }, {});
+}
+
 function Field({ label, children, hint }) {
   return (
     <label className="role-application-field">
@@ -107,18 +132,22 @@ function Field({ label, children, hint }) {
 
 function FileField({ label, file, onChange, required }) {
   return (
-    <Field label={label} hint={file?.name || "PDF or image file. It will be sent as a data URI."}>
-      <input
-        accept="application/pdf,image/*"
-        onChange={(event) => onChange(event.target.files?.[0] || null)}
-        required={required}
-        type="file"
-      />
+    <Field label={label}>
+      <span className={`role-application-file ${file ? "has-file" : ""}`}>
+        <input
+          accept="application/pdf,image/*"
+          onChange={(event) => onChange(event.target.files?.[0] || null)}
+          required={required}
+          type="file"
+        />
+        <span className="role-application-file__button">Choose file</span>
+        <span className="role-application-file__name">{file?.name || "No file selected"}</span>
+      </span>
     </Field>
   );
 }
 
-function ApplicationHistory({ applications, isLoading, error }) {
+function ApplicationHistory({ applications, isLoading, error, onViewApplication }) {
   if (isLoading) {
     return <LoadingSkeleton ariaLabel="Loading role applications" rows={3} variant="list" />;
   }
@@ -156,6 +185,14 @@ function ApplicationHistory({ applications, isLoading, error }) {
             </small>
           </div>
           {application.admin_note && <p>{application.admin_note}</p>}
+          <button
+            className="role-application-row__action"
+            onClick={() => onViewApplication(application)}
+            type="button"
+          >
+            <Eye size={15} />
+            View / edit
+          </button>
         </article>
       ))}
     </div>
@@ -339,7 +376,9 @@ function RoleApplications() {
   const alreadyHasRole = auth.roles.includes(selectedRole);
   const hasPending = hasPendingApplication(applications, selectedRole);
   const hasApproved = hasApprovedApplication(applications, selectedRole);
-  const canSubmit = !alreadyHasRole && !hasPending && !hasApproved;
+  const selectedApplication = getLatestRoleApplication(applications, selectedRole);
+  const canSubmit = !alreadyHasRole && !hasApproved;
+  const submitLabel = hasPending ? "Resubmit application" : "Submit application";
 
   const stats = useMemo(() => ({
     pending: applications.filter((item) => item.status === "pending").length,
@@ -393,6 +432,24 @@ function RoleApplications() {
     }));
   };
 
+  const viewApplication = (application) => {
+    const nextRole = application.requested_role;
+
+    setSelectedRole(nextRole);
+    setFormError("");
+    setSuccess("");
+    setForms((current) => ({
+      ...current,
+      [nextRole]: hydrateFormFromApplication(nextRole, application),
+    }));
+  };
+
+  const fillSelectedApplication = () => {
+    if (selectedApplication) {
+      viewApplication(selectedApplication);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -410,7 +467,7 @@ function RoleApplications() {
       await roleApplicationApi.apply(selectedRole, payload);
       const data = await roleApplicationApi.listMine();
       setApplications(normalizeApplications(data));
-      setSuccess(`${selectedRoleOption.label} application submitted. Admin review is now pending.`);
+      setSuccess(`${selectedRoleOption.label} application ${hasPending ? "resubmitted" : "submitted"}. Admin review is now pending.`);
       setForms((current) => ({
         ...current,
         [selectedRole]: initialForms[selectedRole],
@@ -503,9 +560,20 @@ function RoleApplications() {
 
           {!canSubmit && (
             <div className="role-application-note">
-              {alreadyHasRole || hasApproved
-                ? "This role is already approved for your account."
-                : "You already have a pending request for this role."}
+              This role is already approved for your account.
+            </div>
+          )}
+
+          {canSubmit && selectedApplication && (
+            <div className="role-application-note role-application-note--editable">
+              <div>
+                <strong>{hasPending ? "Pending application is editable." : "Previous application found."}</strong>
+                <span>Review the saved details, update any field, and send it again when ready.</span>
+              </div>
+              <button type="button" onClick={fillSelectedApplication}>
+                <Pencil size={15} />
+                Load details
+              </button>
             </div>
           )}
 
@@ -519,11 +587,8 @@ function RoleApplications() {
           <div className="role-application-form__actions">
             <button className="role-application-submit" disabled={isSubmitting || !canSubmit} type="submit">
               {isSubmitting ? <Loader2 size={18} /> : <Send size={18} />}
-              {isSubmitting ? "Submitting..." : "Submit application"}
+              {isSubmitting ? "Submitting..." : submitLabel}
             </button>
-            <Link className="role-application-secondary" to="/spectator">
-              Back to spectator dashboard
-            </Link>
           </div>
         </form>
 
@@ -532,7 +597,12 @@ function RoleApplications() {
             <h2>Review history</h2>
             <p>Track every professional access request from this account.</p>
           </div>
-          <ApplicationHistory applications={applications} error={loadError} isLoading={isLoading} />
+          <ApplicationHistory
+            applications={applications}
+            error={loadError}
+            isLoading={isLoading}
+            onViewApplication={viewApplication}
+          />
         </aside>
       </div>
     </section>

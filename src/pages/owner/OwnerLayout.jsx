@@ -1,12 +1,13 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { UserRound } from "lucide-react";
 import LogoutButton from "../../auth/LogoutButton";
+import RoleSwitcher from "../../auth/RoleSwitcher";
 import "./owner.css";
 
 const navItems = [
   { label: "Dashboard", to: "/owner", end: true },
   { label: "Horses", to: "/owner/horses" },
   { label: "Registrations", to: "/owner/registrations" },
+  { label: "Deposit history", to: "/owner/deposit-history" },
   { label: "Jockeys", to: "/owner/jockeys" },
   { label: "Schedule", to: "/owner/schedule" },
   { label: "Results", to: "/owner/results" },
@@ -38,10 +39,7 @@ function OwnerLayout() {
         </nav>
 
         <div className="owner-topbar__actions">
-          <Link className="owner-button owner-button--ghost owner-profile-pill" to="/owner/profile">
-            <UserRound size={17} />
-            Profile
-          </Link>
+          <RoleSwitcher profileTo="/owner/profile" triggerClassName="owner-button owner-button--ghost owner-profile-pill" />
           <LogoutButton className="owner-button owner-button--ghost">Logout</LogoutButton>
         </div>
       </header>

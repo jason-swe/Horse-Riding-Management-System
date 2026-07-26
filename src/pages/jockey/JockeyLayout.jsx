@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Bell, CalendarDays, CheckCircle2, FileText, Send, Trophy, UserRound } from "lucide-react";
+import { Bell, CalendarDays, CheckCircle2, FileText, Send, Trophy } from "lucide-react";
 import LogoutButton from "../../auth/LogoutButton";
+import RoleSwitcher from "../../auth/RoleSwitcher";
 import { useJockeyApiData } from "./useJockeyApiData";
 import "./jockey.css";
 
@@ -142,10 +143,7 @@ function JockeyLayout() {
             </aside>
           </div>
 
-          <Link className="jockey-button jockey-button--ghost jockey-profile-pill" to="/jockey/profile">
-            <UserRound size={17} />
-            Profile
-          </Link>
+          <RoleSwitcher profileTo="/jockey/profile" triggerClassName="jockey-button jockey-button--ghost jockey-profile-pill" />
           <LogoutButton className="jockey-button jockey-button--ghost">Logout</LogoutButton>
         </div>
       </header>

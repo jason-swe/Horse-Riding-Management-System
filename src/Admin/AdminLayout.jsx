@@ -14,6 +14,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import LogoutButton from "../auth/LogoutButton";
+import RoleSwitcher from "../auth/RoleSwitcher";
 import "./admin.css";
 
 const navigationGroups = [
@@ -103,7 +104,10 @@ function AdminLayout({ title, eyebrow, description, children, actions }) {
               <h1>{title}</h1>
               <p className="admin-header__description">{description}</p>
             </div>
-            {actions && <div className="admin-header__actions">{actions}</div>}
+            <div className="admin-header__actions">
+              <RoleSwitcher showProfileWhenSingle={false} triggerClassName="admin-header__button admin-header__button--ghost" />
+              {actions}
+            </div>
           </header>
           {children}
         </section>

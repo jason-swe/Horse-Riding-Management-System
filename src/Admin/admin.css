@@ -2275,6 +2275,153 @@
 }
 
 /* Competition planning */
+.admin-competition__row-actions--tournament {
+  flex-wrap: wrap;
+  min-width: 240px;
+}
+
+.admin-competition__row-actions--tournament > .admin-competition__row-actions {
+  display: contents;
+}
+
+.admin-competition__row-actions--tournament > button,
+.admin-competition__row-actions--tournament > .admin-competition__row-actions > button {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 4px;
+  background: rgba(var(--racing-contrast-rgb), 0.03);
+  color: var(--admin-copy);
+  font-size: 0.7rem;
+}
+
+.admin-competition__row-actions--tournament > button:hover,
+.admin-competition__row-actions--tournament > .admin-competition__row-actions > button:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent-soft);
+}
+
+.admin-tournament-detail {
+  scroll-margin-top: 24px;
+  padding: 0;
+  overflow: hidden;
+  outline: none;
+  border-color: rgba(var(--racing-accent-rgb), 0.42);
+  box-shadow: 0 0 0 1px rgba(var(--racing-accent-rgb), 0.08), 0 18px 36px rgba(0, 0, 0, 0.12);
+}
+
+.admin-tournament-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+.admin-tournament-detail__grid > div {
+  display: grid;
+  gap: 6px;
+  min-height: 84px;
+  padding: 16px;
+  border-right: 1px solid var(--admin-line);
+}
+
+.admin-tournament-detail__grid > div:last-child { border-right: 0; }
+.admin-tournament-detail__grid span { color: var(--admin-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.admin-tournament-detail__grid strong { color: var(--admin-copy); font-size: 0.82rem; }
+
+.admin-race-toast {
+  position: fixed;
+  z-index: 30;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.4);
+  border-radius: 8px;
+  background: #151c18;
+  color: var(--admin-copy);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+  animation: admin-race-toast-in 180ms ease-out;
+}
+
+.admin-race-toast__header { display: flex; justify-content: space-between; gap: 16px; align-items: start; padding-bottom: 12px; border-bottom: 1px solid var(--admin-line); }
+.admin-race-toast__header h2 { margin: 4px 0; font-size: 1rem; }
+.admin-race-toast__header span { color: var(--admin-muted); font-size: 0.72rem; }
+.admin-race-toast__header button { display: grid; place-items: center; padding: 5px; border: 0; background: transparent; color: var(--admin-muted); cursor: pointer; }
+.admin-race-toast__header button:hover { color: var(--admin-copy); }
+.admin-race-toast__list { display: grid; max-height: 260px; overflow: auto; }
+.admin-race-toast__item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--admin-line); }
+.admin-race-toast__item > div { display: grid; gap: 3px; min-width: 0; }
+.admin-race-toast__item strong { overflow: hidden; color: var(--admin-copy); font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-race-toast__item span { color: var(--admin-muted); font-size: 0.7rem; }
+.admin-race-toast__empty { display: grid; justify-items: center; gap: 8px; padding: 26px 12px; color: var(--admin-muted); font-size: 0.76rem; text-align: center; }
+.admin-race-toast__footer { width: 100%; justify-content: center; margin-top: 12px; }
+
+.admin-race-window { z-index: 40; }
+.admin-race-window__card { width: min(720px, calc(100vw - 32px)); max-height: min(720px, calc(100dvh - 48px)); padding: 0; overflow: auto; scroll-behavior: smooth; }
+.admin-race-window__card .admin-competition__section-header { min-height: 86px; }
+.admin-race-window__meta { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--admin-line); background: rgba(var(--racing-contrast-rgb), 0.025); }
+.admin-race-window__meta span { padding: 5px 8px; border: 1px solid var(--admin-line); border-radius: 4px; color: var(--admin-muted); font-size: 0.7rem; }
+.admin-race-window__list { display: grid; max-height: 500px; overflow: auto; }
+.admin-race-window__item { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto 16px; align-items: center; gap: 12px; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--admin-line); background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.admin-race-window__item:hover { background: rgba(var(--racing-accent-rgb), 0.08); }
+.admin-race-window__item:focus-visible { outline: 2px solid var(--admin-accent); outline-offset: -2px; }
+.admin-race-window__number { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(var(--racing-accent-rgb), 0.4); border-radius: 4px; color: var(--admin-accent-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; }
+.admin-race-window__copy { display: grid; gap: 4px; min-width: 0; }
+.admin-race-window__copy strong { overflow: hidden; color: var(--admin-copy); font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-race-window__copy small { overflow: hidden; color: var(--admin-muted); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-race-window__item > svg { color: var(--admin-accent-soft); }
+.admin-race-window__empty { display: grid; justify-items: center; gap: 7px; padding: 48px 20px; color: var(--admin-muted); text-align: center; }
+.admin-race-window__empty strong { color: var(--admin-copy); font-size: 0.85rem; }
+.admin-race-window__empty span { font-size: 0.72rem; }
+.admin-race-window__item.is-selected { background: rgba(var(--racing-accent-rgb), 0.1); }
+.admin-race-window__detail { scroll-margin-top: 12px; margin: 0 16px 16px; padding: 14px; border: 1px solid rgba(var(--racing-accent-rgb), 0.36); border-radius: 6px; background: rgba(var(--racing-accent-rgb), 0.035); outline: none; }
+.admin-race-window__detail-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--admin-line); }
+.admin-race-window__detail-header h3 { margin: 4px 0; color: var(--admin-copy); font-size: 0.92rem; }
+.admin-race-window__detail-header span { color: var(--admin-muted); font-size: 0.7rem; }
+.admin-race-window__detail-header button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--admin-line-strong); border-radius: 4px; background: transparent; color: var(--admin-muted); font-size: 0.7rem; cursor: pointer; }
+.admin-race-window__detail-header button:hover { border-color: var(--admin-accent); color: var(--admin-accent-soft); }
+.admin-race-window__detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 12px; background: var(--admin-line); }
+.admin-race-window__detail-grid > div { display: grid; gap: 5px; padding: 10px; background: #151c18; }
+.admin-race-window__detail-grid span { color: var(--admin-muted); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.07em; }
+.admin-race-window__detail-grid strong { color: var(--admin-copy); font-size: 0.74rem; }
+
+.admin-race-detail { scroll-margin-top: 24px; padding: 0; overflow: hidden; outline: none; border-color: rgba(var(--racing-accent-rgb), 0.42); }
+.admin-race-detail__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-race-detail__grid > div { display: grid; gap: 6px; min-height: 80px; padding: 15px 16px; border-right: 1px solid var(--admin-line); border-bottom: 1px solid var(--admin-line); }
+.admin-race-detail__grid > div:nth-child(4n) { border-right: 0; }
+.admin-race-detail__grid span { color: var(--admin-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.admin-race-detail__grid strong { color: var(--admin-copy); font-size: 0.8rem; }
+
+@media (max-width: 900px) {
+  .admin-race-detail__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-race-detail__grid > div:nth-child(4n) { border-right: 1px solid var(--admin-line); }
+  .admin-race-detail__grid > div:nth-child(2n) { border-right: 0; }
+}
+
+@media (max-width: 620px) {
+  .admin-race-window__item { grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 9px; }
+  .admin-race-window__item .admin-status-badge { display: none; }
+  .admin-race-window__detail-grid { grid-template-columns: 1fr; }
+  .admin-race-detail__grid { grid-template-columns: 1fr; }
+  .admin-race-detail__grid > div,
+  .admin-race-detail__grid > div:nth-child(2n),
+  .admin-race-detail__grid > div:nth-child(4n) { border-right: 0; }
+}
+
+@keyframes admin-race-toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 900px) {
+  .admin-tournament-detail__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-tournament-detail__grid > div:nth-child(2) { border-right: 0; }
+}
+
+@media (max-width: 620px) {
+  .admin-tournament-detail__grid { grid-template-columns: 1fr; }
+  .admin-tournament-detail__grid > div { border-right: 0; border-bottom: 1px solid var(--admin-line); }
+  .admin-tournament-detail__grid > div:last-child { border-bottom: 0; }
+  .admin-race-toast { right: 16px; bottom: 16px; }
+}
+
 .admin-competition__flow {
   display: grid;
   grid-template-columns: 1fr 34px 1fr 34px 1fr;
@@ -2398,6 +2545,11 @@
 .admin-competition__stack {
   display: grid;
   gap: 14px;
+}
+
+/* Tournament setup keeps round data for race context, but does not render the round builder here. */
+.admin-competition__stack > .admin-panel:has(.admin-competition__round-controls) {
+  display: none;
 }
 
 .admin-competition__stack > .admin-panel,

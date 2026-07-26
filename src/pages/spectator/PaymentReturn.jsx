@@ -36,6 +36,7 @@ export default function PaymentReturn() {
     : "Pending";
   const gatewayLabel = paymentMethod || (searchParams.get("vnp_TxnRef") ? "VNPAY" : "Gateway");
   const backTarget = isRegistrationPayment ? "/owner/registrations" : "/spectator/deposit";
+  const depositHistoryTarget = isRegistrationPayment ? "/owner/deposit-history" : "/spectator/deposit";
   const backLabel = isRegistrationPayment ? "Back to registrations" : "Back to deposit";
   const hasSignedGatewayPayload = Boolean(
     searchParams.get("vnp_SecureHash")
@@ -123,7 +124,7 @@ export default function PaymentReturn() {
           <p>{statusCopy.detail}</p>
 
           <div className="payment-return-actions">
-            <Link className="spectator-button spectator-button--primary" to="/spectator/deposit">Open deposit history</Link>
+            <Link className="spectator-button spectator-button--primary" to={depositHistoryTarget}>Open deposit history</Link>
             <button className="spectator-button spectator-button--secondary payment-return-refresh" disabled={state.isLoading} type="button" onClick={() => refresh(state.polls)}>
               <RefreshCw size={16} className={state.isLoading ? "payment-return-spin" : ""} aria-hidden="true" /> Refresh
             </button>

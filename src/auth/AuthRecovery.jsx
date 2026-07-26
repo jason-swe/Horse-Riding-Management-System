@@ -32,6 +32,7 @@ const pageContent = {
 };
 
 const RESEND_COOLDOWN_SECONDS = 60;
+const isDevMode = import.meta.env.DEV;
 
 function normalizeOtp(value) {
   return String(value || "").replace(/\D/g, "").slice(0, 6);
@@ -43,6 +44,22 @@ function maskEmail(email) {
   if (!localPart || !domain) return email;
 
   return `${localPart.slice(0, 2)}${"*".repeat(Math.max(2, localPart.length - 2))}@${domain}`;
+}
+
+function getResetDeliveryIssue(response) {
+  if (!isDevMode) {
+    return "";
+  }
+
+  if (response?.email?.skipped) {
+    return response.email.reason || "Backend skipped email delivery for this reset request.";
+  }
+
+  if (!response?.reset && !response?.email) {
+    return "Backend accepted the request, but did not generate a reset email for this address. Check that the account exists, is verified, and is active.";
+  }
+
+  return "";
 }
 
 function AuthRecovery({ mode }) {
@@ -59,7 +76,7 @@ function AuthRecovery({ mode }) {
     newPassword: "",
     confirmPassword: "",
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(location.state?.notice || "");
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -107,13 +124,22 @@ function AuthRecovery({ mode }) {
 
     try {
       if (mode === "forgot") {
-        await authApi.forgotPassword(form.email);
+        const response = await authApi.forgotPassword(form.email);
+        const deliveryIssue = getResetDeliveryIssue(response);
+
+        if (deliveryIssue) {
+          setIsError(true);
+          setMessage(deliveryIssue);
+          return;
+        }
+
         const email = form.email.trim().toLowerCase();
         navigate(`/reset-password?email=${encodeURIComponent(email)}`, {
           replace: true,
           state: {
             email,
             requested: true,
+            notice: "A password reset code has been requested.",
           },
         });
         return;
@@ -172,7 +198,15 @@ function AuthRecovery({ mode }) {
     setIsError(false);
 
     try {
-      await authApi.forgotPassword(form.email);
+      const response = await authApi.forgotPassword(form.email);
+      const deliveryIssue = getResetDeliveryIssue(response);
+
+      if (deliveryIssue) {
+        setIsError(true);
+        setMessage(deliveryIssue);
+        return;
+      }
+
       setResendSeconds(RESEND_COOLDOWN_SECONDS);
       setMessage("A new password reset code has been requested.");
     } catch (apiError) {
