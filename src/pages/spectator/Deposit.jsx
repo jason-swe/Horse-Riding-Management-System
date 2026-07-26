@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, CreditCard, History, Landmark, Package, RefreshCw, ShieldCheck, Target, Trophy, WalletCards } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, History, Landmark, Package, RefreshCw, ShieldCheck, Target, WalletCards } from "lucide-react";
 import { betApi } from "../../api/betApi.js";
 import { depositApi } from "../../api/depositApi.js";
 import { walletApi } from "../../api/walletApi.js";
 import { formatTokenAmount, formatTransactionAmount, formatTransactionDate, getWalletBalance, transactionLabel } from "./walletFormatters.js";
-import { useSpectatorRaceResults } from "./useSpectatorData.js";
 import "./spectator.css";
 
 const VALID_PAYMENT_METHODS = ["VNPAY", "MOMO"];
@@ -109,8 +108,7 @@ function toPredictionHistoryRow(prediction) {
   };
 }
 
-export default function Deposit() {
-  const { error: resultsError, isLoading: resultsLoading, reload: reloadResults, results: raceResults } = useSpectatorRaceResults();
+function Deposit() {
   const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
   const [packagesState, setPackagesState] = useState({ packages: [], isLoading: true, error: "" });
   const [historyState, setHistoryState] = useState({ orders: [], isLoading: true, error: "" });
@@ -299,7 +297,6 @@ export default function Deposit() {
       bonus_token: 0,
     }
     : packagePreview;
-  const latestWinner = raceResults.find((result) => Number(result.position) === 1) || null;
   const activityRows = useMemo(() => {
     const depositRows = historyState.orders.map((order) => ({
       id: order._id || order.order_id,
@@ -329,25 +326,15 @@ export default function Deposit() {
       meta: transaction.direction === "credit" ? "Credit" : "Debit",
     }));
 
-    const winnerRows = raceResults
-      .filter((result) => Number(result.position) === 1)
-      .slice(0, 6)
-      .map((result) => ({
-        id: result.id || `${result.race}-${result.horse}-${result.publishedAt}`,
-        kind: "race-win",
-        date: result.publishedAt,
-        title: "Race winner",
-        detail: `${result.horse} / ${result.race}`,
-        amountLabel: result.score === "-" ? "Published" : `${result.score} pts`,
-        status: "published",
-        tone: "success",
-        meta: `Lane ${result.lane} / ${result.time}`,
-      }));
+    // A settled winning prediction is already represented by the wallet
+    // `bet_win` transaction above. Keep only non-winning prediction rows here
+    // so the same payout is not rendered twice in the activity feed.
+    const predictionRows = activityState.predictions.filter((prediction) => prediction.status !== "won");
 
-    return [...depositRows, ...transactionRows, ...activityState.predictions, ...winnerRows]
+    return [...depositRows, ...transactionRows, ...predictionRows]
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
       .slice(0, 18);
-  }, [activityState.predictions, activityState.transactions, historyState.orders, raceResults]);
+  }, [activityState.predictions, activityState.transactions, historyState.orders]);
 
   return (
     <section className="spectator-page deposit-page">
@@ -357,7 +344,7 @@ export default function Deposit() {
         <div>
           <p className="spectator-eyebrow">Wallet command</p>
           <h1 className="spectator-title">Deposit</h1>
-          <p className="spectator-copy">Top up TOKEN, review wallet movement, track prediction receipts, and follow published race wins from one account ledger.</p>
+          <p className="spectator-copy">Top up TOKEN, review wallet movement, and track prediction receipts from one account ledger.</p>
           <div className="deposit-hero__signals" aria-label="Deposit support summary">
             <span><ShieldCheck size={15} aria-hidden="true" /> Secure gateway return</span>
             <span><CreditCard size={15} aria-hidden="true" /> VNPAY and MoMo only</span>
@@ -367,7 +354,7 @@ export default function Deposit() {
         <aside className="deposit-balance-card">
           <span><WalletCards size={16} /> Current balance</span>
           <strong>{walletState.isLoading ? "Loading..." : formatTokenAmount(walletState.balance)}</strong>
-          <small>{walletState.error || "Wallet updates after payment, prediction settlement, and race prize activity."}</small>
+          <small>{walletState.error || "Wallet updates after payment and prediction settlement."}</small>
         </aside>
       </header>
 
@@ -474,7 +461,7 @@ export default function Deposit() {
               <p className="spectator-eyebrow">Account ledger</p>
               <h2>Recent activity</h2>
             </div>
-            <button className="spectator-badge profile-refresh-button" disabled={historyState.isLoading || activityState.isLoading || resultsLoading} type="button" onClick={() => { loadDepositData(); reloadResults?.(); }}>
+            <button className="spectator-badge profile-refresh-button" disabled={historyState.isLoading || activityState.isLoading} type="button" onClick={loadDepositData}>
               <RefreshCw size={13} /> Refresh
             </button>
           </div>
@@ -483,14 +470,14 @@ export default function Deposit() {
             <div><Package size={16} /><span>Top-ups</span><strong>{historyState.orders.length}</strong></div>
             <div><History size={16} /><span>Ledger rows</span><strong>{activityState.transactions.length}</strong></div>
             <div><Target size={16} /><span>Predictions</span><strong>{activityState.predictions.length}</strong></div>
-            <div><Trophy size={16} /><span>Latest winner</span><strong>{latestWinner?.horse || "TBA"}</strong></div>
+            <div><WalletCards size={16} /><span>Balance</span><strong>{walletState.isLoading ? "--" : formatTokenAmount(walletState.balance)}</strong></div>
           </div>
 
           <div className="profile-history deposit-history-list deposit-activity-list">
-            {(historyState.isLoading || activityState.isLoading || resultsLoading) && <div className="deposit-history-row"><span>Loading</span><strong>Account activity</strong><small>Fetching wallet, prediction, and race records</small><b>--</b></div>}
-            {!historyState.isLoading && (historyState.error || activityState.error || resultsError) && <div className="deposit-history-row"><span>Error</span><strong>Some activity is unavailable</strong><small>{historyState.error || activityState.error || resultsError}</small><b>--</b></div>}
-            {!historyState.isLoading && !activityState.isLoading && !resultsLoading && !historyState.error && !activityState.error && !resultsError && !activityRows.length && <div className="deposit-history-row"><span>Empty</span><strong>No account activity yet</strong><small>Top-ups, withdrawals, predictions, payouts, and race wins will appear here.</small><b>0 TOKEN</b></div>}
-            {!historyState.isLoading && !activityState.isLoading && !resultsLoading && activityRows.map((row) => (
+            {(historyState.isLoading || activityState.isLoading) && <div className="deposit-history-row"><span>Loading</span><strong>Account activity</strong><small>Fetching wallet and prediction records</small><b>--</b></div>}
+            {!historyState.isLoading && (historyState.error || activityState.error) && <div className="deposit-history-row"><span>Error</span><strong>Some activity is unavailable</strong><small>{historyState.error || activityState.error}</small><b>--</b></div>}
+            {!historyState.isLoading && !activityState.isLoading && !historyState.error && !activityState.error && !activityRows.length && <div className="deposit-history-row"><span>Empty</span><strong>No account activity yet</strong><small>Top-ups, withdrawals, predictions, and payouts will appear here.</small><b>0 TOKEN</b></div>}
+            {!historyState.isLoading && !activityState.isLoading && activityRows.map((row) => (
               <div className={`deposit-history-row deposit-activity-row deposit-activity-row--${row.tone}`} key={`${row.kind}-${row.id}`}>
                 <span className="deposit-history-row__date">
                   <span>{formatTransactionDate(row.date)}</span>
@@ -510,3 +497,5 @@ export default function Deposit() {
     </section>
   );
 }
+
+export default Deposit;

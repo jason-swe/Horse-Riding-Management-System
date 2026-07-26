@@ -219,8 +219,16 @@ function mapViolation(item, index = 0) {
 
 export function adaptJockeyApiData({ me, assignments, schedule, results, prizeAwards, stats, violations, approvalStatus, user }) {
   const assignmentItems = asArray(assignments, "assignments").map(mapAssignment);
+  const publishedRaceIds = new Set(
+    asArray(results, "results")
+      .filter((item) => String(item?.status || "").toLowerCase() === "published")
+      .map((item) => getId(item.race_id || item.race))
+      .filter(Boolean)
+      .map(String)
+  );
   const scheduleItems = asArray(schedule, "schedule").map((item, index) => {
     const mapped = item.race_id || item.horse_id ? mapAssignment(item, index) : mapAssignment({ ...item, status: item.status || "accepted" }, index);
+    const raceId = getId(item.race_id || item.race);
     return {
       id: mapped.id,
       time: mapped.date,
@@ -229,7 +237,7 @@ export function adaptJockeyApiData({ me, assignments, schedule, results, prizeAw
       horse: mapped.horse,
       venue: mapped.venue,
       round: mapped.round,
-      status: mapped.status,
+      status: raceId && publishedRaceIds.has(String(raceId)) ? "Complete" : mapped.status,
     };
   });
   const resultItems = asArray(results, "results").map(mapResult);

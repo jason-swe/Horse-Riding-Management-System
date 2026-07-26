@@ -97,12 +97,9 @@ export function toOwnerProfile(apiProfile, user) {
     stable: apiProfile?.stable_name || "Stable not set",
     email: user?.email || "No email",
     phone: user?.phone_number || "No phone",
+    avatarUrl: apiProfile?.avatar_url || user?.avatar_url || "",
     location: apiProfile?.address || "No address",
     status: getDisplayStatus(apiProfile?.status || "active"),
-    season: "Unavailable",
-    joined: "Join date unavailable",
-    winRate: "Unavailable",
-    earnings: "Unavailable",
     licenseNumber: apiProfile?.license_number || "No license",
     raw: apiProfile,
   };

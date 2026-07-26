@@ -16,7 +16,7 @@ import {
 import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
-  if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
+  if (["Accepted", "Confirmed", "Published", "Complete", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
   if (["Rejected", "Expired"].includes(status)) {
@@ -35,6 +35,7 @@ function JockeySchedule() {
   );
 
   const acceptedCount = schedule.filter((race) => race.status === "Accepted").length;
+  const completeCount = schedule.filter((race) => race.status === "Complete").length;
   const pendingCount = schedule.filter((race) => race.status === "Pending").length;
   const rejectedCount = schedule.filter((race) => race.status === "Rejected").length;
   const nextRace = visibleRaces[0] ?? schedule[0];
@@ -78,6 +79,7 @@ function JockeySchedule() {
         {[
           { label: "All slots", value: schedule.length, note: "Personal race windows", icon: CalendarDays },
           { label: "Accepted", value: acceptedCount, note: "Locked rides", icon: BadgeCheck },
+          { label: "Complete", value: completeCount, note: "Published results", icon: Trophy },
           { label: "Pending", value: pendingCount, note: "Awaiting decision", icon: ClipboardCheck },
           { label: "Rejected", value: rejectedCount, note: "Declined slots", icon: XCircle },
         ].map((item) => {
@@ -100,7 +102,7 @@ function JockeySchedule() {
             <h2>{filter === "All" ? "All race slots" : `${filter} race slots`}</h2>
           </div>
           <div className="jockey-segmented">
-            {["All", "Accepted", "Pending", "Rejected", "Cancelled"].map((item) => (
+            {["All", "Accepted", "Complete", "Pending", "Rejected", "Cancelled"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>

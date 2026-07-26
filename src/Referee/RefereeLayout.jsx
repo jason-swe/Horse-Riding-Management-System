@@ -1,6 +1,7 @@
 import { ClipboardCheck, Flag, Gauge, LogOut, ShieldCheck } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import RoleSwitcher from "../auth/RoleSwitcher";
 import "./referee.css";
 
 const navigation = [
@@ -37,7 +38,7 @@ function RefereeLayout({ title, eyebrow, description, children, actions }) {
       </aside>
 
       <section className="admin-content referee-content" id="referee-content">
-        <header className="admin-header referee-header"><div className="referee-header__copy"><p className="admin-header__eyebrow">{eyebrow}</p><h1>{title}</h1><p className="admin-header__description">{description}</p></div><div className="admin-header__actions">{actions}</div></header>
+        <header className="admin-header referee-header"><div className="referee-header__copy"><p className="admin-header__eyebrow">{eyebrow}</p><h1>{title}</h1><p className="admin-header__description">{description}</p></div><div className="admin-header__actions"><RoleSwitcher showProfileWhenSingle={false} triggerClassName="admin-header__button admin-header__button--ghost" />{actions}</div></header>
         <div className="referee-content__body">{children}</div>
       </section>
     </section>

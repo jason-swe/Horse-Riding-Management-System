@@ -2804,6 +2804,8 @@ button.admin-logout-btn {
 
 .footer-race-call__link {
   min-height: 46px;
+  width: fit-content;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -2813,8 +2815,118 @@ button.admin-logout-btn {
   color: #18271e;
   background: var(--racing-accent-strong);
   font-weight: 800;
+  white-space: nowrap;
   text-decoration: none;
   transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.role-switcher {
+  position: relative;
+}
+
+.role-switcher__trigger {
+  cursor: pointer;
+}
+
+.role-switcher__trigger > svg:last-child {
+  transition: transform 180ms ease;
+}
+
+.role-switcher__trigger > svg:last-child.is-open {
+  transform: rotate(180deg);
+}
+
+.role-switcher__popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 100;
+  width: 230px;
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid rgba(238, 231, 212, 0.28);
+  border-radius: 12px;
+  color: #eee7d4;
+  background: rgba(24, 43, 31, 0.98);
+  box-shadow: 0 24px 55px rgba(8, 20, 13, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  animation: roleSwitcherIn 160ms ease-out;
+}
+
+.role-switcher__popover::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 28px;
+  width: 13px;
+  height: 13px;
+  border-top: 1px solid rgba(238, 231, 212, 0.28);
+  border-left: 1px solid rgba(238, 231, 212, 0.28);
+  background: rgba(24, 43, 31, 0.98);
+  transform: rotate(45deg);
+}
+
+.role-switcher__heading {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  padding: 7px 9px 9px;
+  border-bottom: 1px solid rgba(238, 231, 212, 0.14);
+}
+
+.role-switcher__heading span {
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.role-switcher__heading small {
+  color: rgba(238, 231, 212, 0.62);
+  font-size: 0.72rem;
+}
+
+.role-switcher__item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: rgba(238, 231, 212, 0.78);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.role-switcher__item:hover:not(:disabled) {
+  color: #eee7d4;
+  border-color: rgba(205, 137, 65, 0.34);
+  background: rgba(205, 137, 65, 0.14);
+  transform: translateX(2px);
+}
+
+.role-switcher__item.is-active {
+  color: #f2ba79;
+  background: rgba(205, 137, 65, 0.16);
+}
+
+.role-switcher__item:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+@keyframes roleSwitcherIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .footer-race-call__link:hover,
@@ -3018,8 +3130,8 @@ button.admin-logout-btn {
 
 .role-application-layout {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr) 300px;
-  gap: 18px;
+  grid-template-columns: minmax(230px, 0.82fr) minmax(520px, 1.7fr) minmax(260px, 0.95fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -3103,7 +3215,7 @@ button.admin-logout-btn {
 }
 
 .role-application-form {
-  padding: 20px;
+  padding: 22px 24px 24px;
 }
 
 .role-application-form__header {
@@ -3121,22 +3233,27 @@ button.admin-logout-btn {
 .role-application-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px 18px;
+  align-items: start;
 }
 
 .role-application-field {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
   color: var(--racing-text-soft);
   font-size: 0.86rem;
   font-weight: 800;
 }
 
+.role-application-field > span:first-child {
+  min-height: 20px;
+}
+
 .role-application-field input,
 .role-application-field select {
   width: 100%;
-  min-height: 46px;
+  min-height: 54px;
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
   border-radius: 8px;
   background: rgba(29, 48, 36, 0.52);
@@ -3147,9 +3264,14 @@ button.admin-logout-btn {
 }
 
 .role-application-field input[type="file"] {
-  min-height: 52px;
-  padding: 12px;
-  color: var(--racing-text-muted);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .role-application-field input::placeholder {
@@ -3167,8 +3289,61 @@ button.admin-logout-btn {
   line-height: 1.45;
 }
 
+.role-application-file {
+  position: relative;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 8px;
+  background: rgba(29, 48, 36, 0.52);
+  color: var(--racing-text-muted);
+  overflow: hidden;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.role-application-file:hover,
+.role-application-file:focus-within {
+  border-color: rgba(var(--racing-accent-rgb), 0.62);
+  background: rgba(29, 48, 36, 0.68);
+  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.role-application-file__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.38);
+  border-radius: 6px;
+  background: rgba(var(--racing-accent-rgb), 0.16);
+  color: #FFE0B8;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.role-application-file__name {
+  min-width: 0;
+  color: var(--racing-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-application-file.has-file .role-application-file__name {
+  color: var(--racing-text-strong);
+}
+
 .role-application-note {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   padding: 12px 14px;
   border: 1px solid rgba(var(--racing-accent-rgb), 0.34);
   border-radius: 8px;
@@ -3178,12 +3353,64 @@ button.admin-logout-btn {
   font-weight: 700;
 }
 
-.role-application-form__actions {
+.role-application-note--editable {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
   align-items: center;
-  margin-top: 18px;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.role-application-note--editable div {
+  display: grid;
+  gap: 3px;
+}
+
+.role-application-note--editable strong,
+.role-application-note--editable span {
+  display: block;
+}
+
+.role-application-note--editable span {
+  color: var(--racing-text-soft);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.role-application-note--editable button,
+.role-application-row__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.28);
+  border-radius: 7px;
+  background: rgba(var(--racing-contrast-rgb), 0.09);
+  color: var(--racing-text-strong);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.role-application-note--editable button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.role-application-note--editable button:hover,
+.role-application-row__action:hover {
+  border-color: rgba(var(--racing-accent-rgb), 0.48);
+  background: rgba(var(--racing-accent-rgb), 0.13);
+  transform: translateY(-1px);
+}
+
+.role-application-form__actions {
+  display: grid;
+  grid-template-columns: minmax(240px, 360px);
+  justify-content: center;
+  margin-top: 22px;
 }
 
 .role-application-submit,
@@ -3192,10 +3419,11 @@ button.admin-logout-btn {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  min-height: 46px;
-  padding: 0 18px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 22px;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
   font-weight: 850;
   text-decoration: none;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
@@ -3206,11 +3434,13 @@ button.admin-logout-btn {
   background: var(--racing-accent-strong);
   color: var(--racing-green);
   cursor: pointer;
+  box-shadow: 0 14px 28px rgba(var(--racing-accent-rgb), 0.16);
 }
 
 .role-application-submit:hover:not(:disabled) {
   transform: translateY(-1px);
   background: var(--racing-accent-strong);
+  box-shadow: 0 18px 34px rgba(var(--racing-accent-rgb), 0.22);
 }
 
 .role-application-submit:active:not(:disabled),
@@ -3250,6 +3480,12 @@ button.admin-logout-btn {
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.role-application-row__action {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
 }
 
 .role-application-row strong {
@@ -3384,7 +3620,7 @@ button.admin-logout-btn {
   .role-application-form__header,
   .role-application-form__actions {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .role-application-submit,

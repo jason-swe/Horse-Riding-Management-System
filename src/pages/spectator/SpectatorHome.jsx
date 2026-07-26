@@ -1,5 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, CircleDollarSign, Clock3, LineChart, Radio, Sparkles, Trophy } from "lucide-react";
+import { betApi } from "../../api/betApi.js";
+import { walletApi } from "../../api/walletApi.js";
+import { formatTokenAmount, getWalletBalance } from "./walletFormatters.js";
 import "./spectator.css";
 
 const raceImages = [
@@ -48,11 +52,83 @@ const quickActions = [
   { label: "Deposit Ledger", meta: "Top-ups, predictions, and wins", to: "/spectator/deposit" },
 ];
 
+const ACTIVE_BET_STATUSES = new Set(["pending", "accepted", "open"]);
+const SETTLED_BET_STATUSES = new Set(["won", "lost", "cancelled"]);
+
+function normalizeBets(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.bets)) return payload.bets;
+  if (Array.isArray(payload?.data?.bets)) return payload.data.bets;
+  return [];
+}
+
 const SpectatorHome = () => {
+  const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
+  const [betsState, setBetsState] = useState({ bets: [], isLoading: true, error: "" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAccountOverview() {
+      setWalletState((current) => ({ ...current, isLoading: true, error: "" }));
+      setBetsState((current) => ({ ...current, isLoading: true, error: "" }));
+
+      const [walletResult, betsResult] = await Promise.allSettled([
+        walletApi.getMyWallet(),
+        betApi.getMyBets({ page: 1, limit: 100 }),
+      ]);
+
+      if (cancelled) return;
+
+      if (walletResult.status === "fulfilled") {
+        setWalletState({ balance: getWalletBalance(walletResult.value), isLoading: false, error: "" });
+      } else {
+        setWalletState({
+          balance: null,
+          isLoading: false,
+          error: walletResult.reason?.message || "Unable to load wallet.",
+        });
+      }
+
+      if (betsResult.status === "fulfilled") {
+        setBetsState({ bets: normalizeBets(betsResult.value), isLoading: false, error: "" });
+      } else {
+        setBetsState({
+          bets: [],
+          isLoading: false,
+          error: betsResult.reason?.message || "Unable to load predictions.",
+        });
+      }
+    }
+
+    loadAccountOverview();
+    return () => { cancelled = true; };
+  }, []);
+
+  const accountMetrics = useMemo(() => {
+    const activePredictions = betsState.bets.filter((bet) => ACTIVE_BET_STATUSES.has(String(bet?.status || "").toLowerCase())).length;
+    const settledPredictions = betsState.bets.filter((bet) => SETTLED_BET_STATUSES.has(String(bet?.status || "").toLowerCase()));
+    const wonPredictions = settledPredictions.filter((bet) => String(bet?.status || "").toLowerCase() === "won").length;
+    const winRate = settledPredictions.length ? Math.round((wonPredictions / settledPredictions.length) * 100) : 0;
+
+    return {
+      activePredictions,
+      settledCount: settledPredictions.length,
+      winRate,
+    };
+  }, [betsState.bets]);
+
+  const walletBalanceLabel = walletState.isLoading ? "Loading..." : formatTokenAmount(walletState.balance ?? 0);
+  const activePredictionsLabel = betsState.isLoading ? "--" : String(accountMetrics.activePredictions).padStart(2, "0");
+  const winRateLabel = betsState.isLoading ? "--" : `${accountMetrics.winRate}%`;
+  const walletNote = walletState.error || (Number(walletState.balance) > 0 ? "available now" : "no tokens yet");
+  const predictionsNote = betsState.error || (accountMetrics.activePredictions ? "tracking now" : "no active picks");
+  const winRateNote = betsState.error || (accountMetrics.settledCount ? `${accountMetrics.settledCount} settled picks` : "no settled picks");
+
   const overviewStats = [
-    { label: "Reward balance", value: "1,280", note: "points ready", icon: CircleDollarSign },
-    { label: "Active predictions", value: "04", note: "tracking now", icon: Radio },
-    { label: "Win rate", value: "62%", note: "last 30 picks", icon: LineChart },
+    { label: "Reward balance", value: walletBalanceLabel, note: walletNote, icon: CircleDollarSign },
+    { label: "Active predictions", value: activePredictionsLabel, note: predictionsNote, icon: Radio },
+    { label: "Win rate", value: winRateLabel, note: winRateNote, icon: LineChart },
     { label: "Next gate", value: "14:00", note: "Emerald Sprint", icon: Clock3 },
   ];
 
@@ -141,15 +217,15 @@ const SpectatorHome = () => {
           <div className="spectator-card__header">
             <div>
               <p className="spectator-eyebrow">Reward Wallet</p>
-              <h2>1,280 pts</h2>
+              <h2>{walletBalanceLabel}</h2>
             </div>
-            <span className="spectator-badge spectator-badge--amber">Ready</span>
+            <span className="spectator-badge spectator-badge--amber">{walletState.isLoading ? "Loading" : "Ready"}</span>
           </div>
-          <div className="spectator-wallet-card__bar" aria-hidden="true"><span /></div>
-          <p className="spectator-meta">Your next correct prediction can unlock the weekly reward tier.</p>
+          <div className="spectator-wallet-card__bar" aria-hidden="true"><span style={{ width: `${Math.min(accountMetrics.winRate, 100)}%` }} /></div>
+          <p className="spectator-meta">{walletState.error || (Number(walletState.balance) > 0 ? "Your balance is ready for upcoming predictions." : "Deposit tokens to start making predictions.")}</p>
           <div className="spectator-wallet-card__split">
-            <span>Weekly target</span>
-            <strong>68%</strong>
+            <span>Prediction win rate</span>
+            <strong>{winRateLabel}</strong>
           </div>
           <Link className="spectator-button" to="/spectator/deposit">View Deposit</Link>
         </aside>

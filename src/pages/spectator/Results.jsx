@@ -53,8 +53,8 @@ function toBetHistoryRow(bet) {
     odds: Number(bet?.odds_snapshot?.game_odds ?? 0),
     potentialPayout,
     payoutAmount,
-    resultAmount: status === "won" ? payoutAmount : status === "lost" ? 0 : potentialPayout,
-    resultLabel: status === "won" ? "Paid out" : status === "lost" ? "No payout" : "Potential",
+    resultAmount: status === "won" ? payoutAmount : status === "cancelled" ? Number(bet?.stake_amount ?? 0) : status === "lost" ? 0 : potentialPayout,
+    resultLabel: status === "won" ? "Paid out" : status === "cancelled" ? "Refunded" : status === "lost" ? "No payout" : "Potential",
     currency,
   };
 }
