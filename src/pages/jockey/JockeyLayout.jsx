@@ -19,6 +19,7 @@ function JockeyLayout() {
   const notificationsRef = useRef(null);
   const { invitations, schedule, results } = useJockeyApiData();
   const pendingInvitations = invitations.filter((item) => item.rawStatus === "meeting_invited");
+  const termReviews = invitations.filter((item) => item.rawStatus === "terms_pending_confirmation");
   const contractReviews = invitations.filter((item) => item.rawStatus === "contract_uploaded");
   const nextRace = schedule[0];
   const latestResult = results[0];
@@ -26,6 +27,12 @@ function JockeyLayout() {
     ...pendingInvitations.slice(0, 2).map((item) => ({
       icon: Send,
       title: `${item.horse} invitation needs your response.`,
+      meta: item.race,
+      to: "/jockey/invitations",
+    })),
+    ...termReviews.slice(0, 2).map((item) => ({
+      icon: FileText,
+      title: `${item.horse} terms need your confirmation.`,
       meta: item.race,
       to: "/jockey/invitations",
     })),
