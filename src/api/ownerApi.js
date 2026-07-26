@@ -141,17 +141,10 @@ export const ownerApi = {
     return apiRequest(`/jockey-assignments${query ? `?${query}` : ""}`);
   },
 
-  updateJockeyAssignmentTerms(id, payload) {
-    return apiRequest(`/jockey-assignments/${id}/terms`, {
-      method: "PATCH",
-      body: payload,
-    });
-  },
-
-  uploadJockeyAssignmentContract(id, contract) {
+  uploadJockeyAssignmentContract(id, payload) {
     return apiRequest(`/jockey-assignments/${id}/contract`, {
       method: "POST",
-      body: { contract },
+      body: payload,
     });
   },
 

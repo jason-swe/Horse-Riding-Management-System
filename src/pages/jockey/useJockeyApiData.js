@@ -3,6 +3,10 @@ import { jockeyApi } from "../../api/jockeyApi";
 import { useAuth } from "../../auth/AuthContext";
 import { adaptJockeyApiData } from "./jockeyAdapters";
 
+// Assignment changes are made by the owner from a separate session, so the
+// jockey workspace needs a lightweight background revalidation channel.
+const ASSIGNMENT_REFRESH_INTERVAL_MS = 5000;
+
 export function useJockeyApiData() {
   const { user } = useAuth();
   const [state, setState] = useState(() => adaptJockeyApiData({ user }));
@@ -47,6 +51,74 @@ export function useJockeyApiData() {
   useEffect(() => {
     loadJockeyData();
   }, [loadJockeyData]);
+
+  const refreshAssignments = useCallback(async () => {
+    const assignments = await jockeyApi.getAssignments();
+    const refreshedAssignments = adaptJockeyApiData({ assignments, user });
+
+    setState((current) => ({
+      ...current,
+      assignments: refreshedAssignments.assignments,
+      invitations: refreshedAssignments.invitations,
+    }));
+  }, [user]);
+
+  useEffect(() => {
+    // The first full load supplies the surrounding profile/dashboard data.
+    // Subsequent refreshes only request assignments, keeping the contract UI
+    // current without repeatedly reloading the whole jockey workspace.
+    if (isLoading) return undefined;
+
+    let stopped = false;
+    let isRequestInFlight = false;
+    let refreshTimer = null;
+
+    const refreshIfVisible = async () => {
+      if (stopped || document.visibilityState !== "visible" || isRequestInFlight) return;
+
+      isRequestInFlight = true;
+      try {
+        await refreshAssignments();
+      } catch {
+        // Keep the most recently rendered invitation data visible. A later
+        // refresh will retry automatically, so transient network failures do
+        // not interrupt a jockey reviewing a contract.
+      } finally {
+        isRequestInFlight = false;
+      }
+    };
+
+    const startBackgroundRefresh = () => {
+      if (refreshTimer || document.visibilityState !== "visible") return;
+      refreshTimer = window.setInterval(refreshIfVisible, ASSIGNMENT_REFRESH_INTERVAL_MS);
+    };
+
+    const stopBackgroundRefresh = () => {
+      if (!refreshTimer) return;
+      window.clearInterval(refreshTimer);
+      refreshTimer = null;
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshIfVisible();
+        startBackgroundRefresh();
+      } else {
+        stopBackgroundRefresh();
+      }
+    };
+
+    startBackgroundRefresh();
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopped = true;
+      stopBackgroundRefresh();
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isLoading, refreshAssignments]);
 
   const respondToMeeting = useCallback(async (id, accepted) => {
     const action = accepted ? jockeyApi.acceptAppointment : jockeyApi.rejectAppointment;

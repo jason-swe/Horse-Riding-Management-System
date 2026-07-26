@@ -32,9 +32,9 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
     ? "Review the standby appointment details and respond to the owner's backup invitation."
     : "Review the offline appointment details and respond to the owner's invitation.",
   meeting_accepted: isBackup
-    ? "Standby appointment accepted. Attend at the scheduled time, then wait for the owner to record standby terms."
-    : "Appointment accepted. Attend at the scheduled time, then wait for the owner to record the agreed terms.",
-  terms_agreed: "The owner recorded the terms and is preparing the contract.",
+    ? "Standby appointment accepted. The owner will send the terms and contract for your review."
+    : "Appointment accepted. The owner will send the terms and contract for your review.",
+  terms_agreed: "The owner is preparing the contract for your review.",
   contract_uploaded: isBackup
     ? "Review the terms and contract. Confirming accepts the standby assignment or promoted primary contract."
     : "Review the terms and contract. Confirming the contract accepts the assignment.",
@@ -48,7 +48,7 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
 const getStatusGroup = (rawStatus) => ({
   meeting_invited: "Appointment",
   meeting_accepted: "Appointment",
-  terms_agreed: "Terms",
+  terms_agreed: "Contract",
   contract_uploaded: "Contract",
   accepted: "Accepted",
 }[rawStatus] || "Closed");
@@ -147,7 +147,7 @@ function JockeyInvitations() {
             <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
           </div>
           <div className="jockey-segmented">
-              {["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
+              {["All", "Appointment", "Contract", "Accepted", "Closed"].map((item) => (
               <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
                 {item}
               </button>
@@ -188,7 +188,7 @@ function JockeyInvitations() {
                   <div><span>Role</span><strong>{invite.assignmentTypeLabel}{invite.backupPriority ? ` #${invite.backupPriority}` : ""}</strong></div>
                   <div><span><Clock3 size={13} /> Appointment</span><strong>{invite.meetingTime || "Pending"}</strong></div>
                   <div><span><MapPin size={13} /> Location</span><strong>{invite.locationName || invite.venue || "Pending"}</strong></div>
-                  <div><span><FileText size={13} /> Contract</span><strong>{invite.contractTitle || invite.contractFileName || "Contract pending"}</strong></div>
+                  <div><span><FileText size={13} /> Contract</span><strong>{invite.contractFileName || "Contract pending"}</strong></div>
                 </div>
 
                 <div className="jockey-invitation-review">
