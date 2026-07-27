@@ -35,7 +35,7 @@ function RaceLifecycleControls({ race, participantsUnavailable = false, reload }
 
   return <section className="admin-panel">
     <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Lifecycle contract</p><h2>Authoritative race controls</h2></div></div>
-    <p>The backend supports starting a scheduled race and completing a running race. Pause and stop controls are not available.</p>
+    <p>A scheduled race can be started and a running race can be completed. Pause and stop controls are not available.</p>
     {startRestriction && <section className="admin-live-state" aria-live="polite">{startRestriction}</section>}
     {feedback && <section className="admin-live-state" aria-live="polite">{feedback}</section>}
     <div className="admin-tool-card__footer">

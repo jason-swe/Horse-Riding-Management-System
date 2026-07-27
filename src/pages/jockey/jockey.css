@@ -168,6 +168,17 @@
   box-shadow: 0 20px 34px rgba(var(--racing-accent-rgb), 0.36);
 }
 
+.jockey-button--danger {
+  border-color: rgba(239, 128, 116, 0.5);
+  color: var(--racing-danger-soft);
+  background: rgba(177, 65, 53, 0.14);
+}
+
+.jockey-button--danger:hover {
+  border-color: rgba(239, 128, 116, 0.72);
+  background: rgba(177, 65, 53, 0.24);
+}
+
 .jockey-button--ghost {
   border-radius: 999px;
 }
@@ -1267,6 +1278,53 @@
 
 .jockey-invitation-terms small {
   color: var(--jockey-text-muted);
+}
+
+.jockey-cancellation-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(239, 128, 116, 0.3);
+  border-radius: 8px;
+  background: rgba(177, 65, 53, 0.08);
+}
+
+.jockey-cancellation-panel > strong,
+.jockey-cancellation-panel label > span {
+  color: var(--racing-danger-soft);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.jockey-cancellation-panel p,
+.jockey-cancellation-panel small {
+  margin: 0;
+  color: var(--jockey-text-soft);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.jockey-cancellation-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.jockey-cancellation-panel textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 6px;
+  outline: 0;
+  color: var(--jockey-text-strong);
+  background: rgba(11, 25, 16, 0.28);
+  font: inherit;
+  resize: vertical;
+}
+
+.jockey-cancellation-panel textarea:focus-visible {
+  border-color: rgba(239, 128, 116, 0.7);
+  box-shadow: 0 0 0 4px rgba(177, 65, 53, 0.12);
 }
 
 .jockey-invitation-card__actions {

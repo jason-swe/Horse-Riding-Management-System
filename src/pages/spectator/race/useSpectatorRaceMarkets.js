@@ -34,8 +34,8 @@ export function useSpectatorRaceMarkets() {
         const tournament = tournaments.find((item) => String(item.id) === String(adapted.tournamentId));
         return {
           ...adapted,
-          tournamentName: row.tournament_id?.name || tournament?.name || "Tournament",
-          tournamentLocation: row.tournament_id?.location || tournament?.location || adapted.location,
+          tournamentName: adapted.tournamentName || tournament?.name || "Tournament",
+          tournamentLocation: adapted.tournamentLocation || tournament?.location || adapted.location,
           isPreview: false,
         };
       });

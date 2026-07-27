@@ -183,7 +183,7 @@ function RaceMonitor() {
         description: isIncident ? incidentDescription : undefined,
         check_note: isIncident ? incidentDescription : undefined,
         requires_violation: isIncident,
-        auto_confirm_violation: isIncident,
+        auto_confirm_violation: false,
       });
       await reload();
       setForm((current) => ({
@@ -191,7 +191,9 @@ function RaceMonitor() {
         eventType: current.eventType || violationOptions?.violation_types?.[0] || "",
         severity: current.severity || violationOptions?.severities?.[0] || "minor",
       }));
-      setMessage("Race event recorded.");
+      setMessage(isIncident
+        ? "Incident recorded. Review the linked violation before submitting a penalty decision."
+        : "Race observation recorded.");
     } catch (apiError) {
       setMessage(apiError.message || "Unable to record race event.");
     } finally {
@@ -203,7 +205,7 @@ function RaceMonitor() {
     <RefereeLayout
       title="Race Monitor"
       eyebrow={`During race | ${race.name}`}
-      description="Record backend-persisted incidents and use the authoritative start or complete action when the race status allows it."
+      description="Record race incidents and use the official start or complete action when the race status allows it."
       actions={<Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>Race Detail</Link>}
     >
       {!editable && <section className="admin-live-state">Current race status is {formatStatus(race.status)}. During-race records are read only.</section>}
@@ -211,10 +213,17 @@ function RaceMonitor() {
       {optionsError && <section className="admin-live-state admin-live-state--warning">{optionsError}</section>}
       {message && <section className="admin-live-state" aria-live="polite">{message}</section>}
 
+      <nav className="referee-phase-strip" aria-label="Race control phases">
+        <Link to={`/referee/races/${raceId}/horse-inspection?phase=pre_race`}>1. Pre-race checks</Link>
+        <span className="active" aria-current="step">2. Live monitoring</span>
+        <Link to={`/referee/races/${raceId}/horse-inspection?phase=post_race`}>3. Post-race checks</Link>
+        <Link to={`/referee/races/${raceId}/closure`}>4. Closure</Link>
+      </nav>
+
       <RaceLifecycleControls race={race} participantsUnavailable={participantsUnavailable} reload={reload} />
 
       {editable && (
-        <section className="admin-panel">
+        <section className="admin-panel referee-monitor-entry">
           <div className="admin-panel__header">
             <p className="admin-panel__eyebrow">New event</p>
             <h2>Record race observation</h2>
@@ -296,13 +305,13 @@ function RaceMonitor() {
                   <p>{previewError}</p>
                 ) : policyPreview ? (
                   <>
-                    <div><span>Backend policy preview</span></div>
+                    <div><span>System penalty recommendation</span></div>
                     <strong>{describePenalty(policyPreview.suggested_penalty)}</strong>
                     <p>{policyPreview.suggested_penalty?.note}</p>
                     <small>
                       {policyPreview.requires_review
-                        ? "Admin decision required for confirmation or dismissal."
-                        : `Linked violation will be auto-confirmed. Policy ${policyPreview.policy_version}`}
+                        ? "The incident will be recorded for administrative review."
+                        : `This is a recommendation. The Referee chooses the final proposal under policy ${policyPreview.policy_version}.`}
                     </small>
                   </>
                 ) : (
@@ -313,17 +322,18 @@ function RaceMonitor() {
 
             <div className="admin-tool-card__footer">
               <button className="admin-header__button" type="submit" disabled={cannotSubmit}>
-                {isSaving ? "Saving..." : "Record Event"}
+                {isSaving ? "Saving..." : "Record observation"}
               </button>
             </div>
           </form>
         </section>
       )}
 
-      <section className="admin-panel">
+      <section className="admin-panel referee-monitor-timeline">
         <div className="admin-panel__header">
           <p className="admin-panel__eyebrow">Event log</p>
-          <h2>During-race records</h2>
+          <h2>During-race timeline</h2>
+          <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}/violations`}>Review penalties</Link>
         </div>
         {incidents.length === 0 ? (
           <p>No events recorded.</p>
@@ -338,6 +348,7 @@ function RaceMonitor() {
                   <th>Severity</th>
                   <th>Time</th>
                   <th>Description</th>
+                  <th>Decision</th>
                 </tr>
               </thead>
               <tbody>
@@ -352,6 +363,7 @@ function RaceMonitor() {
                       <td>{formatStatus(incident.severity)}</td>
                       <td>{incident.timeMarker || "Not recorded"}</td>
                       <td>{incident.description || incident.note}</td>
+                      <td>{incident.linkedViolationId ? <Link to={`/referee/races/${raceId}/violations`}>Review</Link> : "Observation only"}</td>
                     </tr>
                   );
                 })}

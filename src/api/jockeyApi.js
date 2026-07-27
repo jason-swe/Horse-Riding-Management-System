@@ -103,6 +103,27 @@ export const jockeyApi = {
     });
   },
 
+  withdrawAssignment(id, reason) {
+    return apiRequest(`/jockey-assignments/${id}/withdraw`, {
+      method: "POST",
+      body: { reason },
+    });
+  },
+
+  requestAssignmentCancellation(id, reason) {
+    return apiRequest(`/jockey-assignments/${id}/cancellation-request`, {
+      method: "POST",
+      body: { reason },
+    });
+  },
+
+  respondToAssignmentCancellation(id, decision, responseMessage = "") {
+    return apiRequest(`/jockey-assignments/${id}/cancellation-request/respond`, {
+      method: "POST",
+      body: { decision, response_message: responseMessage },
+    });
+  },
+
   getSchedule(params = {}) {
     return apiRequest(withQuery("/jockeys/me/schedule", params));
   },

@@ -248,6 +248,13 @@ function RaceClosure() {
       {(error || workflowError) && <section className="admin-live-state admin-live-state--warning">{error || workflowError}</section>}
       {!!messages.length && <section className="admin-toast-stack" aria-live="polite">{messages.map((message, index) => <div key={`${message}-${index}`} className="admin-toast">{message}</div>)}</section>}
 
+      <nav className="referee-phase-strip" aria-label="Race control phases">
+        <Link to={`/referee/races/${raceId}/horse-inspection?phase=pre_race`}>1. Pre-race checks</Link>
+        <Link to={`/referee/races/${raceId}/monitor`}>2. Live monitoring</Link>
+        <Link to={`/referee/races/${raceId}/horse-inspection?phase=post_race`}>3. Post-race checks</Link>
+        <span className="active" aria-current="step">4. Closure</span>
+      </nav>
+
       <section className="referee-closure-tabs" aria-label="Race closure tabs">
         {tabs.map((tab) => (
           <button className={activeTab === tab.key ? "is-active" : ""} key={tab.key} onClick={() => setActiveTab(tab.key)} type="button">
@@ -319,11 +326,11 @@ function RaceClosure() {
           <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Official report</p><h2>Referee report</h2></div><span className={`referee-status-badge referee-status-badge--${isSubmitted ? "green" : "gray"}`}>{isSubmitted ? "Submitted" : "Draft"}</span></div>
           <form className="admin-form-grid" onSubmit={(event) => event.preventDefault()}>
             <label className="admin-field"><span>Report Title</span><input value={form.title} onChange={(event) => updateField("title", event.target.value)} disabled={isSubmitted} /></label>
-            <label className="admin-field"><span>Race Condition</span><input value={form.raceCondition} onChange={(event) => updateField("raceCondition", event.target.value)} disabled={isSubmitted} /></label>
-            <label className="admin-field"><span>Weather</span><input value={form.weather} onChange={(event) => updateField("weather", event.target.value)} disabled={isSubmitted} /></label>
-            <label className="admin-field"><span>Track Condition</span><input value={form.trackCondition} onChange={(event) => updateField("trackCondition", event.target.value)} disabled={isSubmitted} /></label>
-            <label className="admin-field"><span>Report Content</span><textarea value={form.content} onChange={(event) => updateField("content", event.target.value)} disabled={isSubmitted} /></label>
-            <label className="admin-field"><span>Conclusion</span><textarea value={form.conclusion} onChange={(event) => updateField("conclusion", event.target.value)} disabled={isSubmitted} /></label>
+            <label className="admin-field"><span>Race condition</span><select value={form.raceCondition} onChange={(event) => updateField("raceCondition", event.target.value)} disabled={isSubmitted}><option value="normal">Normal</option><option value="delayed">Delayed</option><option value="interrupted">Interrupted</option><option value="stopped">Stopped</option></select></label>
+            <label className="admin-field"><span>Weather</span><select value={form.weather} onChange={(event) => updateField("weather", event.target.value)} disabled={isSubmitted}><option value="">Select weather</option><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="light_rain">Light rain</option><option value="heavy_rain">Heavy rain</option><option value="windy">Windy</option></select></label>
+            <label className="admin-field"><span>Track condition</span><select value={form.trackCondition} onChange={(event) => updateField("trackCondition", event.target.value)} disabled={isSubmitted}><option value="">Select track condition</option><option value="firm">Firm</option><option value="good">Good</option><option value="soft">Soft</option><option value="heavy">Heavy</option><option value="unsafe">Unsafe</option></select></label>
+            <label className="admin-field"><span>Material events and observations</span><textarea value={form.content} onChange={(event) => updateField("content", event.target.value)} disabled={isSubmitted} placeholder="Summarize starts, incidents, stoppages, inquiries, and evidence reviewed." /></label>
+            <label className="admin-field"><span>Official conclusion</span><textarea value={form.conclusion} onChange={(event) => updateField("conclusion", event.target.value)} disabled={isSubmitted} placeholder="State whether the race can proceed to result finalization and note any outstanding review." /></label>
           </form>
           {!isSubmitted && <div className="admin-tool-card__footer" style={{ marginTop: 14 }}><button className="admin-header__button admin-header__button--ghost" disabled={isSavingReport} type="button" onClick={saveDraft}>{isSavingReport ? "Saving..." : "Save Draft"}</button><button className="admin-header__button referee-btn--confirm" disabled={isSavingReport} type="button" onClick={submitReport}>Submit Report</button></div>}
           {isSubmitted && <div className="admin-tool-card__footer" style={{ marginTop: 14 }}><button className="admin-header__button" type="button" onClick={() => setActiveTab("result")}>Continue to Results</button></div>}

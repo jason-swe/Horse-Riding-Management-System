@@ -38,7 +38,7 @@ import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerPr
 import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
 
 const statusClass = (status) => {
-  if (["Ready", "Approved", "Assigned", "Confirmed", "Published", "Won", "Verified", "Paid"].includes(status)) {
+  if (["Ready", "Approved", "Assigned", "Accepted", "Standby confirmed", "Confirmed", "Published", "Won", "Verified", "Paid"].includes(status)) {
     return "owner-badge--green";
   }
   if (["Rejected", "Closed", "Cancelled", "Meet rejected", "Appointment rejected", "Terms rejected", "Contract rejected", "Replaced", "Disqualified"].includes(status)) {
@@ -88,6 +88,11 @@ const formatInvitationDate = (value) => {
   }).format(date);
 };
 
+const toLocalDateTimeInputValue = (date = new Date()) => {
+  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
+};
+
 const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
 
 // Keep an owner's open invitation workspace in sync with jockey responses without
@@ -111,6 +116,8 @@ const assignmentStatusLabel = (status) => ({
   meeting_accepted: "Appointment accepted",
   meeting_rejected: "Appointment rejected",
   terms_pending_confirmation: "Terms awaiting jockey",
+  standby_terms_pending_confirmation: "Standby terms awaiting jockey",
+  standby_confirmed: "Standby confirmed",
   terms_agreed: "Terms confirmed",
   terms_rejected: "Terms rejected",
   contract_uploaded: "Contract awaiting jockey",
@@ -124,6 +131,8 @@ const assignmentStageLabel = (status) => ({
   meeting_invited: "Invite",
   meeting_accepted: "Appointment",
   terms_pending_confirmation: "Terms",
+  standby_terms_pending_confirmation: "Standby terms",
+  standby_confirmed: "Standby",
   terms_agreed: "Terms",
   terms_rejected: "Terms",
   contract_uploaded: "Contract",
@@ -134,7 +143,61 @@ const assignmentStageLabel = (status) => ({
   cancelled: "Closed",
 }[status] || "Pending");
 
-const activeAssignmentStatuses = ["meeting_invited", "meeting_accepted", "terms_pending_confirmation", "terms_agreed", "terms_rejected", "contract_uploaded", "accepted"];
+const activeAssignmentStatuses = [
+  "meeting_invited",
+  "meeting_accepted",
+  "terms_pending_confirmation",
+  "standby_terms_pending_confirmation",
+  "standby_confirmed",
+  "terms_agreed",
+  "terms_rejected",
+  "contract_uploaded",
+  "accepted",
+];
+
+const lockedRaceStatuses = [
+  "starting",
+  "started",
+  "running",
+  "ongoing",
+  "in_progress",
+  "completed",
+  "finished",
+  "cancelled",
+  "archived",
+];
+
+const normalizeAssignmentRecord = (item) => {
+  if (!item) return item;
+
+  if (item.status === "pending") {
+    return { ...item, source_status: item.status, status: "meeting_invited" };
+  }
+  if (item.status === "rejected") {
+    return { ...item, source_status: item.status, status: "meeting_rejected" };
+  }
+  if (item.assignment_type === "backup" && item.status === "terms_pending_confirmation") {
+    return { ...item, source_status: item.status, status: "standby_terms_pending_confirmation" };
+  }
+  if (item.assignment_type === "backup" && ["terms_agreed", "contract_uploaded", "accepted"].includes(item.status)) {
+    return { ...item, source_status: item.status, status: "standby_confirmed" };
+  }
+  return item;
+};
+
+const isAssignmentRaceLocked = (item) => {
+  const raceStatus = String(item?.race_id?.status || item?.race_status || "").toLowerCase();
+  return lockedRaceStatuses.includes(raceStatus);
+};
+
+const withdrawableAssignmentStatuses = [
+  "meeting_accepted",
+  "terms_pending_confirmation",
+  "standby_terms_pending_confirmation",
+  "terms_agreed",
+  "terms_rejected",
+  "contract_uploaded",
+];
 
 const assignmentPartyName = (party, fallback) => {
   if (!party) return fallback;
@@ -1281,6 +1344,7 @@ function OwnerJockeys() {
   const [detailLoadingId, setDetailLoadingId] = useState("");
   const [assignmentSaved, setAssignmentSaved] = useState(false);
   const [assignmentError, setAssignmentError] = useState("");
+  const [appointmentMinimum, setAppointmentMinimum] = useState(() => toLocalDateTimeInputValue());
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [invitationToast, setInvitationToast] = useState(null);
   const [existingAssignments, setExistingAssignments] = useState([]);
@@ -1340,7 +1404,7 @@ function OwnerJockeys() {
   const approvedRaceEntries = liveRegistrations.filter((item) => item.status === "Approved" && item.horseId && item.raceId);
   const isBackupInvitation = assignment.assignmentType === "backup";
   const assignableRaceEntries = approvedRaceEntries.filter((item) => isBackupInvitation
-    ? Boolean(findPrimaryAssignmentForRegistration(item))
+    ? Boolean(findPrimaryAssignmentForRegistration(item)) && getBackupAssignmentsForRegistration(item).length === 0
     : !findPrimaryAssignmentForRegistration(item));
   const selectedEntry = assignableRaceEntries.find((item) => item.id === assignment.registrationId) ?? assignableRaceEntries[0] ?? null;
   const selectedHorse = selectedEntry
@@ -1358,10 +1422,21 @@ function OwnerJockeys() {
     })
     : null;
   const assignedCount = existingAssignments.filter((item) => item.status === "accepted").length;
-  const pendingCount = existingAssignments.filter((item) => ["meeting_invited", "meeting_accepted", "terms_pending_confirmation", "terms_agreed", "terms_rejected", "contract_uploaded"].includes(item.status)).length;
+  const pendingCount = existingAssignments.filter((item) => [
+    "meeting_invited",
+    "meeting_accepted",
+    "terms_pending_confirmation",
+    "standby_terms_pending_confirmation",
+    "terms_agreed",
+    "terms_rejected",
+    "contract_uploaded",
+  ].includes(item.status)).length;
   const topWinRate = Math.max(0, ...jockeys.map((jockey) => Math.round((jockey.wins / Math.max(jockey.races, 1)) * 100)));
   const blockedByNoEntry = !assignmentsLoading && !selectedEntry;
-  const invitationLocked = blockedByNoEntry || (!isBackupInvitation && Boolean(existingAssignment)) || (isBackupInvitation && !existingAssignment) || Boolean(selectedJockeyDuplicate);
+  const invitationLocked = blockedByNoEntry
+    || (!isBackupInvitation && Boolean(existingAssignment))
+    || (isBackupInvitation && (!existingAssignment || backupAssignments.length > 0))
+    || Boolean(selectedJockeyDuplicate);
   const selectedWorkflowAssignment = existingAssignments.find((item) => String(item._id) === String(selectedWorkflowId)) || null;
 
   useEffect(() => {
@@ -1396,7 +1471,7 @@ function OwnerJockeys() {
 
       try {
         const data = await ownerApi.getJockeyAssignments();
-        if (!cancelled) setExistingAssignments(data.assignments || []);
+        if (!cancelled) setExistingAssignments((data.assignments || []).map(normalizeAssignmentRecord));
       } catch (apiError) {
         if (!cancelled && initial) {
           setAssignmentError(apiError.message || "Unable to load existing jockey assignments.");
@@ -1468,7 +1543,7 @@ function OwnerJockeys() {
     if (!updated?._id) return;
     setExistingAssignments((current) => current.map((item) => String(item._id) === String(updated._id) ? {
       ...item,
-      ...updated,
+      ...normalizeAssignmentRecord(updated),
       race_id: item.race_id,
       horse_id: item.horse_id,
       owner_id: item.owner_id,
@@ -1497,7 +1572,9 @@ function OwnerJockeys() {
         agreed_at: new Date().toISOString(),
       });
       replaceAssignment(data.assignment);
-      setWorkflowMessage("Terms sent to the jockey for confirmation.");
+      setWorkflowMessage(item.assignment_type === "backup"
+        ? "Standby terms sent. The backup assignment becomes active after jockey confirmation."
+        : "Terms sent to the jockey for confirmation.");
     } catch (apiError) {
       setAssignmentError(apiError.message || "Unable to send terms to the jockey.");
     } finally {
@@ -1611,6 +1688,74 @@ function OwnerJockeys() {
     }
   };
 
+  const requestAssignmentCancellation = async (item) => {
+    const id = item._id;
+    const reason = (workflowDrafts[id]?.cancellationReason || "").trim();
+
+    if (!reason) {
+      setAssignmentError("Enter a reason for ending this jockey contract.");
+      return;
+    }
+
+    setWorkflowActionId(id);
+    setAssignmentError("");
+    setWorkflowMessage("");
+
+    try {
+      const data = await ownerApi.requestJockeyAssignmentCancellation(id, reason);
+      replaceAssignment(data.assignment);
+      setWorkflowMessage("Cancellation request sent. The contract remains active until the jockey agrees.");
+    } catch (apiError) {
+      setAssignmentError(apiError.message || "Unable to request contract cancellation.");
+    } finally {
+      setWorkflowActionId("");
+    }
+  };
+
+  const withdrawJockeyAssignment = async (item) => {
+    const id = item._id;
+    const reason = (workflowDrafts[id]?.withdrawalReason || "").trim();
+
+    if (!reason) {
+      setAssignmentError("Enter a reason for withdrawing from this negotiation.");
+      return;
+    }
+
+    setWorkflowActionId(id);
+    setAssignmentError("");
+    setWorkflowMessage("");
+
+    try {
+      const data = await ownerApi.withdrawJockeyAssignment(id, reason);
+      replaceAssignment(data.assignment);
+      setWorkflowMessage("Assignment negotiation withdrawn. The other party can view the recorded reason.");
+    } catch (apiError) {
+      setAssignmentError(apiError.message || "Unable to withdraw this assignment.");
+    } finally {
+      setWorkflowActionId("");
+    }
+  };
+
+  const respondToAssignmentCancellation = async (item, decision) => {
+    const id = item._id;
+    const responseMessage = (workflowDrafts[id]?.cancellationResponse || "").trim();
+    setWorkflowActionId(id);
+    setAssignmentError("");
+    setWorkflowMessage("");
+
+    try {
+      const data = await ownerApi.respondToJockeyAssignmentCancellation(id, decision, responseMessage);
+      replaceAssignment(data.assignment);
+      setWorkflowMessage(decision === "approve"
+        ? "Contract cancellation agreed. The primary assignment is now closed."
+        : "Cancellation declined. The primary contract remains active.");
+    } catch (apiError) {
+      setAssignmentError(apiError.message || "Unable to respond to this cancellation request.");
+    } finally {
+      setWorkflowActionId("");
+    }
+  };
+
   const setJockeyPreviewAnchor = (event) => {
     if (!event) return;
     const cardWidth = 540;
@@ -1714,6 +1859,11 @@ function OwnerJockeys() {
       return;
     }
 
+    if (isBackupInvitation && backupAssignments.length > 0) {
+      setAssignmentError("This horse already has its optional backup jockey for the selected race.");
+      return;
+    }
+
     if (selectedJockeyDuplicate) {
       setAssignmentError(`${selectedJockey.name} already has an active assignment for this horse and race.`);
       return;
@@ -1724,7 +1874,7 @@ function OwnerJockeys() {
         race_id: selectedRace.id,
         jockey_id: selectedJockey.id,
         assignment_type: assignment.assignmentType,
-        backup_priority: isBackupInvitation ? backupAssignments.length + 1 : undefined,
+        backup_priority: isBackupInvitation ? 1 : undefined,
         invitation_message: assignment.message || (isBackupInvitation
           ? `Please stand by as backup jockey for ${selectedHorse.name} in ${selectedRace.name}.`
           : `Please ride ${selectedHorse.name} in ${selectedRace.name}.`),
@@ -1771,14 +1921,6 @@ function OwnerJockeys() {
     setWorkflowMessage("");
     try {
       const data = await ownerApi.promoteJockeyAssignment(id, `Promote ${jockeyName} from backup to primary for ${horseName}.`);
-      const previousPrimaryId = data.previous_primary_assignment_id;
-
-      if (previousPrimaryId) {
-        setExistingAssignments((current) => current.map((currentItem) => String(currentItem._id) === String(previousPrimaryId)
-          ? { ...currentItem, status: "replaced" }
-          : currentItem));
-      }
-
       replaceAssignment(data.assignment);
       setWorkflowMessage("Backup jockey promoted. Send the new primary terms for jockey confirmation before uploading a contract.");
     } catch (apiError) {
@@ -1967,6 +2109,20 @@ function OwnerJockeys() {
                 const jockeyName = assignmentPartyName(item.jockey_id, "Jockey");
                 const isBusy = workflowActionId === id;
                 const isBackupAssignment = item.assignment_type === "backup";
+                const cancellationRequest = item.cancellation_request;
+                const cancellationPending = cancellationRequest?.status === "pending";
+                const ownerRequestedCancellation = cancellationRequest?.initiated_by_party === "horse_owner";
+                const raceLocked = isAssignmentRaceLocked(item);
+                const itemRaceId = item.race_id?._id || item.race_id?.id || item.race_id;
+                const itemHorseId = item.horse_id?._id || item.horse_id?.id || item.horse_id;
+                const hasActivePrimary = isBackupAssignment && existingAssignments.some((candidate) => {
+                  const candidateRaceId = candidate.race_id?._id || candidate.race_id?.id || candidate.race_id;
+                  const candidateHorseId = candidate.horse_id?._id || candidate.horse_id?.id || candidate.horse_id;
+                  return candidate.assignment_type !== "backup"
+                    && activeAssignmentStatuses.includes(candidate.status)
+                    && String(candidateRaceId) === String(itemRaceId)
+                    && String(candidateHorseId) === String(itemHorseId);
+                });
 
                 return (
                   <article className="owner-assignment-workflow__detail">
@@ -1980,13 +2136,36 @@ function OwnerJockeys() {
 
                     <div className="owner-assignment-steps" aria-label={`Assignment status: ${assignmentStatusLabel(status)}`}>
                       <span className={status !== "meeting_invited" ? "is-complete" : "is-current"}>Appointment invite</span>
-                      <span className={["meeting_accepted", "terms_pending_confirmation", "terms_agreed", "terms_rejected", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ""}>Appointment accepted</span>
-                      <span className={["terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ["meeting_accepted", "terms_pending_confirmation", "terms_rejected"].includes(status) ? "is-current" : ""}>Terms confirmed</span>
-                      <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "terms_agreed" ? "is-current" : ""}>Contract review</span>
-                      <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
+                      <span className={[
+                        "meeting_accepted",
+                        "terms_pending_confirmation",
+                        "standby_terms_pending_confirmation",
+                        "terms_agreed",
+                        "terms_rejected",
+                        "contract_uploaded",
+                        "accepted",
+                        "standby_confirmed",
+                      ].includes(status) ? "is-complete" : ""}>Appointment accepted</span>
+                      <span className={isBackupAssignment
+                        ? status === "standby_confirmed" ? "is-complete" : ["meeting_accepted", "standby_terms_pending_confirmation", "terms_rejected"].includes(status) ? "is-current" : ""
+                        : ["terms_agreed", "contract_uploaded", "accepted"].includes(status) ? "is-complete" : ["meeting_accepted", "terms_pending_confirmation", "terms_rejected"].includes(status) ? "is-current" : ""}>
+                        {isBackupAssignment ? "Standby terms" : "Terms confirmed"}
+                      </span>
+                      {isBackupAssignment ? (
+                        <span className={status === "standby_confirmed" ? "is-complete" : ""}>Standby confirmed</span>
+                      ) : (
+                        <>
+                          <span className={["contract_uploaded", "accepted"].includes(status) ? "is-complete" : status === "terms_agreed" ? "is-current" : ""}>Contract review</span>
+                          <span className={status === "accepted" ? "is-complete" : status === "contract_uploaded" ? "is-current" : ""}>Accepted</span>
+                        </>
+                      )}
                     </div>
 
-                    {status === "meeting_invited" && (
+                    {raceLocked && activeAssignmentStatuses.includes(status) && (
+                      <p className="owner-assignment-workflow__note">The race has started or closed, so this assignment can no longer be changed.</p>
+                    )}
+
+                    {!raceLocked && status === "meeting_invited" && (
                       <div className="owner-assignment-workflow__invite-actions">
                         <p className="owner-assignment-workflow__note">Waiting for the jockey to accept or reject the offline appointment invitation.</p>
                         {cancelAssignmentId === id ? (
@@ -2004,11 +2183,11 @@ function OwnerJockeys() {
                         )}
                       </div>
                     )}
-                    {["meeting_accepted", "terms_rejected"].includes(status) && (
+                    {!raceLocked && ["meeting_accepted", "terms_rejected"].includes(status) && (
                       <div className="owner-assignment-workflow__form">
                         <label className="owner-field owner-field--full">
-                          <span>Terms for jockey confirmation <em>Required</em></span>
-                          <textarea maxLength={5000} value={draft.agreedTerms ?? item.terms?.agreed_terms ?? ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder="Record fee, race scope, preparation, and responsibilities agreed during the appointment." />
+                          <span>{isBackupAssignment ? "Standby terms" : "Terms for jockey confirmation"} <em>Required</em></span>
+                          <textarea maxLength={5000} value={draft.agreedTerms ?? item.terms?.agreed_terms ?? ""} onChange={(event) => updateWorkflowDraft(id, "agreedTerms", event.target.value)} placeholder={isBackupAssignment ? "Record standby window, availability, fee, notice, and replacement conditions." : "Record fee, race scope, preparation, and responsibilities agreed during the appointment."} />
                         </label>
                         <label className="owner-field owner-field--full">
                           <span>Appointment note <small>Optional</small></span>
@@ -2022,8 +2201,9 @@ function OwnerJockeys() {
                     )}
 
                     {status === "terms_pending_confirmation" && <p className="owner-assignment-workflow__note">Terms were sent to the jockey. Contract upload unlocks after the jockey confirms them.</p>}
+                    {status === "standby_terms_pending_confirmation" && <p className="owner-assignment-workflow__note">Standby terms were sent. This backup becomes confirmed immediately after the jockey accepts them.</p>}
 
-                    {status === "terms_agreed" && (
+                    {!raceLocked && status === "terms_agreed" && !isBackupAssignment && (
                       <div className="owner-assignment-workflow__form owner-assignment-workflow__form--contract">
                         <div className="owner-assignment-workflow__terms">
                           <span>Terms confirmed by jockey</span>
@@ -2045,33 +2225,117 @@ function OwnerJockeys() {
                     )}
 
                     {status === "contract_uploaded" && <p className="owner-assignment-workflow__note">Contract sent. The assignment becomes accepted only after the jockey confirms it.</p>}
-                    {status === "cancelled" && <p className="owner-assignment-workflow__note">This jockey invitation was cancelled and can no longer be accepted.</p>}
-                    {status === "accepted" && (
+                    {status === "cancelled" && !item.withdrawal?.reason && item.cancellation_request?.status !== "approved" && (
+                      <p className="owner-assignment-workflow__note">This jockey invitation was cancelled and can no longer be accepted.</p>
+                    )}
+                    {["accepted", "standby_confirmed"].includes(status) && (
                       <div className="owner-assignment-workflow__form owner-assignment-workflow__form--accepted">
                         <div className="owner-assignment-confirmation" role="status">
                           <span className="owner-assignment-confirmation__icon" aria-hidden="true"><CheckCircle2 size={21} strokeWidth={2.4} /></span>
                           <div className="owner-assignment-confirmation__copy">
-                            <span className="owner-assignment-confirmation__eyebrow">{isBackupAssignment ? "Standby assignment accepted" : "Contract accepted"}</span>
+                            <span className="owner-assignment-confirmation__eyebrow">{isBackupAssignment ? "Standby agreement confirmed" : "Contract accepted"}</span>
                             <strong>{isBackupAssignment ? `${jockeyName} is confirmed as a standby rider.` : `${jockeyName} is confirmed to ride ${horseName}.`}</strong>
                             <span className="owner-assignment-confirmation__meta">{raceName} · {isBackupAssignment ? `Backup${item.backup_priority ? ` #${item.backup_priority}` : ""}` : "Primary assignment"}</span>
                           </div>
-                          {item.contract?.file_url && (
+                          {!isBackupAssignment && item.contract?.file_url && (
                             <a className="owner-assignment-confirmation__contract" href={item.contract.file_url} rel="noreferrer" target="_blank">
                               <FileText size={16} /> <span>View signed contract</span>
                             </a>
                           )}
                         </div>
-                        {isBackupAssignment && (
-                          <button className="owner-button owner-button--primary" disabled={isBusy} onClick={() => promoteBackupAssignment(item)} type="button">
-                            <RotateCcw size={16} /> {isBusy ? "Promoting..." : "Promote to primary"}
-                          </button>
+                        {isBackupAssignment && !raceLocked && (
+                          <>
+                            {hasActivePrimary && (
+                              <p className="owner-assignment-workflow__note">
+                                The current primary contract must end by mutual agreement before this backup can be promoted.
+                              </p>
+                            )}
+                            <button className="owner-button owner-button--primary" disabled={isBusy || hasActivePrimary || cancellationPending} onClick={() => promoteBackupAssignment(item)} type="button">
+                              <RotateCcw size={16} /> {isBusy ? "Promoting..." : "Promote to primary"}
+                            </button>
+                          </>
                         )}
+                        {!raceLocked && cancellationPending && ownerRequestedCancellation && (
+                          <div className="owner-assignment-workflow__terms">
+                            <span>Cancellation awaiting jockey confirmation</span>
+                            <p>{cancellationRequest.reason}</p>
+                            <small>The {isBackupAssignment ? "standby agreement" : "primary contract"} remains active until the jockey agrees.</small>
+                          </div>
+                        )}
+                        {!raceLocked && cancellationPending && !ownerRequestedCancellation && (
+                          <div className="owner-assignment-workflow__form">
+                            <div className="owner-assignment-workflow__terms">
+                              <span>Jockey requested {isBackupAssignment ? "standby agreement" : "primary contract"} cancellation</span>
+                              <p>{cancellationRequest.reason}</p>
+                            </div>
+                            <label className="owner-field owner-field--full">
+                              <span>Response note <small>Optional</small></span>
+                              <textarea
+                                maxLength={1000}
+                                value={draft.cancellationResponse || ""}
+                                onChange={(event) => updateWorkflowDraft(id, "cancellationResponse", event.target.value)}
+                                placeholder="Record your response for the cancellation audit."
+                              />
+                            </label>
+                            <div className="owner-assignment-workflow__invite-actions">
+                              <button className="owner-button" disabled={isBusy} onClick={() => respondToAssignmentCancellation(item, "reject")} type="button">
+                                Keep agreement
+                              </button>
+                              <button className="owner-button owner-button--danger" disabled={isBusy} onClick={() => respondToAssignmentCancellation(item, "approve")} type="button">
+                                {isBusy ? "Updating..." : `Agree to end ${isBackupAssignment ? "standby" : "contract"}`}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {!raceLocked && !cancellationPending && (
+                          <div className="owner-assignment-workflow__form">
+                            {cancellationRequest?.status === "rejected" && (
+                              <p className="owner-assignment-workflow__note">
+                                Previous cancellation request was declined. The agreement remains active.
+                              </p>
+                            )}
+                            <label className="owner-field owner-field--full">
+                              <span>Reason for ending {isBackupAssignment ? "standby agreement" : "contract"} <em>Required</em></span>
+                              <textarea
+                                maxLength={1000}
+                                value={draft.cancellationReason || ""}
+                                onChange={(event) => updateWorkflowDraft(id, "cancellationReason", event.target.value)}
+                                placeholder={`Explain why you are asking the jockey to end this ${isBackupAssignment ? "standby agreement" : "primary contract"}.`}
+                              />
+                            </label>
+                            <button className="owner-button owner-button--danger" disabled={isBusy} onClick={() => requestAssignmentCancellation(item)} type="button">
+                              {isBusy ? "Sending request..." : "Request mutual cancellation"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {!raceLocked && withdrawableAssignmentStatuses.includes(status) && (
+                      <div className="owner-assignment-workflow__form">
+                        <label className="owner-field owner-field--full">
+                          <span>Reason for withdrawing <em>Required</em></span>
+                          <textarea
+                            maxLength={1000}
+                            value={draft.withdrawalReason || ""}
+                            onChange={(event) => updateWorkflowDraft(id, "withdrawalReason", event.target.value)}
+                            placeholder="Explain why this negotiation cannot continue."
+                          />
+                        </label>
+                        <button className="owner-button owner-button--danger" disabled={isBusy} onClick={() => withdrawJockeyAssignment(item)} type="button">
+                          {isBusy ? "Withdrawing..." : "Withdraw from negotiation"}
+                        </button>
                       </div>
                     )}
                     {status === "replaced" && <p className="owner-assignment-workflow__note">This primary assignment was replaced by a promoted backup jockey.</p>}
                     {status === "meeting_rejected" && <p className="owner-assignment-workflow__note">The jockey declined the offline appointment invitation.</p>}
                     {status === "contract_rejected" && <p className="owner-assignment-workflow__note">The jockey rejected the contract. This assignment was not accepted.</p>}
-                    {item.contract?.file_url && status !== "accepted" && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
+                    {status === "cancelled" && item.withdrawal?.reason && <p className="owner-assignment-workflow__note">Withdrawn by {item.withdrawal.initiated_by_party === "jockey" ? "jockey" : "horse owner"}: {item.withdrawal.reason}</p>}
+                    {status === "cancelled" && !item.withdrawal?.reason && item.cancellation_request?.status === "approved" && (
+                      <p className="owner-assignment-workflow__note">
+                        Ended by mutual confirmation. Requested by {item.cancellation_request.initiated_by_party === "jockey" ? "jockey" : "horse owner"}: {item.cancellation_request.reason}
+                      </p>
+                    )}
+                    {!isBackupAssignment && item.contract?.file_url && status !== "accepted" && <a className="owner-assignment-contract-link" href={item.contract.file_url} rel="noreferrer" target="_blank"><FileText size={15} /> View uploaded contract</a>}
                   </article>
                 );
               })() : (
@@ -2291,7 +2555,7 @@ function OwnerJockeys() {
           <div><span>Horse</span><strong>{selectedHorse?.name || "Not selected"}</strong></div>
           <div><span>Race</span><strong>{selectedRace?.name || "Not selected"}</strong></div>
           <div><span>Jockey</span><strong>{selectedJockeyDetail?.name || selectedJockey?.name || "Not selected"}</strong></div>
-          <div><span>Role</span><strong>{isBackupInvitation ? `Backup #${backupAssignments.length + 1}` : "Primary"}</strong></div>
+          <div><span>Role</span><strong>{isBackupInvitation ? "Backup" : "Primary"}</strong></div>
         </div>
 
         <div className="owner-invitation-fields">
@@ -2312,7 +2576,14 @@ function OwnerJockeys() {
               </label>
               <label className="owner-field">
                 <span>Appointment time <em>Required</em></span>
-                <input required type="datetime-local" value={assignment.meetingTime} onChange={(event) => updateAssignment("meetingTime", event.target.value)} />
+                <input
+                  required
+                  type="datetime-local"
+                  min={appointmentMinimum}
+                  value={assignment.meetingTime}
+                  onFocus={() => setAppointmentMinimum(toLocalDateTimeInputValue())}
+                  onChange={(event) => updateAssignment("meetingTime", event.target.value)}
+                />
               </label>
               <label className="owner-field">
                 <span>Location name <em>Required</em></span>
@@ -2354,7 +2625,7 @@ function OwnerJockeys() {
         {blockedByNoEntry && (
           <div className="owner-assignment-conflict" role="status">
             <ClipboardCheck size={16} />
-            <span><strong>No eligible race entry.</strong> {isBackupInvitation ? "Choose a race entry that already has an active primary jockey before inviting a backup." : "A horse must have an approved race registration and no existing primary jockey assignment before you can invite a jockey."}</span>
+            <span><strong>No eligible race entry.</strong> {isBackupInvitation ? "A backup requires an active primary and the race entry must not already have a backup jockey." : "A horse must have an approved race registration and no existing primary jockey assignment before you can invite a jockey."}</span>
           </div>
         )}
 
