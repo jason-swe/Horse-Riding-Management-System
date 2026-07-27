@@ -219,7 +219,7 @@ function RaceReport() {
           <h2>Horses &amp; Jockeys</h2>
         </div>
         {race.participants.filter((participant) => participant.eligible).length === 0 ? (
-          <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No participants available from the API yet.</p>
+          <p style={{ color: "rgba(245,247,243,0.48)", fontStyle: "italic" }}>No participants are available for this race yet.</p>
         ) : (
           <div className="admin-data-table__wrap">
             <table className="admin-data-table">

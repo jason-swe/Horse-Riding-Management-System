@@ -190,6 +190,8 @@ export function toSpectatorTournament(apiTournament) {
 export function toSpectatorRace(apiRace) {
   const id = getId(apiRace);
   const raceDate = apiRace.race_date || apiRace.date;
+  const tournament = apiRace.tournament_id || apiRace.tournament || {};
+  const round = apiRace.round_id || apiRace.round || {};
   const date = new Date(raceDate);
   const hasValidDate = !Number.isNaN(date.getTime());
 
@@ -221,10 +223,12 @@ export function toSpectatorRace(apiRace) {
 
   return {
     id,
-    tournamentId: getId(apiRace.tournament_id),
-    roundId: getId(apiRace.round_id),
-    roundName: apiRace.round_id?.name || apiRace.round?.name || apiRace.round_name || null,
-    roundOrder: apiRace.round_id?.round_order ?? null,
+    tournamentId: getId(tournament),
+    tournamentName: tournament.name || null,
+    tournamentLocation: tournament.location || null,
+    roundId: getId(round),
+    roundName: round.name || apiRace.round_name || null,
+    roundOrder: round.round_order ?? null,
     raceDate: hasValidDate ? date.toISOString() : null,
     raceDateDisplay: hasValidDate ? formatLocalDateDisplay(raceDate) : null,
     time: hasValidDate
@@ -232,7 +236,7 @@ export function toSpectatorRace(apiRace) {
       : null,
     name: apiRace.name || "Unnamed race",
     distance: apiRace.distance ? `${apiRace.distance}m` : null,
-    location: apiRace.location || apiRace.tournament_id?.location || null,
+    location: apiRace.location || tournament.location || null,
     runnerCount: apiRace.runner_count ?? apiRace.participant_count ?? apiRace.entries ?? null,
     maxParticipants: apiRace.max_participants ?? null,
     registrationLocked: apiRace.registration_locked ?? false,

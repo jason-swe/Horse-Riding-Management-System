@@ -4403,3 +4403,10 @@
 .admin-analytics-status b { display: block; height: 100%; background: var(--admin-accent); }
 @media (max-width: 1180px) { .admin-analytics-metrics { grid-template-columns: repeat(3, 1fr); } .admin-analytics-metric:nth-child(3) { border-right: 0; } .admin-analytics-metric:nth-child(-n + 3) { border-bottom: 1px solid var(--admin-line); } .admin-analytics-layout, .admin-analytics-bottom { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { .admin-analytics-metrics, .admin-analytics-charts { grid-template-columns: 1fr; } .admin-analytics-metric, .admin-analytics-metric:nth-child(3) { min-height: 118px; border-right: 0; border-bottom: 1px solid var(--admin-line); } .admin-analytics-metric:last-child { border-bottom: 0; } .admin-analytics-chart__plot { height: 246px; margin-inline: 4px; } .admin-analytics-chart__legend { padding-inline: 15px; } .admin-analytics-chart__legend span:last-child { display: none; } .admin-analytics-table__row { grid-template-columns: minmax(0, 1fr) auto; } .admin-analytics-table__row > em { display: none; } .admin-analytics-range { width: 100%; justify-content: space-between; } .admin-analytics-picker { flex: 1; min-width: 0; } .admin-analytics-picker__menu { width: 100%; } }
+.admin-incident-penalty-review {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}

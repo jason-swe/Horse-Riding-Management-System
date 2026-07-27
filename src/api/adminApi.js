@@ -177,6 +177,10 @@ export const adminApi = {
     return apiRequest(withQuery("/violations", params));
   },
 
+  getViolationOptions() {
+    return apiRequest("/violations/options");
+  },
+
   listJockeyAssignments(params = {}) {
     return apiRequest(withQuery("/jockey-assignments", params));
   },
@@ -189,8 +193,9 @@ export const adminApi = {
     return apiRequest(`/violations/${id}`, { method: "PATCH", body: payload });
   },
 
-  confirmViolation(id, decision) {
-    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body: { decision } });
+  confirmViolation(id, payload) {
+    const body = typeof payload === "string" ? { decision: payload } : payload;
+    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body });
   },
 
   dismissViolation(id, decision) {

@@ -167,4 +167,25 @@ export const ownerApi = {
       method: "POST",
     });
   },
+
+  withdrawJockeyAssignment(id, reason) {
+    return apiRequest(`/jockey-assignments/${id}/withdraw`, {
+      method: "POST",
+      body: { reason },
+    });
+  },
+
+  requestJockeyAssignmentCancellation(id, reason) {
+    return apiRequest(`/jockey-assignments/${id}/cancellation-request`, {
+      method: "POST",
+      body: { reason },
+    });
+  },
+
+  respondToJockeyAssignmentCancellation(id, decision, responseMessage = "") {
+    return apiRequest(`/jockey-assignments/${id}/cancellation-request/respond`, {
+      method: "POST",
+      body: { decision, response_message: responseMessage },
+    });
+  },
 };

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { CheckSquare, Save, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, CheckSquare, Save, X } from "lucide-react";
 import { refereeApi } from "../api/refereeApi";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import RefereeLayout from "./RefereeLayout";
@@ -54,14 +54,6 @@ const LABELS = {
 
 const NOTE_REQUIRED_STATUSES = ["failed", "scratched", "injury_detected", "requires_vet_follow_up"];
 
-function getDefaultBulkNote(status) {
-  if (status === "failed") return "Marked failed during bulk inspection.";
-  if (status === "scratched") return "Scratched during bulk inspection.";
-  if (status === "injury_detected") return "Injury detected during bulk inspection.";
-  if (status === "requires_vet_follow_up") return "Requires veterinary follow-up after bulk inspection.";
-  return "";
-}
-
 function initialRows(race, phase, fields) {
   return Object.fromEntries(
     (race?.participants || []).map((participant) => {
@@ -81,6 +73,36 @@ function initialRows(race, phase, fields) {
   );
 }
 
+function checklistProgress(row, fields) {
+  const completed = fields.filter((field) => Boolean(row?.checklist?.[field])).length;
+  return { completed, total: fields.length };
+}
+
+function isRowDirty(row, fields) {
+  if (!row) return false;
+
+  const savedStatus = row.saved?.status || "";
+  const savedNote = row.saved?.note || "";
+  if (row.status !== savedStatus || row.note !== savedNote) return true;
+
+  return fields.some(
+    (field) => Boolean(row.checklist?.[field]) !== Boolean(row.saved?.checklist?.[field])
+  );
+}
+
+function rowSaveState(row, fields) {
+  if (isRowDirty(row, fields)) return { label: "Unsaved", tone: "amber" };
+  if (row?.saved) return { label: "Saved", tone: "green" };
+  return { label: "Not started", tone: "gray" };
+}
+
+function statusTone(status) {
+  if (["passed", "normal"].includes(status)) return "green";
+  if (["failed", "scratched", "injury_detected"].includes(status)) return "red";
+  if (status) return "amber";
+  return "gray";
+}
+
 function HorseInspection() {
   const { raceId } = useParams();
   const [searchParams] = useSearchParams();
@@ -96,6 +118,10 @@ function HorseInspection() {
   const [savingId, setSavingId] = useState("");
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [message, setMessage] = useState("");
+  const [bulkIssues, setBulkIssues] = useState([]);
+  const [selectedHorseId, setSelectedHorseId] = useState("");
+  const [showPassAllConfirmation, setShowPassAllConfirmation] = useState(false);
+  const passAllConfirmationRef = useRef(null);
   const editable = race?.phase === phase;
   const participantsUnavailable = Boolean(isUnavailable || race?.participantsUnavailable);
 
@@ -113,6 +139,19 @@ function HorseInspection() {
 
     return rows;
   }, [race, phase]);
+
+  useEffect(() => {
+    setSelectedHorseId((current) => {
+      if (participants.some((participant) => participant.horseId === current)) return current;
+      return participants[0]?.horseId || "";
+    });
+    setShowPassAllConfirmation(false);
+    setBulkIssues([]);
+  }, [participants]);
+
+  useEffect(() => {
+    if (showPassAllConfirmation) passAllConfirmationRef.current?.focus();
+  }, [showPassAllConfirmation]);
 
   if (isLoading) {
     return (
@@ -148,36 +187,50 @@ function HorseInspection() {
       };
     });
     setRows(nextRows);
-    setMessage("Marked all checklist items as checked and set all status to passed/normal. Click 'Save All Checks' to commit to database.");
-  };
-
-  const handlePassSingle = (horseId) => {
-    setRows((current) => ({
-      ...current,
-      [horseId]: {
-        ...current[horseId],
-        status: phase === RACE_PHASES.PRE_RACE ? "passed" : "normal",
-        checklist: Object.fromEntries(fields.map((field) => [field, true])),
-      }
-    }));
+    setShowPassAllConfirmation(false);
+    setBulkIssues([]);
+    setMessage(
+      `Marked ${participants.length} runners as ${phase === RACE_PHASES.PRE_RACE ? "passed" : "normal"}. Review the unsaved rows before saving.`
+    );
   };
 
   const handleSaveAll = async () => {
     setIsSavingAll(true);
     setMessage("Saving all checks...");
     const checks = [];
-    let skippedCount = 0;
+    const validationIssues = [];
 
     for (const participant of participants) {
       const row = rows[participant.horseId];
 
       if (!row || !row.status) {
-        skippedCount++;
+        validationIssues.push({
+          horseId: participant.horseId,
+          horseName: participant.horseName,
+          reason: "Status is required."
+        });
         continue;
       }
 
       const requiresNote = NOTE_REQUIRED_STATUSES.includes(row.status);
-      const note = row.note.trim() || (requiresNote ? getDefaultBulkNote(row.status) : "");
+      const note = row.note.trim();
+      const requiresCompleteChecklist = ["passed", "normal"].includes(row.status);
+      if (requiresCompleteChecklist && checklistProgress(row, fields).completed !== fields.length) {
+        validationIssues.push({
+          horseId: participant.horseId,
+          horseName: participant.horseName,
+          reason: `${formatStatus(row.status)} requires every checklist item to be completed.`
+        });
+        continue;
+      }
+      if (requiresNote && !note) {
+        validationIssues.push({
+          horseId: participant.horseId,
+          horseName: participant.horseName,
+          reason: `${formatStatus(row.status)} requires a specific inspection note.`
+        });
+        continue;
+      }
 
       checks.push({
         horse_id: participant.horseId,
@@ -190,9 +243,11 @@ function HorseInspection() {
       });
     }
 
+    setBulkIssues(validationIssues);
+
     if (!checks.length) {
       setIsSavingAll(false);
-      setMessage("No checks are ready to save. Select at least one status before saving.");
+      setMessage(`No checks were saved. Resolve ${validationIssues.length} validation issue(s) first.`);
       return;
     }
 
@@ -203,11 +258,21 @@ function HorseInspection() {
       });
       const summary = response.summary || {};
       const failed = response.failed || [];
+      const apiIssues = failed.map((item) => {
+        const failedHorseId = item.horse_id || item.horseId || "";
+        const participant = participants.find((entry) => entry.horseId === failedHorseId);
+        return {
+          horseId: failedHorseId,
+          horseName: participant?.horseName || item.horse_name || "Unknown runner",
+          reason: item.message || item.error || "The API rejected this check."
+        };
+      });
 
       await reload();
+      setBulkIssues([...validationIssues, ...apiIssues]);
       setMessage(
         `Bulk save complete. Created: ${summary.created_count || 0}. Updated: ${summary.updated_count || 0}. ` +
-        `Failed: ${summary.failed_count || failed.length || 0}. Skipped: ${skippedCount}.`
+        `Failed: ${summary.failed_count || failed.length || 0}. Skipped: ${validationIssues.length}.`
       );
     } catch (apiError) {
       setMessage(apiError.message || "Unable to bulk save horse checks.");
@@ -219,12 +284,31 @@ function HorseInspection() {
   const save = async (participant) => {
     const row = rows[participant.horseId];
     const requiresNote = NOTE_REQUIRED_STATUSES.includes(row.status);
-    if (!row.status) return setMessage("Select a check status before saving.");
-    if (requiresNote && !row.note.trim()) return setMessage("This status requires a note or issue description.");
+    if (!row.status) {
+      setBulkIssues([{ horseId: participant.horseId, horseName: participant.horseName, reason: "Status is required." }]);
+      return setMessage("Select a check status before saving.");
+    }
+    if (["passed", "normal"].includes(row.status) && checklistProgress(row, fields).completed !== fields.length) {
+      setBulkIssues([{
+        horseId: participant.horseId,
+        horseName: participant.horseName,
+        reason: `${formatStatus(row.status)} requires every checklist item to be completed.`
+      }]);
+      return setMessage("Complete every checklist item before saving a passing status.");
+    }
+    if (requiresNote && !row.note.trim()) {
+      setBulkIssues([{
+        horseId: participant.horseId,
+        horseName: participant.horseName,
+        reason: `${formatStatus(row.status)} requires a specific inspection note.`
+      }]);
+      return setMessage("This status requires a note or issue description.");
+    }
 
     try {
       setSavingId(participant.horseId);
       setMessage("");
+      setBulkIssues([]);
       const payload = {
         race_id: race.id,
         horse_id: participant.horseId,
@@ -248,11 +332,18 @@ function HorseInspection() {
     }
   };
 
+  const selectedParticipant = participants.find(
+    (participant) => participant.horseId === selectedHorseId
+  );
+  const selectedRow = selectedParticipant ? rows[selectedParticipant.horseId] : null;
+  const selectedSaveState = rowSaveState(selectedRow, fields);
+  const passAllLabel = phase === RACE_PHASES.PRE_RACE ? "Mark All Passed" : "Mark All Normal";
+
   return (
     <RefereeLayout
       title={title}
       eyebrow={`${formatStatus(phase)} | ${race.name}`}
-      description={editable ? "This is the current race phase. Saved records reload from the API." : "This phase is read only for the current race status."}
+      description={editable ? "This is the current race phase. Saved records will appear here automatically." : "This phase is read only for the current race status."}
       actions={
         <Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>
           Race Detail
@@ -271,8 +362,45 @@ function HorseInspection() {
         </section>
       )}
 
+      <nav className="referee-phase-strip" aria-label="Race control phases">
+        {phase === RACE_PHASES.PRE_RACE
+          ? <span className="active" aria-current="step">1. Pre-race checks</span>
+          : <Link to={`/referee/races/${raceId}/horse-inspection?phase=pre_race`}>1. Pre-race checks</Link>}
+        <Link to={`/referee/races/${raceId}/monitor`}>2. Live monitoring</Link>
+        {phase === RACE_PHASES.POST_RACE
+          ? <span className="active" aria-current="step">3. Post-race checks</span>
+          : <Link to={`/referee/races/${raceId}/horse-inspection?phase=post_race`}>3. Post-race checks</Link>}
+        <Link to={`/referee/races/${raceId}/closure`}>4. Closure</Link>
+      </nav>
+
+      {bulkIssues.length > 0 && (
+        <section
+          className="admin-live-state admin-live-state--warning referee-inspection-workspace__issues"
+          aria-live="polite"
+        >
+          <AlertCircle aria-hidden="true" size={18} />
+          <div>
+            <strong>{bulkIssues.length} runner check(s) need attention</strong>
+            <ul>
+              {bulkIssues.map((issue, index) => (
+                <li key={`${issue.horseId || "unknown"}-${index}`}>
+                  <button
+                    type="button"
+                    onClick={() => issue.horseId && setSelectedHorseId(issue.horseId)}
+                    disabled={!issue.horseId}
+                  >
+                    {issue.horseName}
+                  </button>
+                  {`: ${issue.reason}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {editable && participants.length > 0 && (
-        <div className="referee-global-actions-bar">
+        <div className="referee-global-actions-bar referee-inspection-workspace__toolbar">
           <div className="referee-global-actions-bar__title">
             <CheckSquare size={16} />
             <span>Perform inspections for {participants.length} runners</span>
@@ -280,11 +408,11 @@ function HorseInspection() {
           <div className="referee-global-actions-bar__buttons">
             <button
               type="button"
-              className="referee-global-btn referee-global-btn--pass"
+              className="admin-header__button admin-header__button--ghost referee-inspection-workspace__mark-all"
               disabled={participantsUnavailable}
-              onClick={handlePassAll}
+              onClick={() => setShowPassAllConfirmation(true)}
             >
-              <CheckCircle2 size={15} /> Pass All Horses
+              <CheckCircle2 aria-hidden="true" size={15} /> {passAllLabel}
             </button>
             <button
               type="button"
@@ -298,59 +426,180 @@ function HorseInspection() {
         </div>
       )}
 
+      {showPassAllConfirmation && (
+        <section
+          ref={passAllConfirmationRef}
+          className="admin-panel referee-inspection-workspace__confirmation"
+          role="alertdialog"
+          aria-labelledby="mark-all-confirmation-title"
+          aria-describedby="mark-all-confirmation-description"
+          tabIndex="-1"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setShowPassAllConfirmation(false);
+          }}
+        >
+          <div>
+            <p className="admin-panel__eyebrow">Bulk change confirmation</p>
+            <h2 id="mark-all-confirmation-title">{passAllLabel}?</h2>
+            <p id="mark-all-confirmation-description">
+              This checks every item and changes all {participants.length} runner statuses. Nothing is saved until
+              you select Save All Checks.
+            </p>
+          </div>
+          <div className="referee-inspection-workspace__confirmation-actions">
+            <button
+              type="button"
+              className="admin-header__button admin-header__button--ghost"
+              onClick={() => setShowPassAllConfirmation(false)}
+            >
+              <X aria-hidden="true" size={15} /> Cancel
+            </button>
+            <button type="button" className="referee-global-btn referee-global-btn--pass" onClick={handlePassAll}>
+              <CheckCircle2 aria-hidden="true" size={15} /> Confirm {passAllLabel}
+            </button>
+          </div>
+        </section>
+      )}
+
       {participants.length === 0 && (
         <section className="admin-panel">
           <p>No approved race participants are available.</p>
         </section>
       )}
 
-      <div className="referee-inspection-grid">
-        {participants.map((participant) => {
-          const row = rows[participant.horseId];
-          if (!row) return null;
+      {participants.length > 0 && (
+        <section className="admin-panel referee-inspection-workspace">
+          <div className="admin-panel__header referee-inspection-workspace__heading">
+            <div>
+              <p className="admin-panel__eyebrow">Runner inspection workspace</p>
+              <h2>Select a runner to inspect</h2>
+            </div>
+            <span>{participants.length} runners</span>
+          </div>
 
-          return (
-            <article key={participant.horseId} className="referee-inspection-card">
+          <div
+            className="admin-data-table__wrap referee-inspection-workspace__runner-list"
+            role="region"
+            aria-label={`${title} runners`}
+            tabIndex="0"
+          >
+            <table className="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Draw</th>
+                  <th>Runner</th>
+                  <th>Jockey</th>
+                  <th>Checklist</th>
+                  <th>Status</th>
+                  <th>Record</th>
+                  <th><span className="sr-only">Selected runner</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {participants.map((participant) => {
+                  const row = rows[participant.horseId];
+                  if (!row) return null;
+
+                  const progress = checklistProgress(row, fields);
+                  const saveState = rowSaveState(row, fields);
+                  const selected = selectedHorseId === participant.horseId;
+
+                  return (
+                    <tr
+                      key={participant.horseId}
+                      className={selected ? "admin-command-row--selected referee-inspection-workspace__runner--selected" : ""}
+                      aria-selected={selected}
+                      tabIndex="0"
+                      onClick={() => setSelectedHorseId(participant.horseId)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedHorseId(participant.horseId);
+                        }
+                      }}
+                    >
+                      <td>{participant.lane ?? "-"}</td>
+                      <td>
+                        <strong>{participant.horseName}</strong>
+                        <span className="referee-table-subline">{participant.owner || "Owner not recorded"}</span>
+                      </td>
+                      <td>{participant.jockeyName || "Not assigned"}</td>
+                      <td>
+                        <span>{progress.completed}/{progress.total}</span>
+                        <progress
+                          max={progress.total}
+                          value={progress.completed}
+                          aria-label={`${participant.horseName} checklist progress`}
+                        />
+                      </td>
+                      <td>
+                        <span className={`referee-status-badge referee-status-badge--${statusTone(row.status)}`}>
+                          {row.status ? formatStatus(row.status) : "Pending"}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`referee-status-badge referee-status-badge--${saveState.tone}`}>
+                          {saveState.label}
+                        </span>
+                      </td>
+                      <td>
+                        {selected && (
+                          <span className="referee-inspection-workspace__selected-icon" title="Selected runner">
+                            <Check aria-hidden="true" size={15} />
+                            <span className="sr-only">Selected runner</span>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {selectedParticipant && selectedRow && (
+            <article
+              id="selected-runner-inspection"
+              className="referee-inspection-card referee-inspection-workspace__detail"
+              aria-labelledby="selected-runner-name"
+            >
               <div className="referee-inspection-card__header-row">
                 <div className="referee-inspection-card__title-group">
                   <p className="admin-panel__eyebrow">
-                    {participant.lane == null ? "Draw not assigned" : `Draw ${participant.lane}`}
+                    {selectedParticipant.lane == null ? "Draw not assigned" : `Draw ${selectedParticipant.lane}`}
                   </p>
-                  <h2>{participant.horseName}</h2>
+                  <h2 id="selected-runner-name">{selectedParticipant.horseName}</h2>
                 </div>
-                {editable && (
-                  <button
-                    type="button"
-                    className="referee-single-pass-btn"
-                    onClick={() => handlePassSingle(participant.horseId)}
-                  >
-                    Pass All
-                  </button>
-                )}
+                <span className={`referee-status-badge referee-status-badge--${selectedSaveState.tone}`}>
+                  {selectedSaveState.label}
+                </span>
               </div>
 
               <div className="referee-info-grid-compact">
                 <div>
                   <span className="referee-info-label">Owner</span>
-                  <span>{participant.owner}</span>
+                  <span>{selectedParticipant.owner || "Not recorded"}</span>
                 </div>
                 <div>
                   <span className="referee-info-label">Jockey</span>
-                  <span>{participant.jockeyName}</span>
+                  <span>{selectedParticipant.jockeyName || "Not assigned"}</span>
                 </div>
                 <div>
                   <span className="referee-info-label">Horse weight</span>
-                  <span>{participant.weight ?? "Not recorded"}</span>
+                  <span>{selectedParticipant.weight ?? "Not recorded"}</span>
                 </div>
                 <div>
-                  <span className="referee-info-label">Assign</span>
-                  <span>{formatStatus(participant.assignmentStatus)}</span>
+                  <span className="referee-info-label">Assignment</span>
+                  <span>{formatStatus(selectedParticipant.assignmentStatus)}</span>
                 </div>
               </div>
 
               <div className="referee-checklist-container">
                 <div className="referee-checklist-header">
                   <span className="referee-checklist-title-label">Checklist</span>
+                  <span>
+                    {checklistProgress(selectedRow, fields).completed}/{fields.length} complete
+                  </span>
                 </div>
                 <div className="referee-checklist-grid-compact">
                   {fields.map((field) => (
@@ -358,10 +607,10 @@ function HorseInspection() {
                       <input
                         type="checkbox"
                         disabled={!editable}
-                        checked={Boolean(row.checklist[field])}
+                        checked={Boolean(selectedRow.checklist[field])}
                         onChange={(event) =>
-                          update(participant.horseId, {
-                            checklist: { ...row.checklist, [field]: event.target.checked }
+                          update(selectedParticipant.horseId, {
+                            checklist: { ...selectedRow.checklist, [field]: event.target.checked }
                           })
                         }
                       />
@@ -376,10 +625,10 @@ function HorseInspection() {
                   <span>Status</span>
                   <select
                     disabled={!editable}
-                    value={row.status}
-                    onChange={(event) => update(participant.horseId, { status: event.target.value })}
+                    value={selectedRow.status}
+                    onChange={(event) => update(selectedParticipant.horseId, { status: event.target.value })}
                   >
-                    <option value="">Status</option>
+                    <option value="">Select status</option>
                     {statuses.map((status) => (
                       <option key={status} value={status}>
                         {formatStatus(status)}
@@ -388,13 +637,25 @@ function HorseInspection() {
                   </select>
                 </label>
                 <label className="admin-field">
-                  <span>Notes</span>
+                  <span>
+                    Notes
+                    {NOTE_REQUIRED_STATUSES.includes(selectedRow.status) ? " (required)" : ""}
+                  </span>
                   <textarea
                     disabled={!editable}
-                    value={row.note}
-                    placeholder="Enter inspection notes..."
-                    onChange={(event) => update(participant.horseId, { note: event.target.value })}
+                    value={selectedRow.note}
+                    required={NOTE_REQUIRED_STATUSES.includes(selectedRow.status)}
+                    aria-describedby={
+                      NOTE_REQUIRED_STATUSES.includes(selectedRow.status) ? "selected-runner-note-requirement" : undefined
+                    }
+                    placeholder="Record runner-specific observations..."
+                    onChange={(event) => update(selectedParticipant.horseId, { note: event.target.value })}
                   />
+                  {NOTE_REQUIRED_STATUSES.includes(selectedRow.status) && !selectedRow.note.trim() && (
+                    <small id="selected-runner-note-requirement" role="alert">
+                      Explain the observed failure, scratch, injury, or required follow-up before saving.
+                    </small>
+                  )}
                 </label>
               </div>
 
@@ -403,18 +664,22 @@ function HorseInspection() {
                   <button
                     type="button"
                     className="referee-save-btn"
-                    disabled={savingId === participant.horseId || participantsUnavailable}
-                    onClick={() => save(participant)}
+                    disabled={savingId === selectedParticipant.horseId || participantsUnavailable}
+                    onClick={() => save(selectedParticipant)}
                   >
-                    <Save size={13} />
-                    {savingId === participant.horseId ? "Saving..." : row.saved ? "Update" : "Save"}
+                    <Save aria-hidden="true" size={13} />
+                    {savingId === selectedParticipant.horseId
+                      ? "Saving..."
+                      : selectedRow.saved
+                        ? "Update inspection"
+                        : "Save inspection"}
                   </button>
                 </div>
               )}
             </article>
-          );
-        })}
-      </div>
+          )}
+        </section>
+      )}
     </RefereeLayout>
   );
 }

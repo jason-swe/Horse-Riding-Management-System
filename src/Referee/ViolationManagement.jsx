@@ -1,11 +1,16 @@
-import { AlertTriangle, Check, Eye, Pencil, Plus, Scale, X } from "lucide-react";
+import { AlertTriangle, Check, Eye, FileImage, Pencil, Plus, Scale, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { refereeApi } from "../api/refereeApi";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import PenaltyDecisionEditor, {
+  buildPenaltyFromPolicy,
+  penaltiesEqual,
+} from "../components/PenaltyDecisionEditor";
 import RefereeLayout from "./RefereeLayout";
 import { formatStatus } from "./refereeConstants";
 import { useRefereeData } from "./useRefereeData";
+import { readFileAsDataUri } from "../utils/fileData";
 
 const emptyForm = {
   type: "",
@@ -14,10 +19,13 @@ const emptyForm = {
   subjectId: "",
   description: "",
   timeMarker: "",
-  evidence: "",
+  evidenceUrls: [],
+  evidenceFiles: [],
 };
 
 const unresolvedStatuses = new Set(["recorded", "under_review"]);
+const MAX_EVIDENCE_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_EVIDENCE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "video/mp4"]);
 
 function getPolicy(options, type, severity) {
   return options?.penalty_policies?.find((item) => item.violation_type === type && item.severity === severity) || null;
@@ -48,6 +56,31 @@ function getDetailSubject(violation) {
   return jockey?.user_id?.full_name || jockey?.full_name || horse?.name || "Unlinked subject";
 }
 
+function effectivePenalty(violation, policy) {
+  return violation.penalty ||
+    violation.proposedPenalty ||
+    violation.suggestedPenalty ||
+    policy?.suggested_penalty ||
+    null;
+}
+
+function evidenceLinks(violation) {
+  const files = violation?.evidence_files || [];
+  const urls = violation?.evidence_urls || [];
+  return [
+    ...files.map((file) => ({
+      url: file.url,
+      name: file.file_name || "Evidence",
+    })),
+    ...urls.map((url, index) => ({
+      url,
+      name: `Evidence ${index + 1}`,
+    })),
+  ].filter((item, index, items) =>
+    item.url && items.findIndex((candidate) => candidate.url === item.url) === index
+  );
+}
+
 function ViolationManagement() {
   const { raceId } = useParams();
   const { error, getRace, isLoading, isUnavailable, reload } = useRefereeData();
@@ -65,6 +98,8 @@ function ViolationManagement() {
   const [detailError, setDetailError] = useState("");
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [decision, setDecision] = useState("");
+  const [penaltyDecision, setPenaltyDecision] = useState(null);
+  const [deviationReason, setDeviationReason] = useState("");
   const [messages, setMessages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [decisionAction, setDecisionAction] = useState("");
@@ -104,7 +139,7 @@ function ViolationManagement() {
         const data = await refereeApi.previewViolationPenalty({ violation_type: form.type, severity: form.severity });
         if (active) setPreview(data.policy || null);
       } catch (apiError) {
-        if (active) { setPreview(null); setPreviewError(apiError.message || "Unable to preview the backend penalty policy."); }
+        if (active) { setPreview(null); setPreviewError(apiError.message || "Unable to load the system penalty recommendation."); }
       } finally {
         if (active) setIsPreviewLoading(false);
       }
@@ -141,9 +176,57 @@ function ViolationManagement() {
       subjectId: subjectKind === "Jockey" ? violation.jockeyId : violation.horseId,
       description: violation.description || "",
       timeMarker: violation.timeMarker || "",
-      evidence: violation.evidenceUrls.join("\n"),
+      evidenceUrls: violation.evidenceUrls || [],
+      evidenceFiles: [],
     });
     setShowForm(true);
+  };
+
+  const addEvidenceFiles = async (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+
+    for (const file of files) {
+      if (!ALLOWED_EVIDENCE_TYPES.has(file.type)) {
+        addMsg(`${file.name} is not a supported image or MP4 video.`);
+        continue;
+      }
+      if (file.size > MAX_EVIDENCE_FILE_SIZE) {
+        addMsg(`${file.name} exceeds the 10 MB evidence limit.`);
+        continue;
+      }
+
+      try {
+        const fileData = await readFileAsDataUri(file);
+        setForm((current) => ({
+          ...current,
+          evidenceFiles: [
+            ...current.evidenceFiles,
+            {
+              file_data: fileData,
+              type: file.type,
+              file_name: file.name,
+            },
+          ],
+        }));
+      } catch (fileError) {
+        addMsg(fileError.message || `Unable to read ${file.name}.`);
+      }
+    }
+  };
+
+  const removeEvidenceFile = (index) => {
+    setForm((current) => ({
+      ...current,
+      evidenceFiles: current.evidenceFiles.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const removeEvidenceUrl = (url) => {
+    setForm((current) => ({
+      ...current,
+      evidenceUrls: current.evidenceUrls.filter((item) => item !== url),
+    }));
   };
 
   const handleSave = async (event) => {
@@ -152,13 +235,20 @@ function ViolationManagement() {
     if (!editingId && !subject) return addMsg("Select a horse or jockey before recording the violation.");
     if (!form.description.trim()) return addMsg("Describe the incident before saving.");
 
-    const evidenceUrls = form.evidence.split("\n").map((item) => item.trim()).filter(Boolean);
+    const evidenceFiles = [
+      ...form.evidenceUrls.map((url) => ({ url })),
+      ...form.evidenceFiles,
+    ];
     try {
       setIsSaving(true);
       if (editingId) {
-        await refereeApi.updateViolation(editingId, { severity: form.severity, description: form.description.trim(), time_marker: form.timeMarker || undefined, evidence_urls: evidenceUrls });
+        await refereeApi.updateViolation(editingId, {
+          severity: form.severity,
+          description: form.description.trim(),
+          time_marker: form.timeMarker || undefined,
+          evidence_files: evidenceFiles,
+        });
       } else {
-        const policy = preview || getPolicy(options, form.type, form.severity);
         await refereeApi.createViolation({
           race_id: race.id,
           horse_id: subject.horseId || undefined,
@@ -167,12 +257,11 @@ function ViolationManagement() {
           severity: form.severity,
           description: form.description.trim(),
           time_marker: form.timeMarker || undefined,
-          evidence_urls: evidenceUrls,
-          status: policy?.requires_review ? "under_review" : "recorded",
+          evidence_files: evidenceFiles,
         });
       }
       await reload();
-      addMsg(editingId ? "Violation details updated." : "Violation recorded with the backend penalty policy.");
+      addMsg(editingId ? "Violation details updated." : "Violation recorded with the system penalty recommendation.");
       closeForm();
     } catch (apiError) {
       addMsg(apiError.message || "Unable to save violation.");
@@ -185,10 +274,21 @@ function ViolationManagement() {
     try {
       setSelectedViolation(null);
       setDecision("");
+      setPenaltyDecision(null);
+      setDeviationReason("");
       setDetailError("");
       setIsDetailLoading(true);
       const data = await refereeApi.getViolation(id);
-      setSelectedViolation(data.violation || null);
+      const violation = data.violation || null;
+      const policy = violation ? getPolicy(options, violation.violation_type, violation.severity) : null;
+      setSelectedViolation(violation);
+      setPenaltyDecision(
+        violation?.proposed_penalty ||
+        violation?.penalty ||
+        violation?.suggested_penalty ||
+        buildPenaltyFromPolicy(policy)
+      );
+      setDeviationReason(violation?.deviation_reason || "");
     } catch (apiError) {
       setDetailError(apiError.status === 403 ? "You do not have permission to view this violation." : apiError.message || "Unable to load violation detail.");
     } finally {
@@ -198,16 +298,35 @@ function ViolationManagement() {
 
   const decide = async (action) => {
     if (!decision.trim()) return setDetailError("A decision note is required.");
+    if (
+      action === "confirm" &&
+      detailPolicy &&
+      !penaltiesEqual(penaltyDecision, detailPolicy.suggested_penalty) &&
+      !deviationReason.trim()
+    ) {
+      return setDetailError("Explain why the selected penalty differs from policy.");
+    }
     try {
       setDecisionAction(action);
       setDetailError("");
-      if (action === "confirm") await refereeApi.confirmViolation(selectedViolation._id, decision.trim());
-      else await refereeApi.dismissViolation(selectedViolation._id, decision.trim());
+      if (action === "confirm") {
+        const data = await refereeApi.confirmViolation(selectedViolation._id, {
+          decision: decision.trim(),
+          penalty: penaltyDecision,
+          deviation_reason: deviationReason.trim() || undefined,
+        });
+        addMsg(data.requires_admin_review
+          ? "Penalty proposal sent for administrative review."
+          : "Penalty decision confirmed.");
+      }
+      else {
+        await refereeApi.dismissViolation(selectedViolation._id, decision.trim());
+        addMsg("Incident dismissed with a recorded decision.");
+      }
       await reload();
-      addMsg(action === "confirm" ? "Policy penalty applied to the confirmed incident." : "Incident dismissed with an audit decision.");
       setSelectedViolation(null);
     } catch (apiError) {
-      setDetailError(apiError.status === 403 ? "This violation requires Admin review or belongs to another official." : apiError.message || `Unable to ${action} violation.`);
+      setDetailError(apiError.status === 403 ? "This violation requires administrative review or belongs to another official." : apiError.message || `Unable to ${action} violation.`);
     } finally {
       setDecisionAction("");
     }
@@ -218,29 +337,107 @@ function ViolationManagement() {
   const reviewRequiredCount = violations.filter((item) => getPolicy(options, item.type, item.severity)?.requires_review && unresolvedStatuses.has(item.status)).length;
   const detailPolicy = selectedViolation ? getPolicy(options, selectedViolation.violation_type, selectedViolation.severity) : null;
   const detailIsUnresolved = selectedViolation && unresolvedStatuses.has(selectedViolation.status);
-  const canRefereeDecide = detailIsUnresolved && Boolean(detailPolicy) && !detailPolicy.requires_review && !resultsLocked;
+  const canRefereeDecide = detailIsUnresolved && Boolean(detailPolicy) && !resultsLocked;
 
   const closeDetail = () => {
     setSelectedViolation(null);
     setDetailError("");
     setDecision("");
+    setPenaltyDecision(null);
+    setDeviationReason("");
   };
 
-  return <RefereeLayout title="Violation decisions" eyebrow={`Race incident policy | ${race.name}`} description="Record incidents against backend policy, inspect the suggested penalty, and resolve only decisions within Referee authority." actions={<><button className="admin-header__button" type="button" disabled={isOptionsLoading || Boolean(optionsError) || isUnavailable || resultsLocked} onClick={openCreateForm}><Plus aria-hidden="true" size={17} /> New violation</button><Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>Race detail</Link></>}>
+  return <RefereeLayout title="Violation decisions" eyebrow={`Race incident policy | ${race.name}`} description="Record incidents, review the system recommendation, and resolve decisions within Referee authority." actions={<><button className="admin-header__button" type="button" disabled={isOptionsLoading || Boolean(optionsError) || isUnavailable || resultsLocked} onClick={openCreateForm}><Plus aria-hidden="true" size={17} /> New violation</button><Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>Race detail</Link></>}>
     {(error || optionsError) && <section className="admin-live-state admin-live-state--warning" role="alert">{error || optionsError} {optionsError && <button className="admin-header__button admin-header__button--ghost" type="button" onClick={loadOptions}>Retry policy</button>}</section>}
     {isUnavailable && <section className="admin-live-state">Participant data is unavailable. Participant-linked violation creation is disabled.</section>}
     {resultsLocked && <section className="admin-live-state">Violation decisions are locked because race results are {formatStatus(race.resultStatus)}.</section>}
     {!!messages.length && <section className="admin-toast-stack" aria-live="polite">{messages.map((message, index) => <div key={`${message}-${index}`} className="admin-toast">{message}</div>)}</section>}
 
-    <section className="referee-violation-summary" aria-label="Violation summary"><article><span>Total records</span><strong>{violations.length}</strong></article><article><span>Awaiting decision</span><strong>{unresolved.length}</strong></article><article><span>Admin review</span><strong>{reviewRequiredCount}</strong></article><article><span>Confirmed</span><strong>{violations.filter((item) => item.status === "confirmed").length}</strong></article></section>
+    <section className="referee-violation-summary" aria-label="Violation summary"><article><span>Total records</span><strong>{violations.length}</strong></article><article><span>Awaiting decision</span><strong>{unresolved.length}</strong></article><article><span>Administrative review</span><strong>{reviewRequiredCount}</strong></article><article><span>Confirmed</span><strong>{violations.filter((item) => item.status === "confirmed").length}</strong></article></section>
 
     <section className="admin-panel"><div className="admin-panel__header referee-section-heading"><div><p className="admin-panel__eyebrow">Audit ledger</p><h2>Recorded incidents</h2></div><span>{options?.penalty_policies?.[0]?.policy_version ? `Policy ${options.penalty_policies[0].policy_version}` : "Policy unavailable"}</span></div>
-      {violations.length === 0 ? <div className="referee-empty-state"><Scale aria-hidden="true" size={28} /><div><h2>No violations recorded</h2><p>New incidents will appear here with their policy state.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Incident</th><th>Subject</th><th>Severity</th><th>Policy penalty</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead><tbody>{violations.map((violation) => { const policy = getPolicy(options, violation.type, violation.severity); return <tr key={violation.id}><td><strong>{formatStatus(violation.type)}</strong><span className="referee-table-subline">{violation.description || "No description"}</span></td><td>{violation.subjectName}</td><td>{formatStatus(violation.severity)}</td><td>{describePenalty(violation.penalty || policy?.suggested_penalty)}{policy?.requires_review && <span className="referee-table-subline">Admin review required</span>}</td><td><span className={`referee-status-badge referee-status-badge--${statusTone(violation.status)}`}>{formatStatus(violation.status)}</span></td><td>{violation.timeMarker || "—"}</td><td><div className="referee-row-actions"><button type="button" aria-label="View violation detail" onClick={() => openDetail(violation.id)}><Eye aria-hidden="true" size={16} /></button>{!resultsLocked && unresolvedStatuses.has(violation.status) && <button type="button" aria-label="Edit unresolved violation" onClick={() => openEditForm(violation)}><Pencil aria-hidden="true" size={15} /></button>}</div></td></tr>; })}</tbody></table></div>}
+      {violations.length === 0 ? <div className="referee-empty-state"><Scale aria-hidden="true" size={28} /><div><h2>No violations recorded</h2><p>New incidents will appear here with their policy state.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Incident</th><th>Subject</th><th>Severity</th><th>Current penalty</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead><tbody>{violations.map((violation) => { const policy = getPolicy(options, violation.type, violation.severity); return <tr key={violation.id}><td><strong>{formatStatus(violation.type)}</strong><span className="referee-table-subline">{violation.description || "No description"}</span></td><td>{violation.subjectName}</td><td>{formatStatus(violation.severity)}</td><td>{describePenalty(effectivePenalty(violation, policy))}{violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">Referee proposal</span>}{!violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">System recommendation</span>}{policy?.requires_review && unresolvedStatuses.has(violation.status) && <span className="referee-table-subline">Administrative review required</span>}</td><td><span className={`referee-status-badge referee-status-badge--${statusTone(violation.status)}`}>{formatStatus(violation.status)}</span></td><td>{violation.timeMarker || "—"}</td><td><div className="referee-row-actions"><button type="button" aria-label="View violation detail" onClick={() => openDetail(violation.id)}><Eye aria-hidden="true" size={16} /></button>{!resultsLocked && unresolvedStatuses.has(violation.status) && <button type="button" aria-label="Edit unresolved violation" onClick={() => openEditForm(violation)}><Pencil aria-hidden="true" size={15} /></button>}</div></td></tr>; })}</tbody></table></div>}
     </section>
 
-    {showForm && <div className="admin-modal" role="dialog" aria-modal="true" aria-label={editingId ? "Edit violation" : "Record violation"} onClick={(event) => event.target === event.currentTarget && closeForm()}><div className="admin-modal__card referee-violation-modal"><div className="admin-panel__header"><p className="admin-panel__eyebrow">{editingId ? "Unresolved record" : "New incident"}</p><h2>{editingId ? "Update violation details" : "Record policy-backed violation"}</h2></div><form className="admin-form-grid" onSubmit={handleSave}><div className="referee-violation-form-grid"><label className="admin-field"><span>Violation type</span><select disabled={Boolean(editingId)} value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>{options?.violation_types?.map((type) => <option key={type} value={type}>{formatStatus(type)}</option>)}</select></label><label className="admin-field"><span>Severity</span><select value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>{options?.severities?.map((severity) => <option key={severity} value={severity}>{formatStatus(severity)}</option>)}</select></label><label className="admin-field"><span>Subject kind</span><select disabled={Boolean(editingId)} value={form.subjectKind} onChange={(event) => setForm({ ...form, subjectKind: event.target.value, subjectId: "" })}><option value="Jockey">Jockey</option><option value="Horse">Horse</option></select></label><label className="admin-field"><span>Subject</span><select disabled={Boolean(editingId)} value={form.subjectId} onChange={(event) => setForm({ ...form, subjectId: event.target.value })}><option value="">Select participant</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.name}</option>)}</select></label><label className="admin-field"><span>Race time marker</span><input value={form.timeMarker} onChange={(event) => setForm({ ...form, timeMarker: event.target.value })} placeholder="00:01:24" /></label></div><label className="admin-field"><span>Incident description</span><textarea required value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="State what happened and the observable facts." /></label><label className="admin-field"><span>Evidence URLs, one per line</span><textarea value={form.evidence} onChange={(event) => setForm({ ...form, evidence: event.target.value })} placeholder="https://..." /></label><section className={`referee-policy-preview${preview?.requires_review ? " referee-policy-preview--review" : ""}`} aria-live="polite">{isPreviewLoading ? <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" /> : previewError ? <p>{previewError}</p> : preview ? <><div><Scale aria-hidden="true" size={19} /><span>Backend policy preview</span></div><strong>{describePenalty(preview.suggested_penalty)}</strong><p>{preview.suggested_penalty?.note}</p><small>{preview.requires_review ? "Admin decision required for confirmation or dismissal." : `Referee may resolve this incident · Policy ${preview.policy_version}`}</small></> : <p>Select a type and severity to preview the policy.</p>}</section><div className="admin-tool-card__footer"><button className="admin-header__button" disabled={isSaving || isUnavailable || isPreviewLoading || Boolean(previewError)} type="submit">{isSaving ? "Saving..." : editingId ? "Update details" : "Record violation"}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeForm}>Cancel</button></div></form></div></div>}
+    {showForm && (
+      <div className="admin-modal" role="dialog" aria-modal="true" aria-label={editingId ? "Edit violation" : "Record violation"} onClick={(event) => event.target === event.currentTarget && closeForm()}>
+        <div className="admin-modal__card referee-violation-modal">
+          <div className="admin-panel__header">
+            <p className="admin-panel__eyebrow">{editingId ? "Unresolved record" : "New incident"}</p>
+            <h2>{editingId ? "Update violation details" : "Record policy-backed violation"}</h2>
+          </div>
+          <form className="admin-form-grid" onSubmit={handleSave}>
+            <div className="referee-violation-form-grid">
+              <label className="admin-field"><span>Violation type</span><select disabled={Boolean(editingId)} value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>{options?.violation_types?.map((type) => <option key={type} value={type}>{formatStatus(type)}</option>)}</select></label>
+              <label className="admin-field"><span>Severity</span><select value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>{options?.severities?.map((severity) => <option key={severity} value={severity}>{formatStatus(severity)}</option>)}</select></label>
+              <label className="admin-field"><span>Subject kind</span><select disabled={Boolean(editingId)} value={form.subjectKind} onChange={(event) => setForm({ ...form, subjectKind: event.target.value, subjectId: "" })}><option value="Jockey">Jockey</option><option value="Horse">Horse</option></select></label>
+              <label className="admin-field"><span>Subject</span><select disabled={Boolean(editingId)} value={form.subjectId} onChange={(event) => setForm({ ...form, subjectId: event.target.value })}><option value="">Select participant</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.name}</option>)}</select></label>
+              <label className="admin-field"><span>Race time marker</span><input value={form.timeMarker} onChange={(event) => setForm({ ...form, timeMarker: event.target.value })} placeholder="00:01:24" /></label>
+            </div>
+            <label className="admin-field"><span>Incident description</span><textarea required value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="State what happened and the observable facts." /></label>
+            <section className="referee-evidence-upload">
+              <div className="referee-evidence-upload__heading">
+                <div><FileImage size={18} aria-hidden="true" /><span>Evidence</span></div>
+                <label className="admin-header__button admin-header__button--ghost">
+                  <Upload size={15} aria-hidden="true" /> Add files
+                  <input type="file" accept="image/jpeg,image/png,image/webp,video/mp4" multiple onChange={addEvidenceFiles} />
+                </label>
+              </div>
+              <small>Images or MP4 video, up to 10 MB per file.</small>
+              {(form.evidenceUrls.length > 0 || form.evidenceFiles.length > 0) && (
+                <div className="referee-evidence-upload__list">
+                  {form.evidenceUrls.map((url) => <div key={url}><a href={url} target="_blank" rel="noreferrer">Existing evidence</a><button type="button" aria-label="Remove existing evidence" onClick={() => removeEvidenceUrl(url)}><Trash2 size={15} /></button></div>)}
+                  {form.evidenceFiles.map((file, index) => <div key={`${file.file_name}-${index}`}><span>{file.file_name}</span><button type="button" aria-label={`Remove ${file.file_name}`} onClick={() => removeEvidenceFile(index)}><Trash2 size={15} /></button></div>)}
+                </div>
+              )}
+            </section>
+            <section className={`referee-policy-preview${preview?.requires_review ? " referee-policy-preview--review" : ""}`} aria-live="polite">
+              {isPreviewLoading ? <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" /> : previewError ? <p>{previewError}</p> : preview ? <><div><Scale aria-hidden="true" size={19} /><span>System penalty recommendation</span></div><strong>{describePenalty(preview.suggested_penalty)}</strong><p>{preview.suggested_penalty?.note}</p><small>{preview.requires_review ? "Administrative decision required for confirmation or dismissal." : `Referee may resolve this incident · Policy ${preview.policy_version}`}</small></> : <p>Select a type and severity to preview the policy.</p>}
+            </section>
+            <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={isSaving || isUnavailable || isPreviewLoading || Boolean(previewError)} type="submit">{isSaving ? "Saving..." : editingId ? "Update details" : "Record violation"}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeForm}>Cancel</button></div>
+          </form>
+        </div>
+      </div>
+    )}
 
-    {(isDetailLoading || detailError || selectedViolation) && <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Violation decision" onClick={(event) => event.target === event.currentTarget && !decisionAction && closeDetail()}><div className="admin-modal__card referee-violation-modal">{isDetailLoading ? <LoadingSkeleton ariaLabel="Loading violation detail" variant="detail" /> : detailError && !selectedViolation ? <><section className="admin-live-state admin-live-state--warning">{detailError}</section><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeDetail}>Close</button></> : selectedViolation && <><div className="admin-panel__header"><p className="admin-panel__eyebrow">Violation detail</p><h2>{formatStatus(selectedViolation.violation_type)}</h2></div><div className="admin-detail-grid"><div className="admin-detail-item"><span className="admin-detail-label">Subject</span><span className="admin-detail-value">{getDetailSubject(selectedViolation)}</span></div><div className="admin-detail-item"><span className="admin-detail-label">Severity</span><span className="admin-detail-value">{formatStatus(selectedViolation.severity)}</span></div><div className="admin-detail-item"><span className="admin-detail-label">Status</span><span className="admin-detail-value">{formatStatus(selectedViolation.status)}</span></div><div className="admin-detail-item"><span className="admin-detail-label">Time marker</span><span className="admin-detail-value">{selectedViolation.time_marker || "—"}</span></div></div><section className="referee-policy-preview"><div><Scale aria-hidden="true" size={19} /><span>Applicable policy</span></div><strong>{describePenalty(selectedViolation.penalty || detailPolicy?.suggested_penalty)}</strong><p>{selectedViolation.penalty?.note || detailPolicy?.suggested_penalty?.note}</p>{detailPolicy?.requires_review ? <small>Admin review is mandatory for this violation type.</small> : <small>Confirming this incident applies the backend policy penalty. Referees cannot edit the penalty amount.</small>}</section><section className="referee-decision-copy"><p>{selectedViolation.description || "No incident description."}</p>{selectedViolation.decision && <blockquote>{selectedViolation.decision}</blockquote>}{selectedViolation.evidence_urls?.length > 0 && <div className="referee-evidence-links">{selectedViolation.evidence_urls.map((url, index) => <a href={url} key={`${url}-${index}`} rel="noreferrer" target="_blank">Evidence {index + 1}</a>)}</div>}</section>{canRefereeDecide && <label className="admin-field"><span>Decision note</span><textarea value={decision} onChange={(event) => setDecision(event.target.value)} placeholder="Explain why this incident should apply or be dismissed." /></label>}{detailError && <section className="admin-live-state admin-live-state--warning">{detailError}</section>}<div className="admin-tool-card__footer">{canRefereeDecide && <><button className="admin-header__button" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("confirm")}><Check aria-hidden="true" size={16} />{decisionAction === "confirm" ? "Applying..." : "Apply policy penalty"}</button><button className="admin-header__button admin-header__button--red" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("dismiss")}><X aria-hidden="true" size={16} />{decisionAction === "dismiss" ? "Dismissing..." : "Dismiss incident"}</button></>}{detailIsUnresolved && detailPolicy?.requires_review && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Admin review required</span>}{detailIsUnresolved && resultsLocked && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Results locked</span>}{detailIsUnresolved && !detailPolicy && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Policy unavailable</span>}<button className="admin-header__button admin-header__button--ghost" disabled={Boolean(decisionAction)} type="button" onClick={closeDetail}>Close</button></div></>}</div></div>}
+    {(isDetailLoading || detailError || selectedViolation) && (
+      <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Violation decision" onClick={(event) => event.target === event.currentTarget && !decisionAction && closeDetail()}>
+        <div className="admin-modal__card referee-violation-modal">
+          {isDetailLoading ? <LoadingSkeleton ariaLabel="Loading violation detail" variant="detail" /> : detailError && !selectedViolation ? <><section className="admin-live-state admin-live-state--warning">{detailError}</section><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeDetail}>Close</button></> : selectedViolation && (
+            <>
+              <div className="admin-panel__header"><p className="admin-panel__eyebrow">Violation detail</p><h2>{formatStatus(selectedViolation.violation_type)}</h2></div>
+              <div className="admin-detail-grid">
+                <div className="admin-detail-item"><span className="admin-detail-label">Subject</span><span className="admin-detail-value">{getDetailSubject(selectedViolation)}</span></div>
+                <div className="admin-detail-item"><span className="admin-detail-label">Severity</span><span className="admin-detail-value">{formatStatus(selectedViolation.severity)}</span></div>
+                <div className="admin-detail-item"><span className="admin-detail-label">Status</span><span className="admin-detail-value">{formatStatus(selectedViolation.status)}</span></div>
+                <div className="admin-detail-item"><span className="admin-detail-label">Time marker</span><span className="admin-detail-value">{selectedViolation.time_marker || "-"}</span></div>
+              </div>
+              <section className="referee-decision-copy">
+                <p>{selectedViolation.description || "No incident description."}</p>
+                {selectedViolation.decision && <blockquote>{selectedViolation.decision}</blockquote>}
+                {evidenceLinks(selectedViolation).length > 0 && <div className="referee-evidence-links">{evidenceLinks(selectedViolation).map((item) => <a href={item.url} key={item.url} rel="noreferrer" target="_blank">{item.name}</a>)}</div>}
+              </section>
+              <section className="referee-penalty-audit">
+                <div><span>System recommendation</span><strong>{describePenalty(selectedViolation.suggested_penalty || detailPolicy?.suggested_penalty)}</strong></div>
+                {selectedViolation.proposed_penalty && <div><span>Referee proposal</span><strong>{describePenalty(selectedViolation.proposed_penalty)}</strong></div>}
+                {selectedViolation.penalty && <div><span>Final penalty</span><strong>{describePenalty(selectedViolation.penalty)}</strong></div>}
+                {selectedViolation.deviation_reason && <div><span>Reason for adjustment</span><p>{selectedViolation.deviation_reason}</p></div>}
+              </section>
+              {detailPolicy && penaltyDecision && <PenaltyDecisionEditor policy={detailPolicy} value={penaltyDecision} onChange={setPenaltyDecision} deviationReason={deviationReason} onDeviationReasonChange={setDeviationReason} disabled={!canRefereeDecide || Boolean(decisionAction)} reviewer="referee" />}
+              {canRefereeDecide && <label className="admin-field"><span>Decision note</span><textarea value={decision} onChange={(event) => setDecision(event.target.value)} placeholder="Record the evidence and reasoning behind this decision." /></label>}
+              {detailError && <section className="admin-live-state admin-live-state--warning">{detailError}</section>}
+              <div className="admin-tool-card__footer">
+                {canRefereeDecide && <><button className="admin-header__button" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("confirm")}><Check aria-hidden="true" size={16} />{decisionAction === "confirm" ? "Submitting..." : "Submit penalty decision"}</button>{!detailPolicy?.requires_review && <button className="admin-header__button admin-header__button--red" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("dismiss")}><X aria-hidden="true" size={16} />{decisionAction === "dismiss" ? "Dismissing..." : "Dismiss incident"}</button>}</>}
+                {detailIsUnresolved && detailPolicy?.requires_review && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Decision will be routed for administrative review</span>}
+                {detailIsUnresolved && resultsLocked && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Results locked</span>}
+                {detailIsUnresolved && !detailPolicy && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Policy unavailable</span>}
+                <button className="admin-header__button admin-header__button--ghost" disabled={Boolean(decisionAction)} type="button" onClick={closeDetail}>Close</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )}
   </RefereeLayout>;
 }
 

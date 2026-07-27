@@ -103,8 +103,9 @@ export const refereeApi = {
     return apiRequest(`/violations/${id}`);
   },
 
-  confirmViolation(id, decision) {
-    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body: { decision } });
+  confirmViolation(id, payload) {
+    const body = typeof payload === "string" ? { decision: payload } : payload;
+    return apiRequest(`/violations/${id}/confirm`, { method: "POST", body });
   },
 
   dismissViolation(id, decision) {

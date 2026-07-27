@@ -11,6 +11,10 @@ import {
   X,
 } from "lucide-react";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import PenaltyDecisionEditor, {
+  buildPenaltyFromPolicy,
+  penaltiesEqual,
+} from "../components/PenaltyDecisionEditor";
 import { adminApi } from "../api/adminApi";
 import AdminLayout from "./AdminLayout";
 
@@ -220,17 +224,23 @@ function AdminIncidentModule() {
   const [notice, setNotice] = useState("");
   const [actionLoading, setActionLoading] = useState("");
   const [decisionNote, setDecisionNote] = useState("");
+  const [violationOptions, setViolationOptions] = useState(null);
+  const [activeViolationId, setActiveViolationId] = useState("");
+  const [penaltyDecision, setPenaltyDecision] = useState(null);
+  const [deviationReason, setDeviationReason] = useState("");
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
-      const [checkPayload, violationPayload] = await Promise.all([
+      const [checkPayload, violationPayload, optionPayload] = await Promise.all([
         adminApi.listHorseChecks(),
         adminApi.listViolations(),
+        adminApi.getViolationOptions(),
       ]);
       setChecks(extractList(checkPayload, ["horse_checks", "checks", "data"]));
       setViolations(extractList(violationPayload, ["violations", "data"]));
+      setViolationOptions(optionPayload);
     } catch (apiError) {
       setError(apiError.message || "We couldn't load the incident queue.");
     } finally {
@@ -339,6 +349,9 @@ function AdminIncidentModule() {
     await loadData();
     setNotice(message);
     setDecisionNote("");
+    setActiveViolationId("");
+    setPenaltyDecision(null);
+    setDeviationReason("");
   };
 
   const updateCheckStatus = async (action) => {
@@ -367,7 +380,20 @@ function AdminIncidentModule() {
     setError("");
     try {
       if (mode === "confirm") {
-        await adminApi.confirmViolation(getId(violation), decisionNote.trim());
+        const policy = violationOptions?.penalty_policies?.find(
+          (item) => item.violation_type === violation.violation_type && item.severity === violation.severity
+        );
+        if (policy && !penaltiesEqual(penaltyDecision, policy.suggested_penalty) && !deviationReason.trim()) {
+          setError("Explain why the administrative decision differs from the system recommendation.");
+          return;
+        }
+        const approvesExistingProposal = violation.proposed_penalty &&
+          penaltiesEqual(penaltyDecision, violation.proposed_penalty);
+        await adminApi.confirmViolation(getId(violation), {
+          decision: decisionNote.trim(),
+          penalty: approvesExistingProposal ? undefined : penaltyDecision,
+          deviation_reason: deviationReason.trim() || undefined,
+        });
       } else {
         await adminApi.dismissViolation(getId(violation), decisionNote.trim());
       }
@@ -377,6 +403,23 @@ function AdminIncidentModule() {
     } finally {
       setActionLoading("");
     }
+  };
+
+  const openPenaltyDecision = (violation) => {
+    const violationId = getId(violation);
+    const policy = violationOptions?.penalty_policies?.find(
+      (item) => item.violation_type === violation.violation_type && item.severity === violation.severity
+    );
+    setActiveViolationId(violationId);
+    setPenaltyDecision(
+      violation.proposed_penalty ||
+      violation.penalty ||
+      violation.suggested_penalty ||
+      buildPenaltyFromPolicy(policy)
+    );
+    setDeviationReason(violation.deviation_reason || "");
+    setDecisionNote(violation.decision || "");
+    setError("");
   };
 
   const filters = [
@@ -511,6 +554,10 @@ function AdminIncidentModule() {
                       {selectedRecord.violations.map((violation) => {
                         const violationId = getId(violation);
                         const canDecide = openStatuses.has(violation.status);
+                        const policy = violationOptions?.penalty_policies?.find(
+                          (item) => item.violation_type === violation.violation_type && item.severity === violation.severity
+                        );
+                        const isActive = activeViolationId === violationId;
                         return (
                           <article className="admin-incident-violation" key={violationId}>
                             <div>
@@ -518,24 +565,53 @@ function AdminIncidentModule() {
                               <StatusBadge value={violation.status} />
                             </div>
                             <p>{violation.description || "No description recorded."}</p>
-                            <small>{formatLabel(violation.severity)} - {describePenalty(violation.penalty)}</small>
+                            <small>
+                              {formatLabel(violation.severity)} - System recommendation: {describePenalty(violation.suggested_penalty || policy?.suggested_penalty)}
+                            </small>
+                            {violation.proposed_penalty && (
+                              <small>Referee proposal: {describePenalty(violation.proposed_penalty)}</small>
+                            )}
                             {canDecide && (
-                              <div className="admin-incident-violation__actions">
-                                <button className="admin-header__button" disabled={Boolean(actionLoading)} type="button" onClick={() => decideViolation(violation, "confirm")}>
-                                  <Check size={15} aria-hidden="true" /> {actionLoading === `confirm:${violationId}` ? "Applying..." : "Apply penalty"}
-                                </button>
-                                <button className="admin-header__button admin-header__button--red" disabled={Boolean(actionLoading)} type="button" onClick={() => decideViolation(violation, "dismiss")}>
-                                  <X size={15} aria-hidden="true" /> {actionLoading === `dismiss:${violationId}` ? "Dismissing..." : "Dismiss"}
-                                </button>
-                              </div>
+                              <>
+                                {!isActive && (
+                                  <button className="admin-header__button admin-header__button--ghost" disabled={Boolean(actionLoading)} type="button" onClick={() => openPenaltyDecision(violation)}>
+                                    <Eye size={15} aria-hidden="true" /> Review decision
+                                  </button>
+                                )}
+                                {isActive && (
+                                  <div className="admin-incident-penalty-review">
+                                    {policy ? (
+                                      <PenaltyDecisionEditor
+                                        policy={policy}
+                                        value={penaltyDecision}
+                                        onChange={setPenaltyDecision}
+                                        deviationReason={deviationReason}
+                                        onDeviationReasonChange={setDeviationReason}
+                                        disabled={Boolean(actionLoading)}
+                                        reviewer="admin"
+                                      />
+                                    ) : (
+                                      <section className="admin-live-state admin-live-state--warning">Penalty policy is unavailable for this record.</section>
+                                    )}
+                                    <label className="admin-field">
+                                      <span>Administrative decision note</span>
+                                      <textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Record why this decision is approved, modified, or dismissed." />
+                                    </label>
+                                    <div className="admin-incident-violation__actions">
+                                      <button className="admin-header__button" disabled={Boolean(actionLoading) || !policy} type="button" onClick={() => decideViolation(violation, "confirm")}>
+                                        <Check size={15} aria-hidden="true" /> {actionLoading === `confirm:${violationId}` ? "Saving..." : "Confirm decision"}
+                                      </button>
+                                      <button className="admin-header__button admin-header__button--red" disabled={Boolean(actionLoading)} type="button" onClick={() => decideViolation(violation, "dismiss")}>
+                                        <X size={15} aria-hidden="true" /> {actionLoading === `dismiss:${violationId}` ? "Dismissing..." : "Dismiss"}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
                             )}
                           </article>
                         );
                       })}
-                      <label className="admin-field">
-                        <span>Decision note</span>
-                        <textarea value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Required when applying or dismissing a policy violation." />
-                      </label>
                     </>
                   ) : (
                     <p className="admin-incident-muted">No policy violation is linked to this incident yet.</p>

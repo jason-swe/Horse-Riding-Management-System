@@ -138,6 +138,21 @@ export function useJockeyApiData() {
     await loadJockeyData();
   }, [loadJockeyData]);
 
+  const withdrawAssignment = useCallback(async (id, reason) => {
+    await jockeyApi.withdrawAssignment(id, reason);
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
+  const requestCancellation = useCallback(async (id, reason) => {
+    await jockeyApi.requestAssignmentCancellation(id, reason);
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
+  const respondToCancellation = useCallback(async (id, decision, responseMessage = "") => {
+    await jockeyApi.respondToAssignmentCancellation(id, decision, responseMessage);
+    await loadJockeyData();
+  }, [loadJockeyData]);
+
   const updateProfile = useCallback(async (payload) => {
     await jockeyApi.updateMe(payload);
     await loadJockeyData();
@@ -151,6 +166,9 @@ export function useJockeyApiData() {
     respondToMeeting,
     respondToTerms,
     respondToContract,
+    withdrawAssignment,
+    requestCancellation,
+    respondToCancellation,
     updateProfile,
   };
 }

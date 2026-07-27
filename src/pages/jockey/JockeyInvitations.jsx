@@ -18,7 +18,7 @@ import {
 import { useJockeyApiData } from "./useJockeyApiData";
 
 const statusClass = (status) => {
-  if (["Accepted", "Confirmed", "Published", "Available"].includes(status)) {
+  if (["Accepted", "Standby confirmed", "Confirmed", "Published", "Available"].includes(status)) {
     return "jockey-badge--green";
   }
   if (["Rejected", "Expired", "Meeting rejected", "Appointment rejected", "Terms rejected", "Contract rejected", "Cancelled"].includes(status)) {
@@ -32,9 +32,11 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
     ? "Review the standby appointment details and respond to the owner's backup invitation."
     : "Review the offline appointment details and respond to the owner's invitation.",
   meeting_accepted: isBackup
-    ? "Standby appointment accepted. The owner will send terms for your confirmation before the contract."
+    ? "Standby appointment accepted. The owner will send standby terms for your confirmation."
     : "Appointment accepted. The owner will send terms for your confirmation before the contract.",
   terms_pending_confirmation: "Review the terms below. Confirm them before the owner can send the contract.",
+  standby_terms_pending_confirmation: "Review the standby terms. Confirming them activates your backup availability.",
+  standby_confirmed: "Standby agreement confirmed. You remain available unless both parties agree to end it.",
   terms_agreed: "You confirmed the terms. The owner can now send the contract.",
   terms_rejected: "You requested changes to the terms. Wait for the owner to resend them.",
   contract_uploaded: isBackup
@@ -44,13 +46,15 @@ const getStageCopy = (rawStatus, isBackup = false) => ({
   replaced: "This assignment was replaced by another jockey assignment.",
   meeting_rejected: "You declined this appointment invitation.",
   contract_rejected: "You rejected this contract. The assignment is not accepted.",
-  cancelled: "The owner cancelled this assignment.",
+  cancelled: "This assignment has ended. Review the audit note for details.",
 }[rawStatus] || "Track this assignment through its appointment and contract stages.");
 
 const getStatusGroup = (rawStatus) => ({
   meeting_invited: "Appointment",
   meeting_accepted: "Appointment",
   terms_pending_confirmation: "Terms",
+  standby_terms_pending_confirmation: "Terms",
+  standby_confirmed: "Accepted",
   terms_agreed: "Terms",
   terms_rejected: "Terms",
   contract_uploaded: "Contract",
@@ -61,7 +65,18 @@ function JockeyInvitations() {
   const [filter, setFilter] = useState("All");
   const [actionError, setActionError] = useState("");
   const [activeActionId, setActiveActionId] = useState("");
-  const { error, invitations, isLoading, respondToContract, respondToMeeting, respondToTerms } = useJockeyApiData();
+  const [cancellationDrafts, setCancellationDrafts] = useState({});
+  const {
+    error,
+    invitations,
+    isLoading,
+    requestCancellation,
+    respondToCancellation,
+    respondToContract,
+    respondToMeeting,
+    respondToTerms,
+    withdrawAssignment,
+  } = useJockeyApiData();
 
   const visibleInvitations = useMemo(
     () => invitations.filter((invite) => filter === "All" || getStatusGroup(invite.rawStatus) === filter),
@@ -69,8 +84,8 @@ function JockeyInvitations() {
   );
 
   const pendingCount = invitations.filter((invite) => invite.rawStatus === "meeting_invited").length;
-  const acceptedCount = invitations.filter((invite) => invite.status === "Accepted").length;
-  const reviewCount = invitations.filter((invite) => ["terms_pending_confirmation", "contract_uploaded"].includes(invite.rawStatus)).length;
+  const acceptedCount = invitations.filter((invite) => ["accepted", "standby_confirmed"].includes(invite.rawStatus)).length;
+  const reviewCount = invitations.filter((invite) => ["terms_pending_confirmation", "standby_terms_pending_confirmation", "contract_uploaded"].includes(invite.rawStatus)).length;
   const featuredInvite = invitations.find((invite) => invite.rawStatus === "meeting_invited") ?? invitations[0];
 
   const updateInvitation = async (id, action) => {
@@ -87,6 +102,65 @@ function JockeyInvitations() {
       }
     } catch (apiError) {
       setActionError(apiError.message || "Unable to update this invitation.");
+    } finally {
+      setActiveActionId("");
+    }
+  };
+
+  const updateCancellationDraft = (id, field, value) => {
+    setActionError("");
+    setCancellationDrafts((current) => ({
+      ...current,
+      [id]: { ...current[id], [field]: value },
+    }));
+  };
+
+  const submitCancellationRequest = async (invite) => {
+    const reason = (cancellationDrafts[invite.id]?.reason || "").trim();
+
+    if (!reason) {
+      setActionError("Enter a reason for ending the primary jockey contract.");
+      return;
+    }
+
+    setActiveActionId(invite.id);
+    setActionError("");
+    try {
+      await requestCancellation(invite.id, reason);
+    } catch (apiError) {
+      setActionError(apiError.message || "Unable to request contract cancellation.");
+    } finally {
+      setActiveActionId("");
+    }
+  };
+
+  const submitCancellationResponse = async (invite, decision) => {
+    const responseMessage = (cancellationDrafts[invite.id]?.response || "").trim();
+    setActiveActionId(invite.id);
+    setActionError("");
+    try {
+      await respondToCancellation(invite.id, decision, responseMessage);
+    } catch (apiError) {
+      setActionError(apiError.message || "Unable to respond to this cancellation request.");
+    } finally {
+      setActiveActionId("");
+    }
+  };
+
+  const submitWithdrawal = async (invite) => {
+    const reason = (cancellationDrafts[invite.id]?.withdrawReason || "").trim();
+
+    if (!reason) {
+      setActionError("Enter a reason for withdrawing from this assignment.");
+      return;
+    }
+
+    setActiveActionId(invite.id);
+    setActionError("");
+    try {
+      await withdrawAssignment(invite.id, reason);
+    } catch (apiError) {
+      setActionError(apiError.message || "Unable to withdraw from this assignment.");
     } finally {
       setActiveActionId("");
     }
@@ -194,7 +268,7 @@ function JockeyInvitations() {
                   <div><span>Role</span><strong>{invite.assignmentTypeLabel}{invite.backupPriority ? ` #${invite.backupPriority}` : ""}</strong></div>
                   <div><span><Clock3 size={13} /> Appointment</span><strong>{invite.meetingTime || "Pending"}</strong></div>
                   <div><span><MapPin size={13} /> Location</span><strong>{invite.locationName || invite.venue || "Pending"}</strong></div>
-                  <div><span><FileText size={13} /> Contract</span><strong>{invite.contractFileName || "Contract pending"}</strong></div>
+                  {!invite.isBackup && <div><span><FileText size={13} /> Contract</span><strong>{invite.contractFileName || "Contract pending"}</strong></div>}
                 </div>
 
                 <div className="jockey-invitation-review">
@@ -204,10 +278,10 @@ function JockeyInvitations() {
                     {invite.mapUrl && <a href={invite.mapUrl} rel="noreferrer" target="_blank"><LinkIcon size={13} /> Open map</a>}
                     {(invite.contactName || invite.contactPhone) && <small>{[invite.contactName, invite.contactPhone].filter(Boolean).join(" / ")}</small>}
                   </div>
-                  <div>
+                  {!invite.isBackup && <div>
                     <span><FileText size={13} /> Contract</span>
                     {invite.contractUrl ? <a href={invite.contractUrl} rel="noreferrer" target="_blank">{invite.contractFileName || invite.contractUrl}</a> : <strong>{invite.contractFileName || "Contract link pending"}</strong>}
-                  </div>
+                  </div>}
                 </div>
 
                 {invite.terms && (
@@ -218,8 +292,109 @@ function JockeyInvitations() {
                   </div>
                 )}
 
+                {invite.actionsLocked && !["cancelled", "replaced"].includes(invite.rawStatus) && (
+                  <div className="jockey-cancellation-panel" role="status">
+                    <strong>Assignment changes are closed</strong>
+                    <p>The race has started or closed, so this assignment can no longer be changed.</p>
+                  </div>
+                )}
+
+                {invite.rawStatus === "cancelled" && (
+                  <div className="jockey-cancellation-panel" role="status">
+                    <strong>{invite.withdrawal?.reason ? "Negotiation withdrawn" : invite.cancellationRequest?.status === "approved" ? "Agreement ended by mutual confirmation" : "Assignment cancelled"}</strong>
+                    {invite.withdrawal?.reason && (
+                      <p>{invite.withdrawal.initiated_by_party === "jockey" ? "You" : "The horse owner"} withdrew: {invite.withdrawal.reason}</p>
+                    )}
+                    {!invite.withdrawal?.reason && invite.cancellationRequest?.reason && (
+                      <p>Requested by {invite.cancellationRequest.initiated_by_party === "jockey" ? "jockey" : "horse owner"}: {invite.cancellationRequest.reason}</p>
+                    )}
+                  </div>
+                )}
+
+                {!invite.actionsLocked && ["accepted", "standby_confirmed"].includes(invite.rawStatus) && (() => {
+                  const cancellationRequest = invite.cancellationRequest;
+                  const cancellationPending = cancellationRequest?.status === "pending";
+                  const jockeyRequestedCancellation = cancellationRequest?.initiated_by_party === "jockey";
+                  const draft = cancellationDrafts[invite.id] || {};
+
+                  if (cancellationPending && jockeyRequestedCancellation) {
+                    return (
+                      <div className="jockey-cancellation-panel" role="status">
+                        <strong>Waiting for owner confirmation</strong>
+                        <p>{cancellationRequest.reason}</p>
+                        <small>Your {invite.isBackup ? "standby agreement" : "primary contract"} remains active until the owner agrees.</small>
+                      </div>
+                    );
+                  }
+
+                  if (cancellationPending) {
+                    return (
+                      <div className="jockey-cancellation-panel">
+                        <strong>Owner requested {invite.isBackup ? "standby agreement" : "primary contract"} cancellation</strong>
+                        <p>{cancellationRequest.reason}</p>
+                        <label>
+                          <span>Response note <small>Optional</small></span>
+                          <textarea
+                            maxLength={1000}
+                            value={draft.response || ""}
+                            onChange={(event) => updateCancellationDraft(invite.id, "response", event.target.value)}
+                            placeholder="Record your response for the cancellation audit."
+                          />
+                        </label>
+                        <div className="jockey-invitation-card__actions">
+                          <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => submitCancellationResponse(invite, "reject")} type="button">
+                            Keep agreement
+                          </button>
+                          <button className="jockey-button jockey-button--danger" disabled={activeActionId === invite.id} onClick={() => submitCancellationResponse(invite, "approve")} type="button">
+                            {activeActionId === invite.id ? "Updating..." : "Agree to end contract"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="jockey-cancellation-panel">
+                      {cancellationRequest?.status === "rejected" && <small>Previous cancellation request was declined. The agreement remains active.</small>}
+                      <label>
+                          <span>Reason for ending {invite.isBackup ? "standby agreement" : "contract"} <small>Required</small></span>
+                        <textarea
+                          maxLength={1000}
+                          value={draft.reason || ""}
+                          onChange={(event) => updateCancellationDraft(invite.id, "reason", event.target.value)}
+                          placeholder={`Explain why you are asking the owner to end this ${invite.isBackup ? "standby agreement" : "primary contract"}.`}
+                        />
+                      </label>
+                      <div className="jockey-invitation-card__actions">
+                        <button className="jockey-button jockey-button--danger" disabled={activeActionId === invite.id} onClick={() => submitCancellationRequest(invite)} type="button">
+                          {activeActionId === invite.id ? "Sending request..." : "Request mutual cancellation"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {!invite.actionsLocked && ["meeting_accepted", "terms_pending_confirmation", "standby_terms_pending_confirmation", "terms_agreed", "terms_rejected", "contract_uploaded"].includes(invite.rawStatus) && (
+                  <div className="jockey-cancellation-panel">
+                    <label>
+                      <span>Reason for withdrawing <small>Required</small></span>
+                      <textarea
+                        maxLength={1000}
+                        value={cancellationDrafts[invite.id]?.withdrawReason || ""}
+                        onChange={(event) => updateCancellationDraft(invite.id, "withdrawReason", event.target.value)}
+                        placeholder="Explain why you cannot continue this negotiation."
+                      />
+                    </label>
+                    <div className="jockey-invitation-card__actions">
+                      <button className="jockey-button jockey-button--danger" disabled={activeActionId === invite.id} onClick={() => submitWithdrawal(invite)} type="button">
+                        {activeActionId === invite.id ? "Withdrawing..." : "Withdraw from negotiation"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="jockey-invitation-card__actions">
-                  {invite.rawStatus === "meeting_invited" && (
+                  {!invite.actionsLocked && invite.rawStatus === "meeting_invited" && (
                     <>
                       <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-appointment")} type="button">
                         <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Decline appointment"}
@@ -229,7 +404,7 @@ function JockeyInvitations() {
                       </button>
                     </>
                   )}
-                  {invite.rawStatus === "terms_pending_confirmation" && (
+                  {!invite.actionsLocked && ["terms_pending_confirmation", "standby_terms_pending_confirmation"].includes(invite.rawStatus) && (
                     <>
                       <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-terms")} type="button">
                         <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Request changes"}
@@ -239,7 +414,7 @@ function JockeyInvitations() {
                       </button>
                     </>
                   )}
-                  {invite.rawStatus === "contract_uploaded" && (
+                  {!invite.actionsLocked && invite.rawStatus === "contract_uploaded" && !invite.isBackup && (
                     <>
                       <button className="jockey-button" disabled={activeActionId === invite.id} onClick={() => updateInvitation(invite.id, "reject-contract")} type="button">
                         <XCircle size={17} /> {activeActionId === invite.id ? "Updating..." : "Reject contract"}

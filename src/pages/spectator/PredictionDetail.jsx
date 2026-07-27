@@ -210,7 +210,19 @@ export default function PredictionDetail() {
   const { isLoading: racesLoading, races } = useSpectatorRaceMarkets();
   const race = races.find((item) => String(item.id) === String(raceId))
     || tournamentRaces.find((item) => String(item.id) === String(raceId));
-  const tournament = tournaments[0];
+  const previewTournament = tournaments.find(
+    (item) => String(item.id) === String(race?.tournamentId)
+  ) || tournaments[0];
+  const tournament = {
+    id: race?.tournamentId || previewTournament?.id || "",
+    name: race?.tournamentName || previewTournament?.name || "Tournament",
+  };
+  const tournamentPath = tournament.id
+    ? `/spectator/tournaments/${encodeURIComponent(tournament.id)}`
+    : "/spectator/predictions";
+  const raceInfoPath = tournament.id
+    ? `${tournamentPath}/races/${encodeURIComponent(race?.id || raceId)}`
+    : "/spectator/predictions";
   const realtime = useMockRaceSession(race?.id || "missing-race");
   const [selection, setSelection] = useState([]);
   const [stake, setStake] = useState(200);
@@ -226,7 +238,10 @@ export default function PredictionDetail() {
   const mockFixedOddsMarket = useMemo(() => createMockFixedOddsMarket(race?.id || "missing-race"), [race?.id]);
   const currentMarket = marketState.market || (marketState.isPreview ? mockFixedOddsMarket : null);
   const marketValidation = useMemo(() => validateFixedOddsMarket(currentMarket, race?.id), [currentMarket, race?.id]);
-  const contenders = useMemo(() => currentMarket?.runners?.length ? currentMarket.runners : mockContenders, [currentMarket]);
+  const contenders = useMemo(() => {
+    if (marketState.isPreview) return currentMarket?.runners?.length ? currentMarket.runners : mockContenders;
+    return currentMarket?.runners || [];
+  }, [currentMarket, marketState.isPreview]);
   const contendersById = useMemo(() => new Map(contenders.map((horse) => [horse.id, horse])), [contenders]);
   const selectedHorses = selection.map((id) => contendersById.get(id)).filter(Boolean);
   const displayedReceipts = useMemo(() => {
@@ -463,7 +478,7 @@ export default function PredictionDetail() {
   return (
     <section className="spectator-page fixed-odds-page">
       <div className="fixed-odds-topline">
-        <Link className="tournament-detail-back" to={`/spectator/tournaments/${tournament.id}`}><ArrowLeft size={16} /> Back to tournament</Link>
+        <Link className="tournament-detail-back" to={tournamentPath}><ArrowLeft size={16} /> Back to tournament</Link>
         <div className={`fixed-odds-connection fixed-odds-connection--${realtime.connectionState}`}><span className="live-race-dot" /> {connectionLabels[realtime.connectionState]}</div>
       </div>
 
@@ -487,7 +502,7 @@ export default function PredictionDetail() {
         <main className="fixed-odds-board">
           <div className="fixed-odds-board__heading">
             <div><span className="live-race-kicker"><CircleDollarSign size={14} /> Odds board</span><h2>Win market</h2></div>
-            <Link to={`/spectator/tournaments/${tournament.id}/races/${race.id}`}>View race track <ArrowRight size={15} /></Link>
+            <Link to={raceInfoPath}>View race track <ArrowRight size={15} /></Link>
           </div>
 
           <div className="fixed-odds-market-note"><Info size={15} /><span><strong>Win only:</strong> Pick the horse you expect to finish first. Other prediction types are disabled until backend odds and settlement rules exist.</span></div>
@@ -496,6 +511,11 @@ export default function PredictionDetail() {
 
           <section className="fixed-odds-runners" aria-label="Runner odds">
             <div className="fixed-odds-runners__labels"><span>Runner</span><span>Form</span><span>Win odds</span></div>
+            {!marketState.isLoading && contenders.length === 0 && (
+              <div className="live-race-state-message" role="status">
+                This odds snapshot has no runners. Ask an administrator to regenerate the market after entries are finalized.
+              </div>
+            )}
             {contenders.map((horse) => {
               const isUnavailable = currentMarket?.runnerStatuses?.[horse.id] !== "active";
               const selected = selection.includes(horse.id);

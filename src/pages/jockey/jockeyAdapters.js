@@ -44,6 +44,8 @@ function normalizeStatus(status, fallback = "Pending") {
     meeting_accepted: "Appointment accepted",
     meeting_rejected: "Appointment rejected",
     terms_pending_confirmation: "Terms review",
+    standby_terms_pending_confirmation: "Standby terms review",
+    standby_confirmed: "Standby confirmed",
     terms_agreed: "Terms confirmed",
     terms_rejected: "Terms rejected",
     contract_uploaded: "Contract review",
@@ -77,14 +79,43 @@ function formatMoney(value, currency = "VND") {
   }).format(amount);
 }
 
+function normalizeAssignmentStatus(item) {
+  const status = item.status || "";
+
+  if (item.assignment_type !== "backup") {
+    return status === "pending" ? "meeting_invited" : status === "rejected" ? "meeting_rejected" : status;
+  }
+
+  if (["pending"].includes(status)) return "meeting_invited";
+  if (["rejected"].includes(status)) return "meeting_rejected";
+  if (status === "terms_pending_confirmation") return "standby_terms_pending_confirmation";
+  if (["terms_agreed", "contract_uploaded", "accepted"].includes(status)) return "standby_confirmed";
+  return status;
+}
+
 function mapAssignment(item, index = 0) {
   const race = item.race_id || item.race || {};
   const horse = item.horse_id || item.horse || {};
   const owner = item.owner_id || item.owner || horse.owner_id || {};
   const meeting = item.meeting || {};
   const contract = item.contract || {};
-  const status = normalizeStatus(item.status);
+  const cancellationRequest = item.cancellation_request || null;
+  const withdrawal = item.withdrawal || null;
   const assignmentType = item.assignment_type || "primary";
+  const rawStatus = normalizeAssignmentStatus({ ...item, assignment_type: assignmentType });
+  const status = normalizeStatus(rawStatus);
+  const raceStatus = String(race.status || item.race_status || "").toLowerCase();
+  const actionsLocked = [
+    "starting",
+    "started",
+    "running",
+    "ongoing",
+    "in_progress",
+    "completed",
+    "finished",
+    "cancelled",
+    "archived",
+  ].includes(raceStatus);
 
   return {
     id: getId(item) || `ASG-${index + 1}`,
@@ -101,7 +132,10 @@ function mapAssignment(item, index = 0) {
     venue: race.location || item.location || "Race track",
     round: getName(race.round_id || item.round_id, item.round_name || "Race round"),
     note: item.invitation_message || item.response_message || item.note || "Owner invitation is ready for review.",
-    rawStatus: item.status || "",
+    rawStatus,
+    sourceStatus: item.status || "",
+    raceStatus,
+    actionsLocked,
     meetingTitle: meeting.title || item.meeting_title || "Owner appointment",
     meetingUrl: meeting.meeting_url || item.meeting_url || "",
     meetingTime: formatRaceTime(meeting.meeting_time || item.meeting_time),
@@ -118,6 +152,8 @@ function mapAssignment(item, index = 0) {
     terms: item.terms?.agreed_terms || item.agreed_terms || "",
     meetingNote: item.terms?.meeting_note || "",
     responseMessage: contract.response_message || meeting.response_message || item.response_message || "",
+    cancellationRequest,
+    withdrawal,
   };
 }
 
