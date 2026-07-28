@@ -2139,6 +2139,564 @@
   margin-inline: auto;
 }
 
+.owner-entry-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 2px 0;
+}
+
+.owner-entry-header h1 {
+  margin: 3px 0 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1;
+}
+
+.owner-entry-header p:last-child {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  color: var(--owner-text-muted);
+  line-height: 1.5;
+}
+
+.owner-entry-tabs {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+}
+
+.owner-entry-tabs button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--owner-text-muted);
+  background: transparent;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.owner-entry-tabs button:hover,
+.owner-entry-tabs button:focus-visible {
+  color: var(--owner-text-strong);
+}
+
+.owner-entry-tabs button:focus-visible {
+  outline: 2px solid rgba(var(--racing-accent-rgb), 0.65);
+  outline-offset: 2px;
+}
+
+.owner-entry-tabs button.is-active {
+  border-bottom-color: var(--racing-accent);
+  color: var(--racing-accent-soft);
+}
+
+.owner-entry-tabs button span {
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(var(--racing-contrast-rgb), 0.12);
+  font-size: 0.76rem;
+}
+
+.owner-entry-workspace {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 350px);
+  gap: 18px;
+  align-items: start;
+}
+
+.owner-entry-main {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.owner-entry-section {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: clamp(16px, 2vw, 22px);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.22);
+  border-radius: 8px;
+  background: rgba(13, 28, 18, 0.3);
+}
+
+.owner-entry-section__header {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.owner-entry-section__header h2,
+.owner-entry-review h2 {
+  margin: 3px 0 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(1.08rem, 2vw, 1.4rem);
+  line-height: 1.2;
+}
+
+.owner-entry-step {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.42);
+  border-radius: 50%;
+  color: var(--racing-accent-soft);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  font-weight: 900;
+}
+
+.owner-entry-step.is-complete {
+  border-color: rgba(118, 207, 143, 0.56);
+  color: #b7f2c3;
+  background: rgba(76, 154, 98, 0.2);
+}
+
+.owner-entry-horse-list {
+  display: grid;
+  gap: 8px;
+}
+
+.owner-entry-horse {
+  width: 100%;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 28px minmax(150px, 0.8fr) minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 14px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 8px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: left;
+  cursor: pointer;
+}
+
+.owner-entry-horse:hover {
+  border-color: rgba(var(--racing-accent-rgb), 0.42);
+  background: rgba(255, 255, 255, 0.085);
+}
+
+.owner-entry-horse:focus-visible {
+  outline: 3px solid rgba(var(--racing-accent-rgb), 0.45);
+  outline-offset: 2px;
+}
+
+.owner-entry-horse.is-selected {
+  border-color: rgba(118, 207, 143, 0.62);
+  background: rgba(76, 154, 98, 0.16);
+}
+
+.owner-entry-horse.is-unavailable {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.owner-entry-horse__marker,
+.owner-entry-race-marker {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.34);
+  border-radius: 50%;
+  color: #d9f5df;
+}
+
+.owner-entry-horse.is-selected .owner-entry-horse__marker {
+  border-color: #77c889;
+  background: rgba(76, 154, 98, 0.72);
+}
+
+.owner-entry-horse__identity,
+.owner-entry-horse__facts {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.owner-entry-horse__identity strong {
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+}
+
+.owner-entry-horse__identity small,
+.owner-entry-horse__facts {
+  color: var(--owner-text-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.owner-entry-horse__facts {
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px 12px;
+}
+
+.owner-entry-horse__facts > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  color: var(--owner-text-soft);
+  overflow-wrap: anywhere;
+}
+
+.owner-entry-horse__facts small {
+  color: var(--owner-text-muted);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.owner-entry-section.owner-tournament-browser {
+  background: rgba(13, 28, 18, 0.3);
+}
+
+.owner-entry-section .owner-tournament-browser__header > div {
+  position: relative;
+  padding-left: 46px;
+}
+
+.owner-entry-section .owner-tournament-browser__header .owner-entry-step {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.owner-entry-section .owner-tournament-list {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  max-height: 270px;
+}
+
+.owner-entry-section .owner-tournament-choice {
+  gap: 9px;
+  padding: 13px;
+}
+
+.owner-entry-race-head {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) minmax(300px, 1fr) minmax(132px, auto);
+  gap: 16px;
+  padding: 0 20px 8px;
+  color: var(--owner-text-muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.owner-entry-guidance {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed rgba(var(--racing-contrast-rgb), 0.28);
+  border-radius: 8px;
+  color: var(--owner-text-muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-weight: 800;
+}
+
+.owner-entry-guidance svg {
+  color: var(--racing-accent-soft);
+}
+
+.owner-race-choice__footer button {
+  flex: 0 0 auto;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--racing-accent-soft);
+  background: transparent;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.owner-race-choice__footer button:hover,
+.owner-race-choice__footer button:focus-visible {
+  color: var(--owner-text-strong);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.owner-entry-review {
+  position: sticky;
+  top: 18px;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.32);
+  border-radius: 8px;
+  background: rgba(22, 42, 29, 0.96);
+  box-shadow: 0 18px 44px rgba(2, 15, 8, 0.2);
+}
+
+.owner-entry-review__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.owner-entry-review__header > svg {
+  color: var(--racing-accent-soft);
+}
+
+.owner-entry-progress {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.owner-entry-progress li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  color: var(--owner-text-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.owner-entry-progress li > span {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.28);
+  border-radius: 50%;
+}
+
+.owner-entry-progress li.is-complete {
+  color: #b7f2c3;
+}
+
+.owner-entry-progress li.is-complete > span {
+  border-color: rgba(118, 207, 143, 0.58);
+  background: rgba(76, 154, 98, 0.22);
+}
+
+.owner-entry-review__summary {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 8px;
+  background: rgba(var(--racing-contrast-rgb), 0.12);
+}
+
+.owner-entry-review__summary > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(8, 24, 14, 0.72);
+}
+
+.owner-entry-review__summary span,
+.owner-entry-review__total span {
+  color: var(--owner-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.owner-entry-review__summary strong,
+.owner-entry-review__total strong {
+  min-width: 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.owner-entry-review__summary small,
+.owner-entry-review__total small {
+  color: var(--owner-text-muted);
+  line-height: 1.35;
+}
+
+.owner-entry-review__total {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.28);
+  border-radius: 8px;
+  background: rgba(var(--racing-accent-rgb), 0.09);
+}
+
+.owner-entry-review__total strong {
+  color: var(--racing-accent-soft);
+  font-size: 1.5rem;
+}
+
+.owner-entry-note {
+  display: grid;
+  gap: 8px;
+  color: var(--owner-text-soft);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.owner-entry-note span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.owner-entry-note small {
+  color: var(--owner-text-muted);
+}
+
+.owner-entry-note textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 11px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 8px;
+  outline: 0;
+  color: var(--owner-text-strong);
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  resize: vertical;
+}
+
+.owner-entry-note textarea:focus {
+  border-color: rgba(var(--racing-accent-rgb), 0.62);
+  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.owner-entry-notice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border-left: 3px solid var(--racing-accent);
+  color: var(--owner-text-soft);
+  background: rgba(var(--racing-accent-rgb), 0.08);
+}
+
+.owner-entry-notice svg {
+  color: var(--racing-accent-soft);
+}
+
+.owner-entry-notice p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.owner-entry-submit {
+  width: 100%;
+}
+
+.owner-entry-review__hint {
+  color: var(--owner-text-muted);
+  text-align: center;
+}
+
+.owner-entry-dialog-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(1, 12, 6, 0.78);
+}
+
+.owner-entry-dialog {
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  display: grid;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.28);
+  border-radius: 8px;
+  background: #10271c;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+.owner-entry-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.owner-entry-dialog__header h2 {
+  margin: 3px 0 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+}
+
+.owner-entry-dialog__header button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 8px;
+  color: var(--owner-text-soft);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.owner-entry-dialog__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 8px;
+  background: rgba(var(--racing-contrast-rgb), 0.12);
+}
+
+.owner-entry-dialog__facts > div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  background: rgba(8, 24, 14, 0.72);
+}
+
+.owner-entry-dialog__facts span {
+  color: var(--owner-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.owner-entry-dialog__facts strong {
+  color: var(--owner-text-strong);
+  overflow-wrap: anywhere;
+}
+
 .owner-race-detail-page {
   display: grid;
   gap: clamp(18px, 2.4vw, 28px);
@@ -2979,9 +3537,38 @@
   margin-top: 8px;
 }
 
+.owner-invitation-section--meeting .owner-invitation-section__grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+}
+
+.owner-field--appointment-title,
+.owner-field--appointment-time,
+.owner-field--appointment-contact {
+  grid-column: span 6;
+}
+
+.owner-field--location-name {
+  grid-column: span 4;
+}
+
+.owner-field--appointment-address {
+  grid-column: span 8;
+}
+
+.owner-field--appointment-area {
+  grid-column: span 4;
+}
+
+.owner-field--appointment-map,
+.owner-field-readiness--appointment {
+  grid-column: 1 / -1;
+}
+
 .owner-field {
   min-width: 0;
   display: grid;
+  align-content: start;
   gap: 8px;
 }
 
@@ -3041,6 +3628,44 @@
 .owner-registration-form .owner-field input[type="datetime-local"] {
   color-scheme: dark;
   font-variant-numeric: tabular-nums;
+}
+
+.owner-field-readiness {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--racing-danger-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.owner-field-readiness--appointment {
+  min-height: 34px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(224, 129, 100, 0.26);
+  border-radius: 6px;
+  background: rgba(120, 42, 28, 0.1);
+}
+
+.owner-field-readiness--appointment.is-ready {
+  border-color: rgba(118, 207, 143, 0.28);
+  background: rgba(76, 154, 98, 0.1);
+}
+
+.owner-invitation-section--meeting .owner-field input {
+  height: 48px;
+  min-height: 48px;
+}
+
+.owner-field-readiness.is-ready {
+  color: var(--racing-success-soft);
+}
+
+.owner-field-readiness svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .owner-contract-upload {
@@ -3681,6 +4306,21 @@
   opacity: 0.65;
 }
 
+.owner-jockey-picker__option.is-unavailable {
+  border-color: rgba(var(--racing-contrast-rgb), 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.owner-jockey-picker__option.is-unavailable:hover {
+  border-color: rgba(var(--racing-contrast-rgb), 0.16);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.owner-jockey-picker__option.is-unavailable .owner-jockey-picker__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .owner-jockey-picker__avatar {
   display: grid;
   overflow: hidden;
@@ -3736,6 +4376,25 @@
 .owner-jockey-picker__info:hover {
   color: var(--owner-text-strong);
   background: rgba(var(--racing-accent-rgb), 0.15);
+}
+
+.owner-jockey-picker__availability {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 5px;
+  color: var(--racing-danger-soft);
+  background: rgba(177, 65, 53, 0.1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.owner-jockey-picker__availability svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .owner-jockey-picker__preview {
@@ -3843,6 +4502,556 @@
 
   .owner-jockey-picker__facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Jockey invitation workspace */
+.owner-jockey-header {
+  order: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 18px 0 8px;
+}
+
+.owner-jockey-header h1 {
+  margin: 4px 0 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 1;
+}
+
+.owner-jockey-header p:not(.owner-eyebrow) {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  color: var(--owner-text-muted);
+  line-height: 1.55;
+}
+
+.owner-jockey-stats {
+  order: 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.owner-jockey-invite-workspace {
+  order: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.72fr);
+  gap: 18px;
+  align-items: start;
+  scroll-margin-top: 18px;
+  background: rgba(21, 39, 28, 0.84);
+}
+
+.owner-jockey-invite-workspace > .owner-card__header,
+.owner-jockey-invite-workspace > .owner-invite-steps,
+.owner-jockey-invite-workspace > .owner-assignment-type {
+  grid-column: 1 / -1;
+}
+
+.owner-jockey-invite-workspace > .owner-approved-entry-panel,
+.owner-jockey-invite-workspace > .owner-jockey-picker,
+.owner-jockey-invite-workspace > .owner-invitation-fields,
+.owner-jockey-invite-workspace > .owner-assignment-conflict,
+.owner-jockey-invite-workspace > .owner-invitation-actions {
+  grid-column: 1;
+}
+
+.owner-assignment-workflow {
+  order: 4;
+}
+
+.owner-invite-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 8px;
+  background: rgba(4, 20, 12, 0.28);
+}
+
+.owner-invite-steps button {
+  position: relative;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border: 0;
+  border-right: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+  color: var(--owner-text-muted);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.owner-invite-steps button:last-child {
+  border-right: 0;
+}
+
+.owner-invite-steps button > span {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 50%;
+}
+
+.owner-invite-steps button strong {
+  overflow: hidden;
+  font-size: 0.79rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-invite-steps button.is-active {
+  color: var(--racing-accent-soft);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.owner-invite-steps button.is-active > span {
+  border-color: rgba(var(--racing-accent-rgb), 0.55);
+  background: rgba(var(--racing-accent-rgb), 0.14);
+}
+
+.owner-invite-steps button.is-complete {
+  color: var(--racing-success-soft);
+}
+
+.owner-invite-steps button.is-complete > span {
+  border-color: rgba(var(--racing-success-rgb), 0.45);
+  background: rgba(var(--racing-success-rgb), 0.1);
+}
+
+.owner-assignment-type {
+  justify-self: start;
+  width: min(100%, 420px);
+}
+
+.owner-approved-entry-list--always,
+.owner-jockey-picker__list--always {
+  max-height: 390px;
+  padding: 0 3px 0 0;
+}
+
+.owner-approved-entry.owner-approved-entry--detailed {
+  display: grid;
+  grid-template-columns: 48px minmax(210px, 1.35fr) minmax(150px, 0.8fr) minmax(160px, 0.85fr) 34px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 78px;
+  padding: 12px 14px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
+  border-radius: 7px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+  cursor: pointer;
+}
+
+.owner-approved-entry.owner-approved-entry--detailed:hover,
+.owner-approved-entry.owner-approved-entry--detailed.is-selected {
+  border-color: rgba(var(--racing-accent-rgb), 0.48);
+  background: rgba(var(--racing-accent-rgb), 0.09);
+}
+
+.owner-approved-entry__avatar {
+  overflow: hidden;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: rgba(var(--racing-contrast-rgb), 0.1);
+}
+
+.owner-approved-entry__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-approved-entry__main,
+.owner-approved-entry__facts {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.owner-approved-entry__main strong,
+.owner-approved-entry__facts strong {
+  overflow: hidden;
+  color: var(--owner-text-strong);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-approved-entry__main small,
+.owner-approved-entry__facts small {
+  overflow: hidden;
+  color: var(--owner-text-muted);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-approved-entry__check {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 50%;
+  color: var(--owner-text-muted);
+}
+
+.owner-approved-entry.owner-approved-entry--detailed.is-selected .owner-approved-entry__check {
+  border-color: rgba(var(--racing-success-rgb), 0.46);
+  color: var(--racing-success-soft);
+  background: rgba(var(--racing-success-rgb), 0.12);
+}
+
+.owner-jockey-browser {
+  display: grid;
+  gap: 10px;
+}
+
+.owner-jockey-search {
+  min-height: 42px;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px !important;
+  padding: 0 12px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.owner-jockey-search svg {
+  color: var(--owner-text-muted);
+}
+
+.owner-jockey-search input {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--owner-text-strong);
+  background: transparent;
+}
+
+.owner-jockey-picker__option--detailed {
+  grid-template-columns: minmax(0, 1fr) 36px;
+  padding: 5px;
+}
+
+.owner-jockey-picker__option--detailed .owner-jockey-picker__select {
+  grid-template-columns: 38px minmax(130px, 1.1fr) minmax(80px, 0.58fr) minmax(105px, 0.74fr) minmax(100px, 0.7fr) auto 28px;
+  gap: 10px;
+}
+
+.owner-jockey-picker__option--detailed .owner-jockey-picker__avatar {
+  width: 38px;
+  height: 38px;
+}
+
+.owner-jockey-picker__fact {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.owner-jockey-picker__fact small {
+  color: var(--owner-text-muted);
+  font-size: 0.66rem;
+}
+
+.owner-jockey-picker__fact strong {
+  overflow: hidden;
+  color: var(--owner-text-soft);
+  font-size: 0.73rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-jockey-picker__selection {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 50%;
+  color: var(--owner-text-muted);
+}
+
+.owner-jockey-picker__option--detailed.is-selected .owner-jockey-picker__selection {
+  border-color: rgba(var(--racing-success-rgb), 0.46);
+  color: var(--racing-success-soft);
+}
+
+.owner-jockey-picker__info {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.owner-jockey-preview-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 50%;
+  color: var(--owner-text-soft);
+  background: rgba(4, 20, 12, 0.72);
+  cursor: pointer;
+}
+
+.owner-jockey-card--preview {
+  pointer-events: auto;
+}
+
+.owner-invitation-review {
+  position: sticky;
+  top: 18px;
+  grid-column: 2;
+  grid-row: 4 / span 6;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.3);
+  border-radius: 8px;
+  background: rgba(7, 27, 17, 0.94);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+.owner-invitation-review__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.owner-invitation-review__header h3 {
+  margin: 4px 0 0;
+  color: var(--owner-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.1rem;
+}
+
+.owner-invitation-review .owner-invitation-context {
+  grid-template-columns: 1fr;
+}
+
+.owner-invitation-review .owner-invitation-context > div {
+  padding: 10px 12px;
+  border-right: 0;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.1);
+}
+
+.owner-invitation-review .owner-invitation-context > div:last-child {
+  border-bottom: 0;
+}
+
+.owner-invitation-review__flow {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.owner-invitation-review__flow > div {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-invitation-review__flow span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--racing-accent-soft);
+  background: rgba(var(--racing-accent-rgb), 0.12);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.owner-invitation-review__flow strong {
+  color: var(--owner-text-soft);
+  font-size: 0.75rem;
+}
+
+.owner-invitation-review__flow svg {
+  color: var(--owner-text-muted);
+}
+
+.owner-invitation-review__readiness {
+  margin: 0;
+  color: var(--racing-accent-soft);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.owner-invitation-review__readiness.is-ready {
+  color: var(--racing-success-soft);
+}
+
+.owner-invitation-review .owner-invitation-submit {
+  width: 100%;
+  min-width: 0;
+}
+
+.owner-negotiation-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.12);
+}
+
+.owner-negotiation-filters button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.16);
+  border-radius: 6px;
+  color: var(--owner-text-muted);
+  background: transparent;
+  font-size: 0.73rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.owner-negotiation-filters button:hover,
+.owner-negotiation-filters button.is-active {
+  border-color: rgba(var(--racing-accent-rgb), 0.42);
+  color: var(--racing-accent-soft);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+}
+
+.owner-invitation-modal {
+  position: fixed;
+  z-index: 220;
+  top: 50%;
+  left: 50%;
+  width: min(680px, calc(100vw - 28px));
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 100vmax rgba(0, 10, 5, 0.72), 0 26px 72px rgba(0, 0, 0, 0.46);
+}
+
+@media (max-width: 1100px) {
+  .owner-jockey-invite-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-jockey-invite-workspace > .owner-approved-entry-panel,
+  .owner-jockey-invite-workspace > .owner-jockey-picker,
+  .owner-jockey-invite-workspace > .owner-invitation-fields,
+  .owner-jockey-invite-workspace > .owner-assignment-conflict,
+  .owner-jockey-invite-workspace > .owner-invitation-actions,
+  .owner-invitation-review {
+    grid-column: 1;
+  }
+
+  .owner-invitation-review {
+    position: static;
+    grid-row: auto;
+  }
+
+  .owner-jockey-picker__option--detailed .owner-jockey-picker__select {
+    grid-template-columns: 38px minmax(130px, 1fr) minmax(90px, 0.65fr) minmax(100px, 0.75fr) auto 28px;
+  }
+
+  .owner-jockey-picker__option--detailed .owner-jockey-picker__fact:nth-of-type(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .owner-jockey-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owner-jockey-header .owner-button {
+    width: 100%;
+  }
+
+  .owner-jockey-stats,
+  .owner-invite-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-invite-steps button {
+    border-right: 0;
+    border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+  }
+
+  .owner-invite-steps button:last-child {
+    border-bottom: 0;
+  }
+
+  .owner-approved-entry.owner-approved-entry--detailed {
+    grid-template-columns: 42px minmax(0, 1fr) 30px;
+    gap: 10px;
+    min-height: 0;
+    padding: 11px;
+  }
+
+  .owner-approved-entry__avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .owner-approved-entry__facts {
+    grid-column: 2;
+  }
+
+  .owner-approved-entry__check {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+  }
+
+  .owner-jockey-picker__option--detailed .owner-jockey-picker__select {
+    grid-template-columns: 38px minmax(0, 1fr) 28px;
+  }
+
+  .owner-jockey-picker__option--detailed .owner-jockey-picker__fact,
+  .owner-jockey-picker__option--detailed .owner-badge {
+    grid-column: 2;
+  }
+
+  .owner-jockey-picker__option--detailed .owner-jockey-picker__selection {
+    grid-column: 3;
+    grid-row: 1 / span 5;
+  }
+
+  .owner-jockey-card--preview {
+    top: 50% !important;
+    left: 50% !important;
+    max-height: calc(100dvh - 28px);
+    overflow-y: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  .owner-assignment-workflow__list {
+    block-size: auto;
+    max-block-size: 380px;
   }
 }
 
@@ -6299,6 +7508,18 @@
 }
 
 @media (max-width: 1080px) {
+  .owner-entry-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-entry-review {
+    position: static;
+  }
+
+  .owner-entry-section .owner-tournament-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .owner-topbar,
   .owner-hero,
   .owner-horses-hero,
@@ -6399,6 +7620,71 @@
 }
 
 @media (max-width: 640px) {
+  .owner-entry-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .owner-entry-tabs,
+  .owner-entry-tabs button {
+    width: 100%;
+  }
+
+  .owner-entry-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-entry-tabs button {
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .owner-entry-section,
+  .owner-entry-review {
+    padding: 14px;
+  }
+
+  .owner-entry-horse {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+  }
+
+  .owner-entry-horse__facts {
+    grid-column: 2 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-entry-section .owner-tournament-browser__header > div {
+    padding-left: 42px;
+  }
+
+  .owner-entry-section .owner-tournament-list {
+    grid-template-columns: 1fr;
+    max-height: 320px;
+  }
+
+  .owner-entry-race-head {
+    display: none;
+  }
+
+  .owner-entry-dialog-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .owner-entry-dialog {
+    width: 100%;
+    max-height: 88dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .owner-entry-dialog__facts {
+    grid-template-columns: 1fr;
+  }
+
   .owner-page {
     padding-inline: 14px;
   }
@@ -7007,5 +8293,60 @@
   .owner-invitation-toast__actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Keep the Jockey workspace overrides after the shared owner styles. */
+.owner-jockey-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.owner-jockey-card--preview {
+  pointer-events: auto;
+}
+
+.owner-invitation-modal {
+  top: 50%;
+  right: auto;
+  left: 50%;
+  width: min(680px, calc(100vw - 28px));
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  animation: none;
+}
+
+@media (max-width: 760px) {
+  .owner-jockey-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-invitation-section--meeting .owner-invitation-section__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-field--appointment-title,
+  .owner-field--appointment-time,
+  .owner-field--appointment-contact,
+  .owner-field--location-name,
+  .owner-field--appointment-address,
+  .owner-field--appointment-area,
+  .owner-field--appointment-map,
+  .owner-field-readiness--appointment {
+    grid-column: auto;
+  }
+
+  .owner-invitation-modal {
+    top: 50%;
+    right: auto;
+    width: calc(100vw - 24px);
+  }
+
+  .owner-jockey-card--preview {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%);
+    animation: none;
   }
 }

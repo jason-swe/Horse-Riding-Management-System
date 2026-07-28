@@ -151,12 +151,12 @@ export function useOwnerJockeys() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadJockeys = useCallback(async () => {
+  const loadJockeys = useCallback(async (raceId = "") => {
     setIsLoading(true);
     setError("");
 
     try {
-      const data = await ownerApi.getJockeys();
+      const data = await ownerApi.getJockeys(raceId);
       setJockeys((data.jockeys || []).map(toOwnerJockey));
     } catch (apiError) {
       setError(apiError.message || "Unable to load available jockeys.");
