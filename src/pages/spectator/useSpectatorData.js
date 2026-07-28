@@ -191,7 +191,11 @@ export function useSpectatorRaceResultsSingle(raceId) {
     try {
       const data = await spectatorApi.getRaceResults(raceId);
       const adapted = adaptRaceResults(data);
-      const sorted = (adapted.results || []).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
+      const sorted = (adapted.results || []).sort((a, b) => {
+        const firstPosition = Number.isInteger(a.position) ? a.position : Number.MAX_SAFE_INTEGER;
+        const secondPosition = Number.isInteger(b.position) ? b.position : Number.MAX_SAFE_INTEGER;
+        return firstPosition - secondPosition;
+      });
       setResults(sorted);
       setRaceInfo(null);
     } catch (apiError) {

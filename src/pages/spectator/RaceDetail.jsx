@@ -33,6 +33,7 @@ import {
 import "./spectator.css";
 
 const RUNNER_COLORS = ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"];
+const LIVE_STATE_REFRESH_MS = 3000;
 
 function StatusPill({ meta }) {
   if (!meta) return null;
@@ -94,7 +95,8 @@ function ParticipantPreview({ contenders, isOfficial, isLiveConnection }) {
 function getId(value) {
   if (!value) return "";
   if (typeof value === "string") return value;
-  return value._id || value.id || "";
+  const id = value._id || value.id;
+  return id ? String(id) : "";
 }
 
 function getJockeyName(jockey) {
@@ -102,34 +104,65 @@ function getJockeyName(jockey) {
   return jockey.user_id?.full_name || jockey.full_name || jockey.name || "Unknown Jockey";
 }
 
+function getLiveStateSignature(liveState) {
+  if (!liveState) return "";
+
+  return JSON.stringify({
+    raceStatus: liveState.race?.status,
+    participants: (liveState.participants || []).map((participant) => [
+      getId(participant.horse_id || participant.horse),
+      participant.eligible,
+      participant.pre_race_check?.status,
+    ]),
+    engineId: getId(liveState.engine),
+    engineStatus: liveState.engine?.status,
+    finishOrder: (liveState.engine?.finish_order || []).map((result) => [
+      getId(result.horse_id || result.horse),
+      result.position,
+      result.finish_time,
+    ]),
+  });
+}
+
 function mapRaceEngineContenders(engine) {
   if (!engine?.finish_order?.length) return [];
 
-  const participants = engine.participants?.length ? engine.participants : engine.finish_order;
-  const orderByHorse = new Map(engine.finish_order.map((order) => [getId(order.horse_id || order.horse), order]));
+  const participantsByHorse = new Map(
+    (engine.participants || []).map((participant) => [
+      getId(participant.horse_id || participant.horse),
+      participant,
+    ]),
+  );
 
-  return participants.map((participant, index) => {
-    const horse = participant.horse || participant.horse_id || {};
-    const jockey = participant.jockey || participant.jockey_id || {};
-    const horseId = getId(participant.horse_id || horse);
-    const order = orderByHorse.get(horseId);
-    const position = Number(order?.position || index + 1);
-    const finishTime = Number(order?.finish_time);
+  return [...engine.finish_order]
+    .sort((left, right) => Number(left.position) - Number(right.position))
+    .map((order, index) => {
+      const horseId = getId(order.horse_id || order.horse);
+      const participant = participantsByHorse.get(horseId) || {};
+      const horse = participant.horse || order.horse || participant.horse_id || order.horse_id || {};
+      const jockey = participant.jockey || order.jockey || participant.jockey_id || order.jockey_id || {};
+      const position = Number(order.position);
+      const finishTime = Number(order?.finish_time);
 
-    return {
-      id: horseId,
-      horse: horse?.name || order?.horse?.name || "Unknown horse",
-      jockey: getJockeyName(jockey || order?.jockey),
-      owner: horse?.owner_id?.stable_name || "Horse Owner",
-      lane: participant.draw != null ? Number(participant.draw) : participant.lane != null ? Number(participant.lane) : index + 1,
-      weight: horse?.weight ? `${horse.weight}kg` : "56kg",
-      form: "Race Engine",
-      image: getHorseJockeyImage(horseId),
-      color: RUNNER_COLORS[index % RUNNER_COLORS.length],
-      position,
-      raceEngineFinishTimeMs: Number.isFinite(finishTime) ? Math.round(finishTime * 1000) : undefined,
-    };
-  });
+      if (!horseId || !Number.isInteger(position) || position < 1) {
+        return null;
+      }
+
+      return {
+        id: horseId,
+        horse: horse?.name || "Unknown horse",
+        jockey: getJockeyName(jockey),
+        owner: horse?.owner_id?.stable_name || "Horse Owner",
+        lane: participant.draw != null ? Number(participant.draw) : participant.lane != null ? Number(participant.lane) : index + 1,
+        weight: horse?.weight ? `${horse.weight}kg` : "56kg",
+        form: "Race Engine",
+        image: getHorseJockeyImage(horseId),
+        color: RUNNER_COLORS[index % RUNNER_COLORS.length],
+        position,
+        raceEngineFinishTimeMs: Number.isFinite(finishTime) ? Math.round(finishTime * 1000) : undefined,
+      };
+    })
+    .filter(Boolean);
 }
 
 function mapLiveParticipantContenders(participants = []) {
@@ -173,41 +206,32 @@ export default function RaceDetail() {
     }
 
     let active = true;
-    async function fetchParticipants() {
-      setIsLoadingLiveState(true);
+    async function fetchLiveState(isBackground = false) {
+      if (!isBackground) setIsLoadingLiveState(true);
       try {
         const data = await spectatorApi.getRaceLiveState(raceId);
-        if (active) setRaceLiveState(data || null);
-        return;
-        if (active && data && data.participants) {
-          const mapped = data.participants.map((p, idx) => {
-            const horse = p.horse;
-            const jockey = p.jockey || p.assignment?.jockey_id;
-            return {
-              id: horse._id || horse.id,
-              horse: horse.name,
-              jockey: jockey?.user_id?.full_name || jockey?.full_name || "Unknown Jockey",
-              owner: p.owner?.user_id?.full_name || "Horse Owner",
-              lane: p.registration?.draw != null ? Number(p.registration.draw) : p.registration?.lane != null ? Number(p.registration.lane) : idx + 1,
-              weight: horse.weight ? `${horse.weight}kg` : "56kg",
-              form: "-",
-              image: getHorseJockeyImage(horse._id || horse.id),
-              color: ["#f0a15c", "#9dd5b1", "#eee7d4", "#d96a61", "#78b9ef", "#e6b080", "#b1ebd6", "#80c4e6"][idx % 8],
-              position: idx + 1,
-            };
-          });
-          setRaceLiveState({ engine: { participants: mapped, finish_order: [] } });
+        if (active) {
+          setRaceLiveState((current) => (
+            getLiveStateSignature(current) === getLiveStateSignature(data)
+              ? current
+              : data || null
+          ));
         }
       } catch (err) {
         console.warn("Could not fetch real participants from backend (spectator access may be restricted):", err.message);
       } finally {
-        if (active) setIsLoadingLiveState(false);
+        if (active && !isBackground) setIsLoadingLiveState(false);
       }
     }
 
-    fetchParticipants();
+    fetchLiveState(false);
+    const interval = window.setInterval(() => {
+      fetchLiveState(true);
+    }, LIVE_STATE_REFRESH_MS);
+
     return () => {
       active = false;
+      window.clearInterval(interval);
     };
   }, [raceId, hasRealResults]);
 
@@ -229,6 +253,14 @@ export default function RaceDetail() {
   const liveParticipantContenders = mapLiveParticipantContenders(raceLiveState?.participants || []);
   const hasRaceEngineOrder = !hasRealResults && raceEngineContenders.length > 0;
   const hasBackendParticipants = !hasRealResults && liveParticipantContenders.length > 0;
+  const effectiveRace = race
+    ? {
+        ...race,
+        raceStatus: raceLiveState?.race?.status || race.raceStatus,
+        updatedAt: raceLiveState?.race?.updated_at || race.updatedAt,
+        engineGeneratedAt: raceLiveState?.engine?.generated_at || null,
+      }
+    : race;
 
   let contenders = [];
   if (hasRealResults) {
@@ -259,7 +291,7 @@ export default function RaceDetail() {
 
   contenders.sort((a, b) => a.lane - b.lane);
 
-  const viewer = useRaceViewerSession(race, contenders, { useRaceEngineOrder: hasRaceEngineOrder });
+  const viewer = useRaceViewerSession(effectiveRace, contenders, { useRaceEngineOrder: hasRaceEngineOrder });
 
   const isLoading = isLoadingTournament || isLoadingResults;
 
@@ -274,14 +306,14 @@ export default function RaceDetail() {
   if (!tournament || !race)
     return <Navigate to={`/spectator/tournaments/${tournamentId}`} replace />;
 
-  const raceMeta = raceStatusMeta[race.raceStatus];
+  const raceMeta = raceStatusMeta[effectiveRace.raceStatus];
   const marketMeta =
     race.bettingStatus === BETTING_STATUS.UNAVAILABLE
       ? null
       : bettingStatusMeta[race.bettingStatus];
 
   const canBet = race.bettingStatus === BETTING_STATUS.OPEN;
-  const isScheduled = race.raceStatus === RACE_STATUS.SCHEDULED;
+  const isScheduled = effectiveRace.raceStatus === RACE_STATUS.SCHEDULED;
 
   const raceResult = hasRealResults
     ? {
@@ -296,7 +328,7 @@ export default function RaceDetail() {
       }
     : viewer.raceResult;
 
-  const isResultPending = race.raceStatus === RACE_STATUS.COMPLETED && !hasRealResults;
+  const isResultPending = effectiveRace.raceStatus === RACE_STATUS.COMPLETED && !hasRealResults;
   const viewerEyebrow = hasRealResults ? "Official 2D track" : hasRaceEngineOrder ? "Race Engine 2D track" : hasBackendParticipants ? "Backend field preview" : isResultPending ? "Result pending" : "Prototype 2D track";
   const rankingEyebrow = hasRealResults ? "Official ranking" : hasRaceEngineOrder ? "Race Engine order" : hasBackendParticipants ? "Backend field" : isResultPending ? "Race Engine" : "Sample order";
   const rankingTitle = hasRealResults ? "Final standings" : isResultPending && !hasRaceEngineOrder ? "Awaiting official standings" : hasRaceEngineOrder ? "Engine-driven running order" : hasBackendParticipants ? "Registered runners" : "Fixture positions";
@@ -487,7 +519,7 @@ export default function RaceDetail() {
           connectionState={viewer.connectionState}
           contenders={contenders}
           eyebrow={viewerEyebrow}
-          race={race}
+          race={effectiveRace}
           raceResult={raceResult}
           raceScript={viewer.raceScript}
           rankingEyebrow={rankingEyebrow}
