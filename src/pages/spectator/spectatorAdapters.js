@@ -319,12 +319,17 @@ export function toSpectatorRaceResult(apiResult, index = 0) {
   const horse = apiResult.horse_id || apiResult.horse || {};
   const jockey = apiResult.jockey_id || apiResult.jockey || {};
   const race = apiResult.race_id || apiResult.race || {};
+  const positionValue = apiResult.final_position ?? apiResult.position;
+  const numericPosition = Number(positionValue);
+  const position = Number.isInteger(numericPosition) && numericPosition > 0
+    ? numericPosition
+    : null;
 
   return {
     id: getId(apiResult) || `${getId(race)}-${getId(horse)}-${index}`,
     raceId: getId(race),
     horseId: getId(horse),
-    position: apiResult.final_position ?? apiResult.position ?? index + 1,
+    position,
     horse: typeof horse === "string" ? horse : horse.name || apiResult.horse_name || "Unknown Horse",
     jockey:
       typeof jockey === "string"
@@ -340,7 +345,7 @@ export function toSpectatorRaceResult(apiResult, index = 0) {
       const num = Number(val);
       return !Number.isNaN(num) ? num.toFixed(2) : val;
     })(),
-    margin: (apiResult.final_position ?? apiResult.position) === 1 ? "Winner" : "-",
+    margin: position === 1 ? "Winner" : "-",
     status: apiResult.status === "published" ? "Official" : "Review",
     score: apiResult.final_score ?? apiResult.score ?? "-",
     publishedAt: apiResult.published_at || null,

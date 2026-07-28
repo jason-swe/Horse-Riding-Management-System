@@ -91,9 +91,16 @@ export default function RaceViewer2D({
 }) {
   const playback = useRacePlayback({ connectionState, raceId: race.id, raceResult, raceScript });
   const contendersById = new Map(contenders.map((horse) => [horse.id, horse]));
-  const ranking = playback.ranking.length ? playback.ranking : contenders.map((horse, index) => ({
-    horseId: horse.id, lane: horse.lane, name: horse.horse, position: index + 1, progress: 0,
-  }));
+  const ranking = playback.ranking.length ? playback.ranking : contenders.map((horse, index) => {
+    const mappedPosition = Number(horse.position);
+    return {
+      horseId: horse.id,
+      lane: horse.lane,
+      name: horse.horse,
+      position: Number.isInteger(mappedPosition) && mappedPosition > 0 ? mappedPosition : index + 1,
+      progress: 0,
+    };
+  }).sort((left, right) => left.position - right.position);
   const startsAt = playback.script?.startsAt;
   const msRemaining = startsAt ? startsAt - Date.now() : 0;
   const showCountdown = playback.playbackState === "ready" && msRemaining > 0 && msRemaining <= 3000;

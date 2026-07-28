@@ -16,7 +16,9 @@ export function useRaceViewerSession(race, contenders, options = {}) {
     }
 
     if (race.raceStatus === RACE_STATUS.RUNNING) {
-      const startsAt = (race.updatedAt ? new Date(race.updatedAt).getTime() : Date.now()) + 3000;
+      const startsAt = race.engineGeneratedAt
+        ? new Date(race.engineGeneratedAt).getTime()
+        : (race.updatedAt ? new Date(race.updatedAt).getTime() : Date.now()) + 3000;
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
         raceResult: null,
@@ -34,7 +36,11 @@ export function useRaceViewerSession(race, contenders, options = {}) {
     }
 
     if (race.raceStatus === RACE_STATUS.COMPLETED) {
-      const startsAt = race.updatedAt ? new Date(race.updatedAt).getTime() - 68000 : Date.now() - 90000;
+      const startsAt = race.engineGeneratedAt
+        ? new Date(race.engineGeneratedAt).getTime()
+        : race.updatedAt
+          ? new Date(race.updatedAt).getTime() - 68000
+          : Date.now() - 90000;
       return {
         connectionState: CONNECTION_STATES.CONNECTED,
         raceResult: null,
