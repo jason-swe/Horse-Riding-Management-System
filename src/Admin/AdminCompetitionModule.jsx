@@ -136,6 +136,19 @@ function getBettingStatus(race) {
   return String(race?.betting_status || race?.betting_market?.status || "unavailable").toLowerCase();
 }
 
+function isRaceRegistrationOpen(race) {
+  if (String(race?.status || "").toLowerCase() !== "scheduled" || race?.registration_locked === true) {
+    return false;
+  }
+
+  if (!race?.registration_lock_at) {
+    return true;
+  }
+
+  const lockAt = new Date(race.registration_lock_at);
+  return !Number.isNaN(lockAt.getTime()) && lockAt.getTime() > Date.now();
+}
+
 function formatPercent(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
@@ -706,6 +719,7 @@ function AdminCompetitionModule({ moduleName }) {
   const [roundPage, setRoundPage] = useState(1);
   const [racePage, setRacePage] = useState(1);
   const [registrationModeLoading, setRegistrationModeLoading] = useState("");
+  const [registrationRaceId, setRegistrationRaceId] = useState("");
   const [bettingAction, setBettingAction] = useState("");
   const [bettingRaceId, setBettingRaceId] = useState("");
   const [bettingConfig, setBettingConfig] = useState(defaultBettingConfig);
@@ -905,6 +919,22 @@ function AdminCompetitionModule({ moduleName }) {
       setError(apiError.message || "Unable to update owner registration mode.");
     } finally {
       setRegistrationModeLoading("");
+    }
+  };
+
+  const openOwnerRegistrationForRace = async (race) => {
+    if (!race?._id) return;
+
+    setRegistrationRaceId(race._id);
+    setError("");
+    try {
+      await adminApi.openRaceRegistrationDemo(race._id);
+      setNotice(`Owner registration opened for ${race.name}. Other races were not changed.`);
+      await loadData(true);
+    } catch (apiError) {
+      setError(apiError.message || `Unable to open owner registration for ${race.name}.`);
+    } finally {
+      setRegistrationRaceId("");
     }
   };
 
@@ -1162,7 +1192,91 @@ function AdminCompetitionModule({ moduleName }) {
       )}
 
       {isSchedule ? (
-        <section className="admin-panel"><div className="admin-panel__header admin-competition__ledger-heading"><div><p className="admin-panel__eyebrow">Race ledger</p><h2>Scheduled races</h2></div><span>{filteredRaces.length} records - 20 per page</span></div>{!data.tournaments.length || !data.rounds.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>Competition structure required</h3><p>Create a tournament and round first.</p></div></div> : !filteredRaces.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>No races found</h3><p>Create a race or reset the filters.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Race</th><th>Tournament / Round</th><th>Scheduled</th><th>Track</th><th>Referee</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagedRaces.map((race) => <tr key={race._id}><td><strong>R{race.race_no || 1} · {race.name}</strong><small className="admin-competition__id">Class {race.race_class || 5} · {race.course || "B+2"} · {race.going || "Good"}</small></td><td>{race.tournament_id?.name || "Unknown tournament"}<small className="admin-competition__subline">{race.round_id?.name || "Unknown round"}</small></td><td>{formatDate(race.race_date, true)}</td><td>{race.venue_code || "ST"} · {race.location || "Not set"}</td><td>{race.referee_id?.user_id?.full_name || "Unassigned"}</td><td><StatusBadge value={race.status} /></td><td><RowActions label={race.name} onEdit={() => openForm("race", race)} onDelete={() => setDeleteTarget({ kind: "race", item: race })}><button type="button" onClick={() => setEntryRace(race)}><ListChecks size={15} aria-hidden="true" /> Entries</button></RowActions></td></tr>)}</tbody></table></div>}<Pagination page={racePage} totalItems={filteredRaces.length} onChange={setRacePage} label="Race ledger" /></section>
+        <section className="admin-panel">
+          <div className="admin-panel__header admin-competition__ledger-heading">
+            <div>
+              <p className="admin-panel__eyebrow">Race ledger</p>
+              <h2>Scheduled races</h2>
+            </div>
+            <span>{filteredRaces.length} records - 20 per page</span>
+          </div>
+          {!data.tournaments.length || !data.rounds.length ? (
+            <div className="admin-competition__empty">
+              <CalendarDays size={30} aria-hidden="true" />
+              <div><h3>Competition structure required</h3><p>Create a tournament and round first.</p></div>
+            </div>
+          ) : !filteredRaces.length ? (
+            <div className="admin-competition__empty">
+              <CalendarDays size={30} aria-hidden="true" />
+              <div><h3>No races found</h3><p>Create a race or reset the filters.</p></div>
+            </div>
+          ) : (
+            <div className="admin-data-table__wrap">
+              <table className="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>Race</th>
+                    <th>Tournament / Round</th>
+                    <th>Scheduled</th>
+                    <th>Track</th>
+                    <th>Referee</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedRaces.map((race) => {
+                    const registrationOpen = isRaceRegistrationOpen(race);
+                    const openingThisRace = registrationRaceId === race._id;
+
+                    return (
+                      <tr key={race._id}>
+                        <td>
+                          <strong>R{race.race_no || 1} · {race.name}</strong>
+                          <small className="admin-competition__id">Class {race.race_class || 5} · {race.course || "B+2"} · {race.going || "Good"}</small>
+                        </td>
+                        <td>
+                          {race.tournament_id?.name || "Unknown tournament"}
+                          <small className="admin-competition__subline">{race.round_id?.name || "Unknown round"}</small>
+                        </td>
+                        <td>{formatDate(race.race_date, true)}</td>
+                        <td>{race.venue_code || "ST"} · {race.location || "Not set"}</td>
+                        <td>{race.referee_id?.user_id?.full_name || "Unassigned"}</td>
+                        <td>
+                          <StatusBadge value={race.status} />
+                          <small className="admin-competition__subline">
+                            {registrationOpen ? "Entries open" : "Entries closed"}
+                          </small>
+                        </td>
+                        <td>
+                          <RowActions
+                            label={race.name}
+                            onEdit={() => openForm("race", race)}
+                            onDelete={() => setDeleteTarget({ kind: "race", item: race })}
+                          >
+                            <button
+                              type="button"
+                              disabled={registrationOpen || Boolean(registrationRaceId || registrationModeLoading)}
+                              title={registrationOpen ? "Owner registration is already open for this race" : "Prepare this race for demo entries"}
+                              onClick={() => openOwnerRegistrationForRace(race)}
+                            >
+                              <Unlock size={15} aria-hidden="true" />
+                              {openingThisRace ? "Opening" : registrationOpen ? "Entries open" : "Open entries"}
+                            </button>
+                            <button type="button" onClick={() => setEntryRace(race)}>
+                              <ListChecks size={15} aria-hidden="true" /> Entries
+                            </button>
+                          </RowActions>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <Pagination page={racePage} totalItems={filteredRaces.length} onChange={setRacePage} label="Race ledger" />
+        </section>
       ) : (
         <div className="admin-competition__stack">
         <section className="admin-panel"><div className="admin-panel__header admin-competition__ledger-heading"><div><p className="admin-panel__eyebrow">Tournament ledger</p><h2>Tournaments</h2></div><span>{filteredTournaments.length} records - 20 per page</span></div>{!filteredTournaments.length ? <div className="admin-competition__empty"><CalendarDays size={30} aria-hidden="true" /><div><h3>No tournaments found</h3><p>Create a tournament or reset the filters.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Tournament</th><th>Dates</th><th>Venue</th><th>Entry fee</th><th>Rounds</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagedTournaments.map((tournament) => <tr key={tournament._id}><td><strong>{tournament.name}</strong><small className="admin-competition__id">{tournament._id}</small></td><td>{formatDate(tournament.start_date)}<small className="admin-competition__subline">to {formatDate(tournament.end_date)}</small></td><td>{tournament.location || "Not set"}</td><td>{Number(tournament.entry_fee || 0) > 0 ? formatMoney(tournament.entry_fee, tournament.entry_fee_currency || "VND") : "No fee"}</td><td>{data.rounds.filter((round) => idOf(round.tournament_id) === tournament._id).length}</td><td><StatusBadge value={tournament.status} /></td><td><div className="admin-competition__row-actions admin-competition__row-actions--tournament"><button type="button" onClick={() => setRaceToastTournament(tournament)} aria-label={`View races for ${tournament.name}`}><Eye size={15} aria-hidden="true" /> Races</button><button type="button" onClick={() => openTournamentDetails(tournament)} aria-label={`View details for ${tournament.name}`}><ArrowDownToLine size={15} aria-hidden="true" /> Details</button><RowActions label={tournament.name} onEdit={() => openForm("tournament", tournament)} onDelete={() => setDeleteTarget({ kind: "tournament", item: tournament })} /></div></td></tr>)}</tbody></table></div>}<Pagination page={tournamentPage} totalItems={filteredTournaments.length} onChange={setTournamentPage} label="Tournament ledger" /></section>

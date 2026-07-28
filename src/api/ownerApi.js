@@ -51,8 +51,9 @@ export const ownerApi = {
     return apiRequest(`/horse-owner/horses/${horseId}/approval-status`);
   },
 
-  getJockeys() {
-    return apiRequest("/horse-owner/jockeys");
+  getJockeys(raceId = "") {
+    const query = raceId ? `?race_id=${encodeURIComponent(raceId)}` : "";
+    return apiRequest(`/horse-owner/jockeys${query}`);
   },
 
   getJockey(jockeyId) {

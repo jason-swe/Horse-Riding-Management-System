@@ -62,7 +62,7 @@ export function toOwnerHorse(apiHorse) {
   const healthNote = apiHorse.health_status || "";
 
   return {
-    id: apiHorse._id,
+    id: apiHorse._id || apiHorse.id,
     registrationNumber,
     name: apiHorse.name || "Unnamed horse",
     breed: apiHorse.breed || "",
@@ -173,6 +173,8 @@ export function toOwnerJockey(apiJockey, index = 0) {
   const user = apiJockey.user_id || apiJockey.user || {};
   const races = apiJockey.total_races || apiJockey.races || 0;
   const wins = apiJockey.total_wins || apiJockey.wins || 0;
+  const availableForRace = apiJockey.available_for_race ?? apiJockey.availableForRace;
+  const availabilityReason = apiJockey.availability_reason || apiJockey.availabilityReason || "";
 
   return {
     id: apiJockey._id || apiJockey.id || `J-${index + 1}`,
@@ -183,6 +185,10 @@ export function toOwnerJockey(apiJockey, index = 0) {
     availability: apiJockey.status === "active" ? "Available" : getDisplayStatus(apiJockey.status),
     status: apiJockey.status === "active" ? "Available" : getDisplayStatus(apiJockey.status),
     licenseNumber: apiJockey.license_number || "No license",
+    availableForRace: availableForRace === undefined || availableForRace === null
+      ? null
+      : Boolean(availableForRace),
+    availabilityReason,
     raw: apiJockey,
   };
 }
@@ -242,6 +248,10 @@ export function toOwnerRaceOption(apiRace, index = 0) {
     clock: hasRaceDate ? raceDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "",
     location: apiRace.location || "",
     distance: hasValue(apiRace.distance) ? `${apiRace.distance}m` : "",
+    course: apiRace.course || "",
+    raceClass: apiRace.race_class || "",
+    going: apiRace.going || "",
+    surface: apiRace.surface || "",
     maxParticipants: hasValue(apiRace.max_participants) ? String(apiRace.max_participants) : "",
     participantCount,
     remainingSlots,
