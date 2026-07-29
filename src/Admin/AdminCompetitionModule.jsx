@@ -915,7 +915,7 @@ function AdminCompetitionModule({ moduleName }) {
       const updatedCount = data.updated_count ?? 0;
       setNotice(enabled
         ? `Owner registration turned on for ${updatedCount} scheduled races.`
-        : `Owner registration turned off for ${updatedCount} scheduled races.`);
+        : `Owner registration turned off for ${updatedCount} races.`);
       await loadData(true);
     } catch (apiError) {
       setError(apiError.message || "Unable to update owner registration mode.");
