@@ -1068,6 +1068,18 @@ function OwnerRegistrations() {
     && selectedRaceState?.available
     && termsAccepted
   );
+  const submissionBlockReason = (() => {
+    if (!selectedHorse?.id) return "Select an eligible horse to continue.";
+    if (!isHorseEligible(selectedHorse)) return "The selected horse is not active.";
+    if (!selectedTournament?.id) return "Choose a tournament to continue.";
+    if (racesLoading) return "The race programme is still loading.";
+    if (!selectedRace?.id) return "Choose an open race to continue.";
+    if (!selectedRaceState?.available) {
+      return selectedRaceState?.reason || "The selected race is not accepting entries.";
+    }
+    if (!termsAccepted) return "Accept the entry and pre-race inspection conditions.";
+    return "";
+  })();
 
   return (
     <div className="owner-registration-page">
@@ -1313,10 +1325,15 @@ function OwnerRegistrations() {
 
             {saved && <span className="owner-success"><CheckCircle2 size={16} /> Entry confirmed. Confirmation email queued.</span>}
             {error && <span className="owner-success owner-success--error">{error}</span>}
-            <button className="owner-button owner-button--primary owner-entry-submit" disabled={isSubmitting || racesLoading || !canSubmit} type="submit">
+            <button
+              aria-busy={isSubmitting}
+              className="owner-button owner-button--primary owner-entry-submit"
+              disabled={isSubmitting || racesLoading || !canSubmit}
+              type="submit"
+            >
               {isSubmitting ? "Preparing payment..." : registrationFeeVnd > 0 ? "Continue to VNPay" : "Confirm entry"}
             </button>
-            {!canSubmit && !error && <small className="owner-entry-review__hint">Complete all three steps to continue.</small>}
+            {!canSubmit && !error && <small className="owner-entry-review__hint">{submissionBlockReason}</small>}
           </aside>
         </form>
 

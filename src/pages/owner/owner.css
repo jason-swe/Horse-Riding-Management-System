@@ -2614,6 +2614,14 @@
   width: 100%;
 }
 
+.owner-entry-submit:disabled {
+  cursor: not-allowed;
+}
+
+.owner-entry-submit[aria-busy="true"] {
+  cursor: progress;
+}
+
 .owner-entry-review__hint {
   color: var(--owner-text-muted);
   text-align: center;

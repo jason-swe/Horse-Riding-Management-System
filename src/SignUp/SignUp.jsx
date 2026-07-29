@@ -66,6 +66,32 @@ function SignUp() {
         },
       });
     } catch (apiError) {
+      if (apiError.status === 409) {
+        const email = form.email.trim().toLowerCase();
+
+        try {
+          const verification = await authApi.resendVerification(email);
+
+          if (verification.already_verified) {
+            setError("This email already has an account. Sign in to continue.");
+            return;
+          }
+
+          navigate(`/verify-account?email=${encodeURIComponent(email)}`, {
+            replace: true,
+            state: {
+              email,
+              requested: true,
+              resent: true,
+            },
+          });
+          return;
+        } catch (resendError) {
+          setError(resendError.message || "Unable to resend the verification code. Please try again.");
+          return;
+        }
+      }
+
       setError(apiError.message || "Unable to create account. Please try again.");
     } finally {
       setIsSubmitting(false);
