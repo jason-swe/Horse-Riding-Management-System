@@ -3,6 +3,7 @@ import {
   CalendarRange,
   ClipboardCheck,
   CircleDollarSign,
+  FileClock,
   Flag,
   Gauge,
   Gift,
@@ -23,6 +24,7 @@ const navigationGroups = [
     items: [
       { to: "/admin", label: "Overview", icon: Gauge, end: true },
       { to: "/admin/registrations", label: "Race entries", icon: ClipboardCheck },
+      { to: "/admin/cancellations", label: "Cancellation requests", icon: FileClock },
       { to: "/admin/incidents", label: "Incidents", icon: ShieldAlert },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/deposits", label: "Deposits", icon: CircleDollarSign },

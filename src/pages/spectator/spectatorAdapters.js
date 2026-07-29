@@ -174,7 +174,8 @@ export function toSpectatorTournament(apiTournament) {
     description: apiTournament.description || "",
     location: apiTournament.location || null,
     status,
-    prize: formatPrize(apiTournament.prize_pool || apiTournament.prize),
+    prize: formatPrize(apiTournament.total_race_prize_pool || 0),
+    prizeTotalsByCurrency: apiTournament.prize_totals_by_currency || {},
     date: formatDate(apiTournament.start_date || apiTournament.date),
     dateDisplay: formatDateDisplay(apiTournament.start_date || apiTournament.date),
     endDate: formatDate(apiTournament.end_date),
@@ -285,6 +286,11 @@ export function summarizeTournamentRaces(racesPayload) {
   const locations = [...new Set(races.map((race) => race.location).filter(Boolean))];
   const runnerCapacity = races.reduce((total, race) => total + (Number(race.maxParticipants) || 0), 0);
   const runnerEntries = races.reduce((total, race) => total + (Number(race.runnerCount) || 0), 0);
+  const prizeTotalsByCurrency = races.reduce((totals, race) => {
+    const currency = race.prizeCurrency || "VND";
+    totals[currency] = (totals[currency] || 0) + Number(race.prizePool || 0);
+    return totals;
+  }, {});
 
   return {
     raceCount: races.length,
@@ -294,6 +300,7 @@ export function summarizeTournamentRaces(racesPayload) {
     nextRaceTime: nextRace?.time || null,
     distanceSummary: distances.length > 2 ? `${distances[0]} - ${distances[distances.length - 1]}` : distances.join(" / ") || null,
     trackSummary: locations[0] || null,
+    prizeTotalsByCurrency,
   };
 }
 

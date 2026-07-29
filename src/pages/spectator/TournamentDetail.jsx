@@ -231,7 +231,7 @@ function TournamentDetail() {
         }
       : null,
     tournament?.track ? { icon: Flag, term: "Surface", value: tournament.track } : null,
-    tournament?.prize ? { icon: Trophy, term: "Prize pool", value: tournament.prize } : null,
+    tournament?.prize ? { icon: Trophy, term: "Total race prizes", value: tournament.prize } : null,
   ].filter(Boolean);
 
   if (isLoading) {

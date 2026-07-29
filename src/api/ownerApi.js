@@ -72,13 +72,6 @@ export const ownerApi = {
     return apiRequest(`/horse-owner/races/${raceId}/rounds`);
   },
 
-  registerHorseForTournament(payload) {
-    return apiRequest("/horse-owner/tournament-registrations", {
-      method: "POST",
-      body: payload,
-    });
-  },
-
   registerHorseForRace(payload) {
     return apiRequest("/horse-owner/race-registrations", {
       method: "POST",
@@ -97,17 +90,28 @@ export const ownerApi = {
     return apiRequest(`/horse-owner/registration-payments/${encodeURIComponent(orderId)}`);
   },
 
-  cancelTournamentRegistration(payload) {
-    return apiRequest("/horse-owner/tournament-registrations/cancel", {
-      method: "PATCH",
-      body: payload,
+  createCancellationTicket(registrationId, reason) {
+    return apiRequest("/horse-owner/registration-cancellation-tickets", {
+      method: "POST",
+      body: { registration_id: registrationId, reason },
     });
   },
 
-  cancelRaceRegistration(payload) {
-    return apiRequest("/horse-owner/race-registrations/cancel", {
-      method: "PATCH",
-      body: payload,
+  getCancellationTickets(params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")
+    ).toString();
+    return apiRequest(`/horse-owner/registration-cancellation-tickets${query ? `?${query}` : ""}`);
+  },
+
+  getCancellationTicket(id) {
+    return apiRequest(`/horse-owner/registration-cancellation-tickets/${id}`);
+  },
+
+  confirmRefundReceipt(id, confirmationNote = "") {
+    return apiRequest(`/horse-owner/registration-cancellation-tickets/${id}/confirm-refund`, {
+      method: "POST",
+      body: { confirmation_note: confirmationNote },
     });
   },
 

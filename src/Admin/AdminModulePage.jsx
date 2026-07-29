@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import AdminCommandModule from "./AdminCommandModule";
 import AdminCompetitionModule from "./AdminCompetitionModule";
+import AdminCancellationModule from "./AdminCancellationModule";
 import AdminDepositModule from "./AdminDepositModule";
 import AdminIncidentModule from "./AdminIncidentModule";
 import AdminLayout from "./AdminLayout";
@@ -15,6 +16,7 @@ function AdminModulePage() {
   const { module: moduleName } = useParams();
 
   if (moduleName === "incidents") return <AdminIncidentModule />;
+  if (moduleName === "cancellations") return <AdminCancellationModule />;
   if (moduleName === "deposits") return <AdminDepositModule />;
   if (moduleName === "rewards") return <AdminRewardsModule />;
   if (commandModules.has(moduleName)) return <AdminCommandModule moduleName={moduleName} />;

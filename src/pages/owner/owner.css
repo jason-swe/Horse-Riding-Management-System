@@ -5413,6 +5413,36 @@
   padding: 0 12px;
 }
 
+.owner-registration__request-status {
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  color: var(--racing-text-soft);
+  font-size: 0.76rem;
+  text-transform: capitalize;
+}
+
+.owner-registration__request-status small {
+  color: var(--racing-muted-warm);
+  text-transform: capitalize;
+}
+
+.owner-cancellation-dialog {
+  display: grid;
+  gap: 18px;
+  width: min(620px, 100%);
+}
+
+.owner-cancellation-dialog .owner-entry-note textarea {
+  min-height: 120px;
+}
+
+.owner-cancellation-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .owner-jockey-page {
   display: grid;
   gap: 18px;
