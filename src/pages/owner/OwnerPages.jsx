@@ -36,8 +36,8 @@ import {
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { ownerApi } from "../../api/ownerApi";
 import { readFileAsDataUri } from "../../utils/fileData";
-import { findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
-import { useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
+import { canRequestRegistrationCancellation, findAcceptedPrimaryAssignment, toHorsePayload, toOwnerJockey, toOwnerProfilePayload, toOwnerRaceOption, toOwnerScheduleEntry } from "./ownerAdapters";
+import { useOwnerCancellationTickets, useOwnerHorse, useOwnerHorseApprovalStatus, useOwnerHorses, useOwnerJockeyAssignments, useOwnerJockeys, useOwnerPrizeAwards, useOwnerProfile, useOwnerRegistrations, useOwnerTournaments } from "./useOwnerData";
 
 const statusClass = (status) => {
   if (["Ready", "Available", "Approved", "Assigned", "Accepted", "Standby confirmed", "Confirmed", "Published", "Won", "Verified", "Paid"].includes(status)) {
@@ -804,6 +804,12 @@ function OwnerRegistrations() {
     error: registrationsError,
     reload: reloadRegistrations,
   } = useOwnerRegistrations();
+  const {
+    tickets: cancellationTickets,
+    isLoading: cancellationTicketsLoading,
+    error: cancellationTicketsError,
+    reload: reloadCancellationTickets,
+  } = useOwnerCancellationTickets();
   const horses = liveHorses;
   const tournaments = liveTournaments;
   const registrations = liveRegistrations;
@@ -814,7 +820,10 @@ function OwnerRegistrations() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cancellingId, setCancellingId] = useState("");
+  const [cancellationRegistration, setCancellationRegistration] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [cancellationSubmitting, setCancellationSubmitting] = useState(false);
+  const [confirmingRefundId, setConfirmingRefundId] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [tournamentQuery, setTournamentQuery] = useState("");
   const [detailsRace, setDetailsRace] = useState(null);
@@ -847,7 +856,7 @@ function OwnerRegistrations() {
       }
 
       setRaces([]);
-      setEntry((current) => ({ ...current, race: "" }));
+      setEntry((current) => ({ ...current, raceId: "" }));
       setRacesLoading(true);
       setError("");
 
@@ -989,31 +998,64 @@ function OwnerRegistrations() {
     }
   };
 
-  const handleCancelRegistration = async (registration) => {
-    if (!registration.horseId || !registration.raceId) {
-      setError("Registration is missing horse or race data.");
-      return;
-    }
-
+  const openCancellationRequest = (registration) => {
     setSaved(false);
     setError("");
-    setCancellingId(registration.id);
+    if (!canRequestRegistrationCancellation(registration)) {
+      setError("This race has already started and the registration can no longer be cancelled.");
+      return;
+    }
+    setCancellationReason("");
+    setCancellationRegistration(registration);
+  };
 
+  const submitCancellationRequest = async (event) => {
+    event.preventDefault();
+    if (!cancellationRegistration) return;
+    if (!canRequestRegistrationCancellation(cancellationRegistration)) {
+      setCancellationRegistration(null);
+      setCancellationReason("");
+      setError("This race has already started and the registration can no longer be cancelled.");
+      return;
+    }
+    if (!cancellationReason.trim()) {
+      setError("Please provide a cancellation reason.");
+      return;
+    }
+    setCancellationSubmitting(true);
+    setError("");
     try {
-      await ownerApi.cancelRaceRegistration({
-        horse_id: registration.horseId,
-        race_id: registration.raceId,
-      });
-      await reloadRegistrations();
+      await ownerApi.createCancellationTicket(cancellationRegistration.id, cancellationReason.trim());
+      await reloadCancellationTickets();
+      setCancellationRegistration(null);
+      setCancellationReason("");
       setSaved(true);
     } catch (apiError) {
-      setError(apiError.message || "Unable to cancel registration.");
+      setError(apiError.message || "Unable to submit cancellation request.");
     } finally {
-      setCancellingId("");
+      setCancellationSubmitting(false);
     }
   };
 
-  if (horsesLoading || tournamentsLoading || registrationsLoading) {
+  const confirmRefundReceipt = async (ticket) => {
+    setConfirmingRefundId(ticket._id);
+    setError("");
+    try {
+      await ownerApi.confirmRefundReceipt(ticket._id);
+      await Promise.all([reloadCancellationTickets(), reloadRegistrations()]);
+      setSaved(true);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to confirm refund receipt.");
+    } finally {
+      setConfirmingRefundId("");
+    }
+  };
+
+  const cancellationTicketFor = (registrationId) => cancellationTickets.find((ticket) => (
+    String(ticket.registration_id?._id || ticket.registration_id || "") === String(registrationId)
+  ));
+
+  if (horsesLoading || tournamentsLoading || registrationsLoading || cancellationTicketsLoading) {
     return <div className="owner-registration-page"><LoadingSkeleton ariaLabel="Loading registration workspace" variant="page" /></div>;
   }
 
@@ -1029,9 +1071,9 @@ function OwnerRegistrations() {
 
   return (
     <div className="owner-registration-page">
-      {(horsesError || tournamentsError || registrationsError) && (
+      {(horsesError || tournamentsError || registrationsError || cancellationTicketsError) && (
         <section className="admin-live-state admin-live-state--warning" aria-live="polite">
-          {horsesError || tournamentsError || registrationsError}
+          {horsesError || tournamentsError || registrationsError || cancellationTicketsError}
         </section>
       )}
 
@@ -1144,7 +1186,7 @@ function OwnerRegistrations() {
                   </span>
                   <span className="owner-tournament-choice__footer">
                     <span>{tournament.raceCount ? `${tournament.raceCount} races` : "Race programme available"}</span>
-                    <span>{tournament.prizePool > 0 ? formatMoney(tournament.prizePool, tournament.prizeCurrency) : "Prize pending"}</span>
+                    <span>{tournament.prizePool > 0 ? `${formatMoney(tournament.prizePool, tournament.prizeCurrency)} total prizes` : "Race prizes pending"}</span>
                   </span>
                 </button>
               ))}
@@ -1170,7 +1212,7 @@ function OwnerRegistrations() {
             <div className="owner-tournament-context">
               {selectedTournament?.location && <div><span>Tournament location</span><strong>{selectedTournament.location}</strong></div>}
               {selectedTournament?.date && <div><span>Tournament dates</span><strong>{selectedTournament.date}</strong></div>}
-              <div><span>Tournament prize pool</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
+              <div><span>Total race prizes</span><strong>{tournamentPrizePool > 0 ? formatMoney(tournamentPrizePool, tournamentPrizeCurrency) : "Not configured"}</strong></div>
               <div><span>Selected race fee</span><strong>{registrationFeeVnd > 0 ? formatMoney(registrationFeeVnd, registrationFeeCurrency) : "No fee calculated"}</strong></div>
               <div><span>Race options</span><strong>{racesLoading ? "Loading" : races.length}</strong></div>
             </div>
@@ -1309,14 +1351,29 @@ function OwnerRegistrations() {
               </div>
               <div className="owner-registration__actions">
                 <span className={`owner-badge ${statusClass(item.status)}`}>{item.status}</span>
-                {item.status !== "Cancelled" && item.status !== "Rejected" && (
+                {cancellationTicketFor(item.id) && (
+                  <span className="owner-registration__request-status">
+                    Request: {String(cancellationTicketFor(item.id).status || "").replaceAll("_", " ")}
+                    <small>Refund: {String(cancellationTicketFor(item.id).refund_status || "").replaceAll("_", " ")}</small>
+                  </span>
+                )}
+                {canRequestRegistrationCancellation(item) && !cancellationTicketFor(item.id) && (
                   <button
                     className="owner-button"
-                    disabled={cancellingId === item.id}
-                    onClick={() => handleCancelRegistration(item)}
+                    onClick={() => openCancellationRequest(item)}
                     type="button"
                   >
-                    {cancellingId === item.id ? "Cancelling..." : "Cancel"}
+                    Request cancellation
+                  </button>
+                )}
+                {cancellationTicketFor(item.id)?.refund_status === "awaiting_owner_confirmation" && (
+                  <button
+                    className="owner-button owner-button--primary"
+                    disabled={confirmingRefundId === cancellationTicketFor(item.id)._id}
+                    onClick={() => confirmRefundReceipt(cancellationTicketFor(item.id))}
+                    type="button"
+                  >
+                    {confirmingRefundId === cancellationTicketFor(item.id)._id ? "Confirming..." : "Confirm refund received"}
                   </button>
                 )}
               </div>
@@ -1329,6 +1386,45 @@ function OwnerRegistrations() {
           )}
         </div>
       </article>}
+
+      {cancellationRegistration && (
+        <div className="owner-entry-dialog-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !cancellationSubmitting && setCancellationRegistration(null)}>
+          <form aria-labelledby="cancellation-request-title" aria-modal="true" className="owner-entry-dialog owner-cancellation-dialog" onSubmit={submitCancellationRequest} role="dialog">
+            <div className="owner-entry-dialog__header">
+              <div>
+                <span className="owner-kicker">Cancellation request</span>
+                <h2 id="cancellation-request-title">{cancellationRegistration.race}</h2>
+              </div>
+              <button aria-label="Close cancellation request" disabled={cancellationSubmitting} onClick={() => setCancellationRegistration(null)} title="Close" type="button"><X size={19} /></button>
+            </div>
+            <div className="owner-entry-dialog__facts">
+              <div><span>Horse</span><strong>{cancellationRegistration.horse}</strong></div>
+              <div><span>Refund requested</span><strong>{formatMoney(cancellationRegistration.entryFeeVnd, "VND")}</strong></div>
+            </div>
+            <label className="owner-entry-note">
+              <span>Reason *</span>
+              <textarea
+                autoFocus
+                maxLength="1000"
+                onChange={(event) => { setCancellationReason(event.target.value); setError(""); }}
+                placeholder="Explain why this race entry needs to be cancelled..."
+                required
+                value={cancellationReason}
+              />
+              <small>{cancellationReason.length}/1000 characters</small>
+            </label>
+            <div className="owner-entry-notice">
+              <Info size={17} />
+              <p>The request must be approved before the tournament starts. A paid entry is refunded only after approval, and you will confirm when the funds arrive.</p>
+            </div>
+            {error && <span className="owner-success owner-success--error">{error}</span>}
+            <div className="owner-cancellation-dialog__actions">
+              <button className="owner-button owner-button--primary" disabled={cancellationSubmitting || !cancellationReason.trim()} type="submit">{cancellationSubmitting ? "Submitting..." : "Submit request"}</button>
+              <button className="owner-button" disabled={cancellationSubmitting} onClick={() => setCancellationRegistration(null)} type="button">Keep entry</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {detailsRace && (
         <div className="owner-entry-dialog-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDetailsRace(null)}>

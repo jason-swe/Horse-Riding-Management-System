@@ -227,6 +227,33 @@ export function useOwnerRegistrations() {
   return { registrations, isLoading, error, reload: loadRegistrations };
 }
 
+export function useOwnerCancellationTickets() {
+  const [tickets, setTickets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadTickets = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await ownerApi.getCancellationTickets();
+      setTickets(data.cancellation_tickets || []);
+    } catch (apiError) {
+      setError(apiError.message || "Unable to load cancellation requests.");
+      setTickets([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
+
+  return { tickets, isLoading, error, reload: loadTickets };
+}
+
 export function useOwnerJockeyAssignments() {
   const [assignments, setAssignments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

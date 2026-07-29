@@ -130,6 +130,35 @@ export const adminApi = {
     return apiRequest(`/registrations/${id}`);
   },
 
+  listCancellationTickets(params = {}) {
+    return apiRequest(withQuery("/admin/registration-cancellation-tickets", params));
+  },
+
+  getCancellationTicket(id) {
+    return apiRequest(`/admin/registration-cancellation-tickets/${id}`);
+  },
+
+  approveCancellationTicket(id, adminNote = "") {
+    return apiRequest(`/admin/registration-cancellation-tickets/${id}/approve`, {
+      method: "POST",
+      body: { admin_note: adminNote },
+    });
+  },
+
+  rejectCancellationTicket(id, adminNote = "") {
+    return apiRequest(`/admin/registration-cancellation-tickets/${id}/reject`, {
+      method: "POST",
+      body: { admin_note: adminNote },
+    });
+  },
+
+  markCancellationRefundSent(id, refundReference, adminNote = "") {
+    return apiRequest(`/admin/registration-cancellation-tickets/${id}/mark-refunded`, {
+      method: "POST",
+      body: { refund_reference: refundReference, admin_note: adminNote },
+    });
+  },
+
   listRaceResults(params = {}) {
     return apiRequest(withQuery("/race-results", params));
   },

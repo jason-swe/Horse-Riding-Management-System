@@ -4410,3 +4410,635 @@
   padding-top: 14px;
   border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
+
+/* Registration cancellation review */
+.admin-cancellation-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--admin-line);
+  border-radius: 5px;
+  background: var(--admin-surface-soft);
+}
+
+.admin-cancellation-metrics article {
+  min-width: 0;
+  min-height: 88px;
+  padding: 17px 18px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border-right: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-metrics article:last-child {
+  border-right: 0;
+}
+
+.admin-cancellation-metrics__icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--admin-accent) 48%, var(--admin-line));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--admin-accent) 8%, transparent);
+  color: var(--admin-accent);
+}
+
+.admin-cancellation-metrics article > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.admin-cancellation-metrics small {
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.admin-cancellation-metrics strong {
+  color: var(--admin-text);
+  font-family: "Sora", sans-serif;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.admin-cancellation-workspace {
+  min-height: 650px;
+  display: grid;
+  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--admin-line);
+  border-radius: 6px;
+  background: rgba(8, 14, 10, 0.34);
+}
+
+.admin-cancellation-queue {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  align-content: start;
+  border-right: 1px solid var(--admin-line);
+  background: rgba(var(--racing-contrast-rgb), 0.018);
+}
+
+.admin-cancellation-queue > header {
+  padding: 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-cancellation-queue h2,
+.admin-cancellation-detail h2,
+.admin-cancellation-progress h3,
+.admin-cancellation-record h3 {
+  margin: 3px 0 0;
+  color: var(--admin-text);
+  font-family: "Sora", sans-serif;
+  letter-spacing: 0;
+}
+
+.admin-cancellation-queue h2 {
+  font-size: 1.08rem;
+}
+
+.admin-cancellation-queue > header > span {
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.admin-cancellation-tabs {
+  padding: 0 18px 14px;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-tabs button {
+  min-height: 32px;
+  padding: 0 9px;
+  flex: 0 0 auto;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 0.69rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-cancellation-tabs button:hover,
+.admin-cancellation-tabs button.is-active {
+  color: var(--admin-text);
+}
+
+.admin-cancellation-tabs button.is-active {
+  border-bottom-color: var(--admin-accent);
+}
+
+.admin-cancellation-search {
+  min-height: 44px;
+  margin: 12px 14px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--admin-line);
+  border-radius: 4px;
+  background: rgba(7, 12, 9, 0.45);
+  color: var(--admin-muted);
+}
+
+.admin-cancellation-search:focus-within {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-cancellation-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.admin-cancellation-search input::placeholder {
+  color: var(--admin-muted);
+}
+
+.admin-cancellation-list {
+  min-height: 0;
+  max-height: 650px;
+  overflow-y: auto;
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-row {
+  width: 100%;
+  min-height: 128px;
+  padding: 14px 16px 13px 18px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 0;
+  border-bottom: 1px solid var(--admin-line);
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--admin-copy);
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.admin-cancellation-row:hover {
+  background: rgba(var(--racing-contrast-rgb), 0.035);
+}
+
+.admin-cancellation-row.is-selected {
+  border-left-color: var(--admin-accent);
+  background: color-mix(in srgb, var(--admin-accent) 8%, transparent);
+}
+
+.admin-cancellation-row__top,
+.admin-cancellation-row__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-cancellation-row__top strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--admin-text);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cancellation-row__owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--admin-copy);
+  font-size: 0.74rem;
+}
+
+.admin-cancellation-row__race {
+  overflow: hidden;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cancellation-row__bottom {
+  margin-top: 3px;
+  color: var(--admin-muted);
+}
+
+.admin-cancellation-row__bottom small {
+  font-size: 0.67rem;
+}
+
+.admin-cancellation-status {
+  min-height: 23px;
+  padding: 3px 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--admin-line);
+  border-radius: 3px;
+  color: var(--admin-muted);
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-cancellation-status.is-green {
+  border-color: rgba(102, 189, 124, 0.36);
+  background: rgba(102, 189, 124, 0.09);
+  color: var(--racing-success-soft);
+}
+
+.admin-cancellation-status.is-amber {
+  border-color: rgba(224, 165, 94, 0.4);
+  background: rgba(224, 165, 94, 0.09);
+  color: var(--racing-accent-soft);
+}
+
+.admin-cancellation-status.is-red {
+  border-color: rgba(218, 104, 94, 0.4);
+  background: rgba(218, 104, 94, 0.09);
+  color: var(--racing-danger-soft);
+}
+
+.admin-cancellation-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgba(var(--racing-contrast-rgb), 0.012);
+}
+
+.admin-cancellation-detail__header {
+  min-height: 98px;
+  padding: 19px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-detail__header h2 {
+  font-size: 1.38rem;
+}
+
+.admin-cancellation-detail__header div > span {
+  display: block;
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+}
+
+.admin-cancellation-detail__body {
+  padding: 22px;
+  display: grid;
+  gap: 22px;
+}
+
+.admin-cancellation-reason {
+  padding: 15px 16px;
+  border-left: 3px solid var(--admin-accent);
+  background: color-mix(in srgb, var(--admin-accent) 7%, transparent);
+}
+
+.admin-cancellation-reason span,
+.admin-cancellation-record p span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--admin-accent);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-cancellation-reason p {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.admin-cancellation-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-facts > div {
+  min-width: 0;
+  min-height: 94px;
+  padding: 14px 15px;
+  border-right: 1px solid var(--admin-line);
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-facts > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.admin-cancellation-facts > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.admin-cancellation-facts dt {
+  color: var(--admin-muted);
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.admin-cancellation-facts dd {
+  margin: 7px 0 3px;
+  overflow-wrap: anywhere;
+  color: var(--admin-text);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.admin-cancellation-facts small {
+  color: var(--admin-muted);
+  font-size: 0.68rem;
+}
+
+.admin-cancellation-progress,
+.admin-cancellation-record {
+  display: grid;
+  gap: 0;
+}
+
+.admin-cancellation-progress h3,
+.admin-cancellation-record h3 {
+  margin-bottom: 12px;
+  font-size: 0.86rem;
+}
+
+.admin-cancellation-progress__item {
+  position: relative;
+  min-height: 54px;
+  padding: 0 0 11px 38px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.admin-cancellation-progress__item:not(:last-child)::before {
+  position: absolute;
+  top: 27px;
+  bottom: -1px;
+  left: 13px;
+  width: 1px;
+  background: var(--admin-line);
+  content: "";
+}
+
+.admin-cancellation-progress__item > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--admin-line);
+  border-radius: 50%;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.admin-cancellation-progress__item.is-current > span {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-cancellation-progress__item.is-complete > span {
+  border-color: rgba(102, 189, 124, 0.5);
+  background: rgba(102, 189, 124, 0.12);
+  color: var(--racing-success-soft);
+}
+
+.admin-cancellation-progress__item strong,
+.admin-cancellation-progress__item small {
+  display: block;
+}
+
+.admin-cancellation-progress__item strong {
+  color: var(--admin-text);
+  font-size: 0.76rem;
+}
+
+.admin-cancellation-progress__item small {
+  margin-top: 4px;
+  color: var(--admin-muted);
+  font-size: 0.68rem;
+}
+
+.admin-cancellation-record {
+  padding-top: 2px;
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-cancellation-record h3 {
+  margin-top: 15px;
+}
+
+.admin-cancellation-record p {
+  margin: 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--admin-line);
+  color: var(--admin-copy);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.admin-cancellation-record p span {
+  margin-bottom: 3px;
+  color: var(--admin-muted);
+}
+
+.admin-cancellation-actions {
+  margin-top: auto;
+  padding: 18px 22px;
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--admin-line);
+  background: rgba(6, 11, 8, 0.48);
+}
+
+.admin-cancellation-actions .admin-field textarea {
+  min-height: 72px;
+}
+
+.admin-cancellation-actions > div:last-child {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.admin-cancellation-actions--refund .admin-header__button {
+  justify-self: end;
+}
+
+.admin-cancellation-refund-heading,
+.admin-cancellation-actions--waiting,
+.admin-cancellation-actions--complete,
+.admin-cancellation-actions--closed {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-cancellation-refund-heading > svg,
+.admin-cancellation-actions--waiting > svg,
+.admin-cancellation-actions--complete > svg,
+.admin-cancellation-actions--closed > svg {
+  flex: 0 0 auto;
+  color: var(--admin-accent);
+}
+
+.admin-cancellation-actions--complete > svg {
+  color: var(--racing-success-soft);
+}
+
+.admin-cancellation-refund-heading strong,
+.admin-cancellation-refund-heading span,
+.admin-cancellation-actions--waiting strong,
+.admin-cancellation-actions--waiting span,
+.admin-cancellation-actions--complete strong,
+.admin-cancellation-actions--complete span,
+.admin-cancellation-actions--closed strong,
+.admin-cancellation-actions--closed span {
+  display: block;
+}
+
+.admin-cancellation-refund-heading strong,
+.admin-cancellation-actions--waiting strong,
+.admin-cancellation-actions--complete strong,
+.admin-cancellation-actions--closed strong {
+  color: var(--admin-text);
+  font-size: 0.8rem;
+}
+
+.admin-cancellation-refund-heading span,
+.admin-cancellation-actions--waiting span,
+.admin-cancellation-actions--complete span,
+.admin-cancellation-actions--closed span {
+  margin-top: 3px;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+}
+
+.admin-cancellation-empty {
+  min-height: 150px;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.admin-cancellation-empty--detail {
+  min-height: 520px;
+}
+
+.admin-cancellation-empty strong {
+  color: var(--admin-text);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 1080px) {
+  .admin-cancellation-workspace {
+    grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1fr);
+  }
+
+  .admin-cancellation-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cancellation-facts > div,
+  .admin-cancellation-facts > div:nth-child(2n),
+  .admin-cancellation-facts > div:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+
+  .admin-cancellation-facts > div:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 780px) {
+  .admin-cancellation-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cancellation-metrics article,
+  .admin-cancellation-metrics article:last-child {
+    min-height: 72px;
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+
+  .admin-cancellation-metrics article:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-cancellation-workspace {
+    display: block;
+  }
+
+  .admin-cancellation-queue {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+
+  .admin-cancellation-list {
+    max-height: 390px;
+  }
+
+  .admin-cancellation-detail__header,
+  .admin-cancellation-detail__body,
+  .admin-cancellation-actions {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .admin-cancellation-actions > div:last-child {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cancellation-actions .admin-header__button,
+  .admin-cancellation-actions--refund .admin-header__button {
+    width: 100%;
+    justify-self: stretch;
+  }
+}

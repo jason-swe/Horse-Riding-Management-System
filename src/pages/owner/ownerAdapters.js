@@ -196,8 +196,6 @@ export function toOwnerJockey(apiJockey, index = 0) {
 export function toOwnerTournament(apiTournament, index = 0) {
   const startDate = getDisplayDate(apiTournament.start_date, "");
   const endDate = getDisplayDate(apiTournament.end_date, "");
-  const entryFee = Number(apiTournament.entry_fee || 0);
-  const entryFeeShare = Number(apiTournament.entry_fee_share ?? entryFee);
 
   return {
     id: apiTournament._id || apiTournament.id || `T-${index + 1}`,
@@ -206,11 +204,9 @@ export function toOwnerTournament(apiTournament, index = 0) {
     location: apiTournament.location || "",
     status: getDisplayStatus(apiTournament.status || "active"),
     date: startDate && endDate ? `${startDate} to ${endDate}` : startDate || endDate || "",
-    prizePool: Number(apiTournament.prize_pool || 0),
-    prizeCurrency: apiTournament.prize_currency || apiTournament.entry_fee_currency || "VND",
-    entryFee,
-    entryFeeCurrency: apiTournament.entry_fee_currency || apiTournament.prize_currency || "VND",
-    entryFeeShare,
+    prizePool: Number(apiTournament.total_race_prize_pool || 0),
+    prizeCurrency: Object.keys(apiTournament.prize_totals_by_currency || {})[0] || "VND",
+    prizeTotalsByCurrency: apiTournament.prize_totals_by_currency || {},
     raceCount: Number(apiTournament.race_count || 0),
     expectedParticipants: Number(apiTournament.expected_participants || 0),
     raw: apiTournament,
@@ -230,7 +226,7 @@ export function toOwnerRaceOption(apiRace, index = 0) {
   const remainingSlots = apiRace.remaining_slots === null || (apiRace.remaining_slots === undefined && maxParticipants <= 0)
     ? null
     : Number(apiRace.remaining_slots ?? Math.max(0, maxParticipants - participantCount));
-  const entryFeeVnd = Number(apiRace.entry_fee_vnd ?? (prizePool > 0 && maxParticipants > 0 ? Math.ceil(prizePool / maxParticipants) : 0));
+  const entryFeeVnd = Number(apiRace.entry_fee ?? apiRace.entry_fee_vnd ?? 0);
   const registrationAvailable = apiRace.registration_available !== undefined
     ? Boolean(apiRace.registration_available)
     : String(apiRace.status || 'scheduled').toLowerCase() === 'scheduled'
@@ -317,6 +313,35 @@ export function toOwnerRegistration(apiRegistration, index = 0) {
     raceStatus: getDisplayStatus(race.status || "scheduled"),
     raw: apiRegistration,
   };
+}
+
+const CLOSED_CANCELLATION_RACE_STATUSES = new Set([
+  "starting",
+  "started",
+  "running",
+  "ongoing",
+  "in_progress",
+  "completed",
+  "finished",
+  "cancelled",
+  "canceled",
+  "deleted",
+]);
+
+export function canRequestRegistrationCancellation(registration, now = Date.now()) {
+  if (!registration || registration.status !== "Approved") return false;
+
+  const raceDate = registration.raceDate ? new Date(registration.raceDate) : null;
+  if (!raceDate || Number.isNaN(raceDate.getTime()) || raceDate.getTime() <= now) return false;
+
+  const raceStatus = String(
+    registration.raw?.race_id?.status
+      || registration.raw?.race?.status
+      || registration.raceStatus
+      || "",
+  ).trim().toLowerCase().replaceAll(" ", "_");
+
+  return !CLOSED_CANCELLATION_RACE_STATUSES.has(raceStatus);
 }
 
 function nestedId(value) {
