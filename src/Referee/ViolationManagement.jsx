@@ -71,10 +71,12 @@ function evidenceLinks(violation) {
     ...files.map((file) => ({
       url: file.url,
       name: file.file_name || "Evidence",
+      type: file.type || "",
     })),
     ...urls.map((url, index) => ({
       url,
       name: `Evidence ${index + 1}`,
+      type: "",
     })),
   ].filter((item, index, items) =>
     item.url && items.findIndex((candidate) => candidate.url === item.url) === index
@@ -310,14 +312,12 @@ function ViolationManagement() {
       setDecisionAction(action);
       setDetailError("");
       if (action === "confirm") {
-        const data = await refereeApi.confirmViolation(selectedViolation._id, {
+        await refereeApi.confirmViolation(selectedViolation._id, {
           decision: decision.trim(),
           penalty: penaltyDecision,
           deviation_reason: deviationReason.trim() || undefined,
         });
-        addMsg(data.requires_admin_review
-          ? "Penalty proposal sent for administrative review."
-          : "Penalty decision confirmed.");
+        addMsg("Penalty decision confirmed.");
       }
       else {
         await refereeApi.dismissViolation(selectedViolation._id, decision.trim());
@@ -326,7 +326,7 @@ function ViolationManagement() {
       await reload();
       setSelectedViolation(null);
     } catch (apiError) {
-      setDetailError(apiError.status === 403 ? "This violation requires administrative review or belongs to another official." : apiError.message || `Unable to ${action} violation.`);
+      setDetailError(apiError.status === 403 ? "This violation belongs to another official." : apiError.message || `Unable to ${action} violation.`);
     } finally {
       setDecisionAction("");
     }
@@ -334,7 +334,6 @@ function ViolationManagement() {
 
   const unresolved = violations.filter((item) => unresolvedStatuses.has(item.status));
   const resultsLocked = ["confirmed", "published"].includes(race.resultStatus);
-  const reviewRequiredCount = violations.filter((item) => getPolicy(options, item.type, item.severity)?.requires_review && unresolvedStatuses.has(item.status)).length;
   const detailPolicy = selectedViolation ? getPolicy(options, selectedViolation.violation_type, selectedViolation.severity) : null;
   const detailIsUnresolved = selectedViolation && unresolvedStatuses.has(selectedViolation.status);
   const canRefereeDecide = detailIsUnresolved && Boolean(detailPolicy) && !resultsLocked;
@@ -353,10 +352,10 @@ function ViolationManagement() {
     {resultsLocked && <section className="admin-live-state">Violation decisions are locked because race results are {formatStatus(race.resultStatus)}.</section>}
     {!!messages.length && <section className="admin-toast-stack" aria-live="polite">{messages.map((message, index) => <div key={`${message}-${index}`} className="admin-toast">{message}</div>)}</section>}
 
-    <section className="referee-violation-summary" aria-label="Violation summary"><article><span>Total records</span><strong>{violations.length}</strong></article><article><span>Awaiting decision</span><strong>{unresolved.length}</strong></article><article><span>Administrative review</span><strong>{reviewRequiredCount}</strong></article><article><span>Confirmed</span><strong>{violations.filter((item) => item.status === "confirmed").length}</strong></article></section>
+    <section className="referee-violation-summary" aria-label="Violation summary"><article><span>Total records</span><strong>{violations.length}</strong></article><article><span>Awaiting decision</span><strong>{unresolved.length}</strong></article><article><span>Dismissed</span><strong>{violations.filter((item) => item.status === "dismissed").length}</strong></article><article><span>Confirmed</span><strong>{violations.filter((item) => item.status === "confirmed").length}</strong></article></section>
 
     <section className="admin-panel"><div className="admin-panel__header referee-section-heading"><div><p className="admin-panel__eyebrow">Audit ledger</p><h2>Recorded incidents</h2></div><span>{options?.penalty_policies?.[0]?.policy_version ? `Policy ${options.penalty_policies[0].policy_version}` : "Policy unavailable"}</span></div>
-      {violations.length === 0 ? <div className="referee-empty-state"><Scale aria-hidden="true" size={28} /><div><h2>No violations recorded</h2><p>New incidents will appear here with their policy state.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Incident</th><th>Subject</th><th>Severity</th><th>Current penalty</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead><tbody>{violations.map((violation) => { const policy = getPolicy(options, violation.type, violation.severity); return <tr key={violation.id}><td><strong>{formatStatus(violation.type)}</strong><span className="referee-table-subline">{violation.description || "No description"}</span></td><td>{violation.subjectName}</td><td>{formatStatus(violation.severity)}</td><td>{describePenalty(effectivePenalty(violation, policy))}{violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">Referee proposal</span>}{!violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">System recommendation</span>}{policy?.requires_review && unresolvedStatuses.has(violation.status) && <span className="referee-table-subline">Administrative review required</span>}</td><td><span className={`referee-status-badge referee-status-badge--${statusTone(violation.status)}`}>{formatStatus(violation.status)}</span></td><td>{violation.timeMarker || "—"}</td><td><div className="referee-row-actions"><button type="button" aria-label="View violation detail" onClick={() => openDetail(violation.id)}><Eye aria-hidden="true" size={16} /></button>{!resultsLocked && unresolvedStatuses.has(violation.status) && <button type="button" aria-label="Edit unresolved violation" onClick={() => openEditForm(violation)}><Pencil aria-hidden="true" size={15} /></button>}</div></td></tr>; })}</tbody></table></div>}
+      {violations.length === 0 ? <div className="referee-empty-state"><Scale aria-hidden="true" size={28} /><div><h2>No violations recorded</h2><p>New incidents will appear here with their decision state.</p></div></div> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Incident</th><th>Subject</th><th>Severity</th><th>Current penalty</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead><tbody>{violations.map((violation) => { const policy = getPolicy(options, violation.type, violation.severity); return <tr key={violation.id}><td><strong>{formatStatus(violation.type)}</strong><span className="referee-table-subline">{violation.description || "No description"}</span></td><td>{violation.subjectName}</td><td>{formatStatus(violation.severity)}</td><td>{describePenalty(effectivePenalty(violation, policy))}{violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">Referee proposal</span>}{!violation.proposedPenalty && !violation.penalty && <span className="referee-table-subline">System recommendation</span>}</td><td><span className={`referee-status-badge referee-status-badge--${statusTone(violation.status)}`}>{formatStatus(violation.status)}</span></td><td>{violation.timeMarker || "—"}</td><td><div className="referee-row-actions"><button type="button" aria-label="View violation detail" onClick={() => openDetail(violation.id)}><Eye aria-hidden="true" size={16} /></button>{!resultsLocked && unresolvedStatuses.has(violation.status) && <button type="button" aria-label="Edit unresolved violation" onClick={() => openEditForm(violation)}><Pencil aria-hidden="true" size={15} /></button>}</div></td></tr>; })}</tbody></table></div>}
     </section>
 
     {showForm && (
@@ -391,8 +390,8 @@ function ViolationManagement() {
                 </div>
               )}
             </section>
-            <section className={`referee-policy-preview${preview?.requires_review ? " referee-policy-preview--review" : ""}`} aria-live="polite">
-              {isPreviewLoading ? <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" /> : previewError ? <p>{previewError}</p> : preview ? <><div><Scale aria-hidden="true" size={19} /><span>System penalty recommendation</span></div><strong>{describePenalty(preview.suggested_penalty)}</strong><p>{preview.suggested_penalty?.note}</p><small>{preview.requires_review ? "Administrative decision required for confirmation or dismissal." : `Referee may resolve this incident · Policy ${preview.policy_version}`}</small></> : <p>Select a type and severity to preview the policy.</p>}
+            <section className="referee-policy-preview" aria-live="polite">
+              {isPreviewLoading ? <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" /> : previewError ? <p>{previewError}</p> : preview ? <><div><Scale aria-hidden="true" size={19} /><span>System penalty recommendation</span></div><strong>{describePenalty(preview.suggested_penalty)}</strong><p>{preview.suggested_penalty?.note}</p><small>The Referee records the final decision after reviewing the incident.</small></> : <p>Select a type and severity to preview the policy.</p>}
             </section>
             <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={isSaving || isUnavailable || isPreviewLoading || Boolean(previewError)} type="submit">{isSaving ? "Saving..." : editingId ? "Update details" : "Record violation"}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeForm}>Cancel</button></div>
           </form>
@@ -405,34 +404,72 @@ function ViolationManagement() {
         <div className="admin-modal__card referee-violation-modal">
           {isDetailLoading ? <LoadingSkeleton ariaLabel="Loading violation detail" variant="detail" /> : detailError && !selectedViolation ? <><section className="admin-live-state admin-live-state--warning">{detailError}</section><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeDetail}>Close</button></> : selectedViolation && (
             <>
-              <div className="admin-panel__header"><p className="admin-panel__eyebrow">Violation detail</p><h2>{formatStatus(selectedViolation.violation_type)}</h2></div>
-              <div className="admin-detail-grid">
-                <div className="admin-detail-item"><span className="admin-detail-label">Subject</span><span className="admin-detail-value">{getDetailSubject(selectedViolation)}</span></div>
-                <div className="admin-detail-item"><span className="admin-detail-label">Severity</span><span className="admin-detail-value">{formatStatus(selectedViolation.severity)}</span></div>
-                <div className="admin-detail-item"><span className="admin-detail-label">Status</span><span className="admin-detail-value">{formatStatus(selectedViolation.status)}</span></div>
-                <div className="admin-detail-item"><span className="admin-detail-label">Time marker</span><span className="admin-detail-value">{selectedViolation.time_marker || "-"}</span></div>
+              <header className="referee-violation-modal__header">
+                <div>
+                  <p className="admin-panel__eyebrow">Violation detail</p>
+                  <div className="referee-violation-modal__title">
+                    <h2>{formatStatus(selectedViolation.violation_type)}</h2>
+                    <span className={`referee-status-badge referee-status-badge--${selectedViolation.severity === "critical" ? "red" : "amber"}`}>{formatStatus(selectedViolation.severity)}</span>
+                    <span className={`referee-status-badge referee-status-badge--${statusTone(selectedViolation.status)}`}>{formatStatus(selectedViolation.status)}</span>
+                  </div>
+                </div>
+                <button className="referee-violation-modal__close" disabled={Boolean(decisionAction)} type="button" aria-label="Close violation detail" onClick={closeDetail}><X aria-hidden="true" size={18} /></button>
+              </header>
+
+              <div className="referee-violation-modal__body">
+                <aside className="referee-violation-modal__context">
+                  <section>
+                    <h3>Incident context</h3>
+                    <dl className="referee-violation-facts">
+                      <div><dt>Subject</dt><dd>{getDetailSubject(selectedViolation)}</dd></div>
+                      <div><dt>Race time</dt><dd>{selectedViolation.time_marker || "Not recorded"}</dd></div>
+                      <div><dt>Severity</dt><dd>{formatStatus(selectedViolation.severity)}</dd></div>
+                      <div><dt>Status</dt><dd>{formatStatus(selectedViolation.status)}</dd></div>
+                    </dl>
+                  </section>
+                  <section>
+                    <h3>Official observation</h3>
+                    <p className="referee-violation-description">{selectedViolation.description || "No incident description."}</p>
+                    {selectedViolation.decision && <blockquote>{selectedViolation.decision}</blockquote>}
+                  </section>
+                  <section>
+                    <h3>Evidence</h3>
+                    {evidenceLinks(selectedViolation).length > 0 ? (
+                      <div className="referee-violation-evidence">
+                        {evidenceLinks(selectedViolation).map((item) => (
+                          <a href={item.url} key={item.url} rel="noreferrer" target="_blank">
+                            {item.type.startsWith("image/") ? <img alt="" src={item.url} /> : <span><FileImage aria-hidden="true" size={22} /></span>}
+                            <strong>{item.name}</strong>
+                          </a>
+                        ))}
+                      </div>
+                    ) : <p className="referee-violation-empty-copy">No evidence attached.</p>}
+                  </section>
+                </aside>
+
+                <main className="referee-violation-modal__decision">
+                  <section className="referee-penalty-audit">
+                    <div><span>System recommendation</span><strong>{describePenalty(selectedViolation.suggested_penalty || detailPolicy?.suggested_penalty)}</strong></div>
+                    {selectedViolation.proposed_penalty && <div><span>Referee proposal</span><strong>{describePenalty(selectedViolation.proposed_penalty)}</strong></div>}
+                    {selectedViolation.penalty && <div><span>Final penalty</span><strong>{describePenalty(selectedViolation.penalty)}</strong></div>}
+                    {selectedViolation.deviation_reason && <div><span>Reason for adjustment</span><p>{selectedViolation.deviation_reason}</p></div>}
+                  </section>
+                  {detailPolicy && penaltyDecision && <PenaltyDecisionEditor policy={detailPolicy} value={penaltyDecision} onChange={setPenaltyDecision} deviationReason={deviationReason} onDeviationReasonChange={setDeviationReason} disabled={!canRefereeDecide || Boolean(decisionAction)} reviewer="referee" />}
+                  {canRefereeDecide && <label className="admin-field referee-violation-decision-note"><span>Decision note <b>Required</b></span><textarea value={decision} onChange={(event) => setDecision(event.target.value)} placeholder="Record the evidence and reasoning behind the final decision." /></label>}
+                  {canRefereeDecide && <section className="referee-final-decision-note"><Check aria-hidden="true" size={17} /><span>Once confirmed, this penalty becomes the official decision for the race result.</span></section>}
+                  {detailError && <section className="admin-live-state admin-live-state--warning">{detailError}</section>}
+                  {detailIsUnresolved && resultsLocked && <section className="referee-final-decision-note referee-final-decision-note--locked"><AlertTriangle aria-hidden="true" size={17} /><span>Decisions are locked because the race result is {formatStatus(race.resultStatus)}.</span></section>}
+                  {detailIsUnresolved && !detailPolicy && <section className="referee-final-decision-note referee-final-decision-note--locked"><AlertTriangle aria-hidden="true" size={17} /><span>Penalty guidance is unavailable. Reload the page before deciding.</span></section>}
+                </main>
               </div>
-              <section className="referee-decision-copy">
-                <p>{selectedViolation.description || "No incident description."}</p>
-                {selectedViolation.decision && <blockquote>{selectedViolation.decision}</blockquote>}
-                {evidenceLinks(selectedViolation).length > 0 && <div className="referee-evidence-links">{evidenceLinks(selectedViolation).map((item) => <a href={item.url} key={item.url} rel="noreferrer" target="_blank">{item.name}</a>)}</div>}
-              </section>
-              <section className="referee-penalty-audit">
-                <div><span>System recommendation</span><strong>{describePenalty(selectedViolation.suggested_penalty || detailPolicy?.suggested_penalty)}</strong></div>
-                {selectedViolation.proposed_penalty && <div><span>Referee proposal</span><strong>{describePenalty(selectedViolation.proposed_penalty)}</strong></div>}
-                {selectedViolation.penalty && <div><span>Final penalty</span><strong>{describePenalty(selectedViolation.penalty)}</strong></div>}
-                {selectedViolation.deviation_reason && <div><span>Reason for adjustment</span><p>{selectedViolation.deviation_reason}</p></div>}
-              </section>
-              {detailPolicy && penaltyDecision && <PenaltyDecisionEditor policy={detailPolicy} value={penaltyDecision} onChange={setPenaltyDecision} deviationReason={deviationReason} onDeviationReasonChange={setDeviationReason} disabled={!canRefereeDecide || Boolean(decisionAction)} reviewer="referee" />}
-              {canRefereeDecide && <label className="admin-field"><span>Decision note</span><textarea value={decision} onChange={(event) => setDecision(event.target.value)} placeholder="Record the evidence and reasoning behind this decision." /></label>}
-              {detailError && <section className="admin-live-state admin-live-state--warning">{detailError}</section>}
-              <div className="admin-tool-card__footer">
-                {canRefereeDecide && <><button className="admin-header__button" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("confirm")}><Check aria-hidden="true" size={16} />{decisionAction === "confirm" ? "Submitting..." : "Submit penalty decision"}</button>{!detailPolicy?.requires_review && <button className="admin-header__button admin-header__button--red" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("dismiss")}><X aria-hidden="true" size={16} />{decisionAction === "dismiss" ? "Dismissing..." : "Dismiss incident"}</button>}</>}
-                {detailIsUnresolved && detailPolicy?.requires_review && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Decision will be routed for administrative review</span>}
-                {detailIsUnresolved && resultsLocked && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Results locked</span>}
-                {detailIsUnresolved && !detailPolicy && <span className="referee-admin-review-note"><AlertTriangle aria-hidden="true" size={17} /> Policy unavailable</span>}
-                <button className="admin-header__button admin-header__button--ghost" disabled={Boolean(decisionAction)} type="button" onClick={closeDetail}>Close</button>
-              </div>
+
+              <footer className="referee-violation-modal__footer">
+                <div>{canRefereeDecide && <button className="admin-header__button admin-header__button--red" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("dismiss")}><X aria-hidden="true" size={16} />{decisionAction === "dismiss" ? "Dismissing..." : "Dismiss incident"}</button>}</div>
+                <div>
+                  <button className="admin-header__button admin-header__button--ghost" disabled={Boolean(decisionAction)} type="button" onClick={closeDetail}>Close</button>
+                  {canRefereeDecide && <button className="admin-header__button" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("confirm")}><Check aria-hidden="true" size={16} />{decisionAction === "confirm" ? "Confirming..." : "Confirm penalty"}</button>}
+                </div>
+              </footer>
             </>
           )}
         </div>

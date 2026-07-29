@@ -298,7 +298,7 @@ function RaceMonitor() {
             </label>
 
             {isIncident && (
-              <section className={`referee-policy-preview${policyPreview?.requires_review ? " referee-policy-preview--review" : ""}`} aria-live="polite">
+              <section className="referee-policy-preview" aria-live="polite">
                 {isPreviewLoading ? (
                   <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" />
                 ) : previewError ? (
@@ -308,11 +308,7 @@ function RaceMonitor() {
                     <div><span>System penalty recommendation</span></div>
                     <strong>{describePenalty(policyPreview.suggested_penalty)}</strong>
                     <p>{policyPreview.suggested_penalty?.note}</p>
-                    <small>
-                      {policyPreview.requires_review
-                        ? "The incident will be recorded for administrative review."
-                        : `This is a recommendation. The Referee chooses the final proposal under policy ${policyPreview.policy_version}.`}
-                    </small>
+                    <small>This is guidance. The Referee records the final decision after reviewing the incident.</small>
                   </>
                 ) : (
                   <p>Select event type and severity to preview the policy.</p>
