@@ -9,9 +9,9 @@
   gap: 12px;
   align-items: center;
   padding: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 6px;
-  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 4px;
+  background: rgba(var(--racing-contrast-rgb), 0.045);
 }
 
 .penalty-editor__comparison > div {
@@ -21,22 +21,22 @@
 }
 
 .penalty-editor__comparison > svg {
-  color: #d6a84b;
+  color: var(--racing-accent);
 }
 
 .penalty-editor__comparison strong,
 .penalty-choice strong {
-  color: #f8fafc;
+  color: var(--racing-text-strong);
 }
 
 .penalty-editor__comparison small,
 .penalty-choice small {
-  color: #94a3b8;
+  color: var(--racing-text-muted);
   line-height: 1.35;
 }
 
 .penalty-editor__eyebrow {
-  color: #d6a84b;
+  color: var(--racing-accent-soft);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -51,7 +51,7 @@
 
 .penalty-editor legend {
   margin-bottom: 9px;
-  color: #cbd5e1;
+  color: var(--racing-text-soft);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -72,14 +72,14 @@
   gap: 9px;
   align-items: start;
   padding: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 5px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .penalty-choice:has(input:checked) {
-  border-color: #d6a84b;
-  background: rgba(214, 168, 75, 0.1);
+  border-color: var(--racing-accent);
+  background: rgba(var(--racing-accent-rgb), 0.1);
 }
 
 .penalty-choice--disabled {
@@ -102,15 +102,15 @@
   width: 18px;
   height: 18px;
   place-items: center;
-  border: 1px solid #64748b;
+  border: 1px solid var(--racing-muted-warm);
   border-radius: 50%;
   color: transparent;
 }
 
 .penalty-choice input:checked + .penalty-choice__mark {
-  border-color: #d6a84b;
-  background: #d6a84b;
-  color: #10231d;
+  border-color: var(--racing-accent-strong);
+  background: var(--racing-accent-strong);
+  color: var(--racing-green);
 }
 
 .penalty-choice > span:last-child {
@@ -127,7 +127,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  color: #e2e8f0;
+  color: var(--racing-text);
 }
 
 .penalty-stepper {
@@ -136,7 +136,7 @@
   gap: 12px;
   align-items: center;
   padding: 8px 0;
-  color: #cbd5e1;
+  color: var(--racing-text-soft);
 }
 
 .penalty-stepper__control {
@@ -148,9 +148,9 @@
 .penalty-stepper button,
 .penalty-stepper input {
   min-width: 0;
-  border: 1px solid rgba(148, 163, 184, 0.32);
-  background: #111c1a;
-  color: #f8fafc;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
+  background: var(--racing-green);
+  color: var(--racing-text-strong);
 }
 
 .penalty-stepper button {
@@ -177,12 +177,12 @@
 .penalty-editor__reason {
   display: grid;
   gap: 7px;
-  color: #f8fafc;
+  color: var(--racing-text-strong);
   font-weight: 600;
 }
 
 .penalty-editor__reason span {
-  color: #f87171;
+  color: var(--racing-danger);
 }
 
 .penalty-editor__reason textarea {
@@ -196,9 +196,9 @@
   gap: 9px;
   align-items: flex-start;
   padding: 11px;
-  border-left: 3px solid #d6a84b;
-  background: rgba(214, 168, 75, 0.12);
-  color: #fde68a;
+  border-left: 3px solid var(--racing-accent);
+  background: rgba(var(--racing-accent-rgb), 0.1);
+  color: var(--racing-accent-soft);
 }
 
 @media (max-width: 720px) {

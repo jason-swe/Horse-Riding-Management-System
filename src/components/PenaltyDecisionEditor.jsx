@@ -78,7 +78,7 @@ function isStepAligned(value, bounds) {
 
 export function isPenaltyWithinRefereeBounds(policy, penalty) {
   const adjustment = adjustmentOf(policy);
-  if (adjustment.allowed === false || policy?.requires_review === true) return false;
+  if (adjustment.allowed === false) return false;
 
   const value = normalizePenalty(penalty);
   const primaryTypes = adjustment.primary_types;
@@ -242,7 +242,7 @@ export default function PenaltyDecisionEditor({
           <label
             className={`penalty-choice${optionDisabled ? " penalty-choice--disabled" : ""}`}
             key={option.value}
-            title={!optionAllowed && reviewer !== "admin" ? "This sanction requires administrative review." : undefined}
+            title={!optionAllowed && reviewer !== "admin" ? "This sanction is not available for this severity." : undefined}
           >
             <input
               type="radio"
@@ -351,13 +351,7 @@ export default function PenaltyDecisionEditor({
       {!withinBounds && reviewer !== "admin" && (
         <div className="penalty-editor__review" role="status">
           <AlertTriangle size={18} />
-          <span>This decision requires administrative review before the penalty becomes final.</span>
-        </div>
-      )}
-      {refereeReadOnly && (
-        <div className="penalty-editor__review" role="status">
-          <AlertTriangle size={18} />
-          <span>This incident requires administrative review. The system recommendation is read-only for the Referee.</span>
+          <span>Adjust the selected values so they remain within the allowed range for this severity.</span>
         </div>
       )}
     </section>
