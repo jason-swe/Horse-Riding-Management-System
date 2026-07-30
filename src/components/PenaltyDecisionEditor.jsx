@@ -1,4 +1,5 @@
 import { AlertTriangle, Check, Minus, Plus, Scale } from "lucide-react";
+import { useId } from "react";
 import "./PenaltyDecisionEditor.css";
 
 const PRIMARY_TYPES = [
@@ -177,6 +178,7 @@ export default function PenaltyDecisionEditor({
   disabled = false,
   reviewer = "referee",
 }) {
+  const reasonInputId = useId();
   const suggested = buildPenaltyFromPolicy(policy);
   const current = normalizePenalty(value || suggested);
   const differs = !penaltiesEqual(current, suggested);
@@ -335,17 +337,27 @@ export default function PenaltyDecisionEditor({
       </fieldset>
 
       {differs && (
-        <label className="penalty-editor__reason">
-          <span className="penalty-editor__reason-label">Reason for policy deviation <b aria-hidden="true">*</b></span>
+        <div className="penalty-editor__reason">
+          <div className="penalty-editor__reason-heading">
+            <label className="penalty-editor__reason-label" htmlFor={reasonInputId}>
+              <span>Reason for policy deviation</span>
+              <b aria-hidden="true">*</b>
+            </label>
+            <span className="penalty-editor__reason-status">Required for audit</span>
+          </div>
           <textarea
+            id={reasonInputId}
             rows="3"
             value={deviationReason || ""}
             onChange={(event) => onDeviationReasonChange?.(event.target.value)}
             disabled={disabled || refereeReadOnly}
             required
-            placeholder="Describe the race context and evidence supporting this decision."
+            placeholder="Explain the race context and evidence behind this adjustment..."
           />
-        </label>
+          <p className="penalty-editor__reason-helper">
+            Briefly explain why the selected sanction differs from the system recommendation.
+          </p>
+        </div>
       )}
 
       {!withinBounds && reviewer !== "admin" && (
