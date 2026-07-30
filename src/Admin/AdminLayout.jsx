@@ -1,14 +1,13 @@
 import { Link, NavLink } from "react-router-dom";
 import {
   CalendarRange,
-  ClipboardCheck,
   CircleDollarSign,
+  FileCheck2,
   FileClock,
   Flag,
   Gauge,
   Gift,
   LogOut,
-  ShieldAlert,
   ShieldCheck,
   Trophy,
   UserRoundCheck,
@@ -23,9 +22,7 @@ const navigationGroups = [
     label: "Command",
     items: [
       { to: "/admin", label: "Overview", icon: Gauge, end: true },
-      { to: "/admin/registrations", label: "Race entries", icon: ClipboardCheck },
       { to: "/admin/cancellations", label: "Cancellation requests", icon: FileClock },
-      { to: "/admin/incidents", label: "Incidents", icon: ShieldAlert },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/deposits", label: "Deposits", icon: CircleDollarSign },
       { to: "/admin/rewards", label: "Prize rewards", icon: Gift },
@@ -42,6 +39,7 @@ const navigationGroups = [
     label: "Directory",
     items: [
       { to: "/admin/users", label: "Users & roles", icon: UsersRound },
+      { to: "/admin/role-applications", label: "Role applications", icon: FileCheck2 },
       { to: "/admin/jockeys", label: "Jockeys", icon: UserRoundCheck },
       { to: "/admin/referees", label: "Referees", icon: ShieldCheck },
     ],
@@ -79,13 +77,6 @@ function AdminLayout({ title, eyebrow, description, children, actions }) {
               </div>
             ))}
           </nav>
-
-          <div className="admin-sidebar__brief">
-            <span>Priority queue</span>
-            <strong>Incident review</strong>
-            <p>Resolve race incidents before the official result is published.</p>
-            <Link to="/admin/incidents">Open incident desk <ShieldAlert size={15} aria-hidden="true" /></Link>
-          </div>
 
           <div className="admin-user-row">
             <div className="admin-user-avatar" aria-hidden="true">A</div>

@@ -360,13 +360,13 @@ function ViolationManagement() {
 
     {showForm && (
       <div className="admin-modal" role="dialog" aria-modal="true" aria-label={editingId ? "Edit violation" : "Record violation"} onClick={(event) => event.target === event.currentTarget && closeForm()}>
-        <div className="admin-modal__card referee-violation-modal">
-          <div className="admin-panel__header">
+        <div className="admin-modal__card referee-violation-modal referee-violation-modal--form">
+          <div className="admin-panel__header referee-incident-form__header">
             <p className="admin-panel__eyebrow">{editingId ? "Unresolved record" : "New incident"}</p>
             <h2>{editingId ? "Update violation details" : "Record policy-backed violation"}</h2>
           </div>
-          <form className="admin-form-grid" onSubmit={handleSave}>
-            <div className="referee-violation-form-grid">
+          <form className="admin-form-grid referee-incident-form" onSubmit={handleSave}>
+            <div className="referee-violation-form-grid referee-incident-form__fields">
               <label className="admin-field"><span>Violation type</span><select disabled={Boolean(editingId)} value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>{options?.violation_types?.map((type) => <option key={type} value={type}>{formatStatus(type)}</option>)}</select></label>
               <label className="admin-field"><span>Severity</span><select value={form.severity} onChange={(event) => setForm({ ...form, severity: event.target.value })}>{options?.severities?.map((severity) => <option key={severity} value={severity}>{formatStatus(severity)}</option>)}</select></label>
               <label className="admin-field"><span>Subject kind</span><select disabled={Boolean(editingId)} value={form.subjectKind} onChange={(event) => setForm({ ...form, subjectKind: event.target.value, subjectId: "" })}><option value="Jockey">Jockey</option><option value="Horse">Horse</option></select></label>
@@ -393,7 +393,7 @@ function ViolationManagement() {
             <section className="referee-policy-preview" aria-live="polite">
               {isPreviewLoading ? <LoadingSkeleton ariaLabel="Loading penalty preview" variant="inline" /> : previewError ? <p>{previewError}</p> : preview ? <><div><Scale aria-hidden="true" size={19} /><span>System penalty recommendation</span></div><strong>{describePenalty(preview.suggested_penalty)}</strong><p>{preview.suggested_penalty?.note}</p><small>The Referee records the final decision after reviewing the incident.</small></> : <p>Select a type and severity to preview the policy.</p>}
             </section>
-            <div className="admin-tool-card__footer"><button className="admin-header__button" disabled={isSaving || isUnavailable || isPreviewLoading || Boolean(previewError)} type="submit">{isSaving ? "Saving..." : editingId ? "Update details" : "Record violation"}</button><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeForm}>Cancel</button></div>
+            <div className="admin-tool-card__footer referee-incident-form__actions"><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeForm}>Cancel</button><button className="admin-header__button" disabled={isSaving || isUnavailable || isPreviewLoading || Boolean(previewError)} type="submit">{isSaving ? "Saving..." : editingId ? "Update details" : "Record violation"}</button></div>
           </form>
         </div>
       </div>
@@ -401,23 +401,33 @@ function ViolationManagement() {
 
     {(isDetailLoading || detailError || selectedViolation) && (
       <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Violation decision" onClick={(event) => event.target === event.currentTarget && !decisionAction && closeDetail()}>
-        <div className="admin-modal__card referee-violation-modal">
+        <div className="admin-modal__card referee-violation-modal referee-violation-modal--detail">
           {isDetailLoading ? <LoadingSkeleton ariaLabel="Loading violation detail" variant="detail" /> : detailError && !selectedViolation ? <><section className="admin-live-state admin-live-state--warning">{detailError}</section><button className="admin-header__button admin-header__button--ghost" type="button" onClick={closeDetail}>Close</button></> : selectedViolation && (
             <>
               <header className="referee-violation-modal__header">
-                <div>
-                  <p className="admin-panel__eyebrow">Violation detail</p>
+                <div className="referee-violation-modal__header-main">
+                  <div className="referee-violation-modal__case-mark" aria-hidden="true"><Scale size={19} /></div>
+                  <div>
+                  <p className="admin-panel__eyebrow">Decision workspace <span className="referee-violation-modal__case-id">Case {String(selectedViolation._id || selectedViolation.id || "").slice(-8).toUpperCase()}</span></p>
                   <div className="referee-violation-modal__title">
                     <h2>{formatStatus(selectedViolation.violation_type)}</h2>
                     <span className={`referee-status-badge referee-status-badge--${selectedViolation.severity === "critical" ? "red" : "amber"}`}>{formatStatus(selectedViolation.severity)}</span>
-                    <span className={`referee-status-badge referee-status-badge--${statusTone(selectedViolation.status)}`}>{formatStatus(selectedViolation.status)}</span>
+                  </div>
                   </div>
                 </div>
-                <button className="referee-violation-modal__close" disabled={Boolean(decisionAction)} type="button" aria-label="Close violation detail" onClick={closeDetail}><X aria-hidden="true" size={18} /></button>
+                <div className="referee-violation-modal__header-actions">
+                  <span className={`referee-violation-modal__status referee-violation-modal__status--${statusTone(selectedViolation.status)}`}><span aria-hidden="true" />{formatStatus(selectedViolation.status)}</span>
+                  <button className="referee-violation-modal__close" disabled={Boolean(decisionAction)} type="button" aria-label="Close violation detail" onClick={closeDetail}><X aria-hidden="true" size={18} /></button>
+                </div>
               </header>
 
               <div className="referee-violation-modal__body">
                 <aside className="referee-violation-modal__context">
+                  <div className="referee-violation-context__lead">
+                    <span>Subject under review</span>
+                    <strong>{getDetailSubject(selectedViolation)}</strong>
+                    <small>{selectedViolation.time_marker ? `Observed at ${selectedViolation.time_marker}` : "Race time not recorded"}</small>
+                  </div>
                   <section>
                     <h3>Incident context</h3>
                     <dl className="referee-violation-facts">
@@ -448,6 +458,13 @@ function ViolationManagement() {
                 </aside>
 
                 <main className="referee-violation-modal__decision">
+                  <header className="referee-decision-heading">
+                    <div>
+                      <p className="admin-panel__eyebrow">Final review</p>
+                      <h3>Resolve this incident</h3>
+                    </div>
+                    <span>Policy-guided decision</span>
+                  </header>
                   <section className="referee-penalty-audit">
                     <div><span>System recommendation</span><strong>{describePenalty(selectedViolation.suggested_penalty || detailPolicy?.suggested_penalty)}</strong></div>
                     {selectedViolation.proposed_penalty && <div><span>Referee proposal</span><strong>{describePenalty(selectedViolation.proposed_penalty)}</strong></div>}
@@ -464,6 +481,7 @@ function ViolationManagement() {
               </div>
 
               <footer className="referee-violation-modal__footer">
+                <div className="referee-violation-modal__footer-note">{canRefereeDecide ? <><span className="referee-violation-modal__footer-dot" aria-hidden="true" />Changes are logged to the race record</> : "Read-only decision record"}</div>
                 <div>{canRefereeDecide && <button className="admin-header__button admin-header__button--red" disabled={Boolean(decisionAction)} type="button" onClick={() => decide("dismiss")}><X aria-hidden="true" size={16} />{decisionAction === "dismiss" ? "Dismissing..." : "Dismiss incident"}</button>}</div>
                 <div>
                   <button className="admin-header__button admin-header__button--ghost" disabled={Boolean(decisionAction)} type="button" onClick={closeDetail}>Close</button>

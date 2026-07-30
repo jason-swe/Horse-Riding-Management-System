@@ -11,7 +11,6 @@ import {
   Lock,
   MapPin,
   Shield,
-  ShieldCheck,
   Trophy,
   Unlock,
   Users,
@@ -195,19 +194,14 @@ export default function RaceDetail() {
   const race = races.find((item) => String(item.id) === String(raceId));
 
   const [raceLiveState, setRaceLiveState] = useState(null);
-  const [isLoadingLiveState, setIsLoadingLiveState] = useState(false);
 
   const hasRealResults = realResults && realResults.length > 0;
 
   useEffect(() => {
-    if (!raceId || hasRealResults) {
-      setIsLoadingLiveState(false);
-      return;
-    }
+    if (!raceId || hasRealResults) return;
 
     let active = true;
-    async function fetchLiveState(isBackground = false) {
-      if (!isBackground) setIsLoadingLiveState(true);
+    async function fetchLiveState() {
       try {
         const data = await spectatorApi.getRaceLiveState(raceId);
         if (active) {
@@ -219,14 +213,12 @@ export default function RaceDetail() {
         }
       } catch (err) {
         console.warn("Could not fetch real participants from backend (spectator access may be restricted):", err.message);
-      } finally {
-        if (active && !isBackground) setIsLoadingLiveState(false);
       }
     }
 
-    fetchLiveState(false);
+    fetchLiveState();
     const interval = window.setInterval(() => {
-      fetchLiveState(true);
+      fetchLiveState();
     }, LIVE_STATE_REFRESH_MS);
 
     return () => {
@@ -489,31 +481,6 @@ export default function RaceDetail() {
         </div>
       </section>
 
-      <div className="race-detail-data-note" role="status">
-        <ShieldCheck size={16} />
-        {hasRealResults ? (
-          <span>
-            <strong>Official results connected.</strong> Standing details, finish times, and rankings are verified by the official race engine.
-          </span>
-        ) : hasRaceEngineOrder ? (
-          <span>
-            <strong>{isResultPending ? "Race completed." : "Race Engine order connected."}</strong> {isResultPending ? "The 2D viewer can replay the provisional engine order while official results are pending." : "The runner field uses backend participants and the final stretch follows the Race Engine finish order."}
-          </span>
-        ) : hasBackendParticipants ? (
-          <span>
-            <strong>Backend participants connected.</strong> The 2D viewer uses registered horses and jockeys while waiting for the referee to start the race.
-          </span>
-        ) : isLoadingLiveState ? (
-          <span>
-            <strong>Race field loading.</strong> Race details are ready while participant and engine data loads in the background.
-          </span>
-        ) : (
-          <span>
-            <strong>Participant preview.</strong> The backend has no spectator-safe participant endpoint, so the runner field and 2D viewer remain an explicitly labelled prototype.
-          </span>
-        )}
-      </div>
-
       <div className="race-detail-viewer-shell">
         <RaceViewer2D
           connectionState={viewer.connectionState}
@@ -531,28 +498,6 @@ export default function RaceDetail() {
         </RaceViewer2D>
       </div>
 
-      <footer className="race-detail-boundary-note">
-        {hasRealResults ? (
-          <span>
-            <ShieldCheck size={15} /> Race results are verified and live
-          </span>
-        ) : hasRaceEngineOrder ? (
-          <span>
-            <ShieldCheck size={15} /> {isResultPending ? "Race complete; replaying provisional Race Engine order" : "Race Engine finish order connected; 2D path is generated on the frontend"}
-          </span>
-        ) : hasBackendParticipants ? (
-          <span>
-            <ShieldCheck size={15} /> Backend registered field connected; Race Engine order starts after referee start
-          </span>
-        ) : (
-          <>
-            <span>
-              <ShieldCheck size={15} /> Race information is live; viewer data is a prototype
-            </span>
-            <strong>No participant or realtime race API is connected.</strong>
-          </>
-        )}
-      </footer>
     </section>
   );
 }

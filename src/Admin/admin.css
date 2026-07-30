@@ -214,46 +214,6 @@
   color: var(--admin-accent);
 }
 
-.admin-sidebar__brief {
-  display: grid;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--admin-line);
-  border-left: 2px solid var(--admin-accent-strong);
-  border-radius: 4px;
-  background: var(--admin-surface-soft);
-}
-
-.admin-sidebar__brief > span {
-  color: var(--admin-accent);
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
-.admin-sidebar__brief strong {
-  font-family: "Sora", sans-serif;
-  font-size: 0.84rem;
-}
-
-.admin-sidebar__brief p {
-  margin: 0;
-  color: var(--admin-muted);
-  font-size: 0.74rem;
-  line-height: 1.55;
-}
-
-.admin-sidebar__brief a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 4px;
-  color: var(--admin-copy);
-  font-size: 0.74rem;
-  font-weight: 750;
-}
-
 .admin-user-row {
   width: 100%;
   margin-top: auto;
@@ -3631,7 +3591,6 @@
   }
 
   .admin-system-state,
-  .admin-sidebar__brief,
   .admin-nav__label,
   .admin-user-info {
     display: none;
@@ -5040,5 +4999,205 @@
   .admin-cancellation-actions--refund .admin-header__button {
     width: 100%;
     justify-self: stretch;
+  }
+}
+
+/* Role application review */
+.admin-role-application-filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 142px;
+  gap: 8px;
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-role-application-filter-row .admin-cancellation-search {
+  margin: 0;
+}
+
+.admin-role-application-role-filter select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 9px;
+  border: 1px solid var(--admin-line);
+  border-radius: 4px;
+  background: rgba(7, 12, 9, 0.45);
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.admin-role-application-role-filter select:focus,
+.admin-role-application-link:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+.admin-role-application-row {
+  min-height: 142px;
+}
+
+.admin-role-application-row__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--admin-accent);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.admin-role-application-section {
+  display: grid;
+  gap: 11px;
+}
+
+.admin-role-application-section__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-accent);
+}
+
+.admin-role-application-section__heading h3 {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 0.86rem;
+}
+
+.admin-role-application-section__heading span {
+  margin-left: auto;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+}
+
+.admin-role-application-data {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--admin-line);
+}
+
+.admin-role-application-data > div {
+  min-width: 0;
+  padding: 11px 13px;
+  border-right: 1px solid var(--admin-line);
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-role-application-data > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.admin-role-application-data > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.admin-role-application-data dt {
+  color: var(--admin-muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.admin-role-application-data dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--admin-copy);
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+
+.admin-role-application-documents {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-role-application-documents article {
+  min-width: 0;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--admin-line);
+  border-radius: 4px;
+  background: rgba(var(--racing-contrast-rgb), 0.025);
+}
+
+.admin-role-application-documents article > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-role-application-documents strong {
+  overflow-wrap: anywhere;
+  color: var(--admin-text);
+  font-size: 0.76rem;
+}
+
+.admin-role-application-documents small,
+.admin-role-application-muted {
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.admin-role-application-muted {
+  margin: 0;
+}
+
+.admin-role-application-link {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 5px;
+  color: var(--admin-accent);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.admin-role-application-link:hover {
+  color: var(--admin-text);
+}
+
+.admin-role-application-record {
+  padding-top: 2px;
+}
+
+.admin-role-application-record p {
+  margin: 0;
+  color: var(--admin-copy);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.admin-role-application-actions--closed {
+  margin-top: auto;
+}
+
+@media (max-width: 780px) {
+  .admin-role-application-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-role-application-data {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-role-application-data > div,
+  .admin-role-application-data > div:nth-child(2n),
+  .admin-role-application-data > div:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+
+  .admin-role-application-data > div:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-role-application-documents article {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

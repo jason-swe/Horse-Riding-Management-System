@@ -233,6 +233,24 @@ function mapProfile(data, user, stats, approvalStatus) {
   };
 }
 
+function formatPenalty(penalty) {
+  if (!penalty) return "No penalty recorded";
+  if (typeof penalty === "string") return penalty;
+  if (typeof penalty !== "object") return String(penalty);
+
+  const details = [];
+  if (penalty.type) details.push(String(penalty.type).replaceAll("_", " "));
+  if (penalty.time_penalty_seconds) details.push(`+${penalty.time_penalty_seconds}s`);
+  if (penalty.position_delta) details.push(`${penalty.position_delta} position`);
+  if (penalty.score_deduction) details.push(`-${penalty.score_deduction} score`);
+  if (penalty.suspension_days) details.push(`${penalty.suspension_days} day suspension`);
+  if (penalty.fine_amount) details.push(`Fine ${penalty.fine_amount}`);
+  if (penalty.disqualified) details.push("Disqualification");
+  if (!details.length && penalty.note) details.push(penalty.note);
+
+  return details.join(" · ") || "Penalty recorded";
+}
+
 function mapViolation(item, index = 0) {
   const race = item.race_id || item.race || {};
   const horse = item.horse_id || item.horse || {};
@@ -243,7 +261,7 @@ function mapViolation(item, index = 0) {
     id: getId(item) || `VIO-${index + 1}`,
     type: item.violation_type || "Recorded violation",
     description: item.description || "No additional description.",
-    penalty: item.penalty || "No penalty recorded",
+    penalty: formatPenalty(item.penalty || item.proposed_penalty || item.suggested_penalty),
     status: normalizeStatus(item.status, "Recorded"),
     race: getName(race, "Race pending"),
     horse: getName(horse, "Horse pending"),

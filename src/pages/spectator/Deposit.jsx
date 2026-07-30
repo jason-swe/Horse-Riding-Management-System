@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, CreditCard, History, Landmark, Package, RefreshCw, ShieldCheck, Target, WalletCards } from "lucide-react";
-import { betApi } from "../../api/betApi.js";
+import { ArrowLeft, CheckCircle2, CreditCard, Gift, Landmark, Package, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
 import { depositApi } from "../../api/depositApi.js";
 import { walletApi } from "../../api/walletApi.js";
 import { formatTokenAmount, formatTransactionAmount, formatTransactionDate, getWalletBalance, transactionLabel } from "./walletFormatters.js";
@@ -44,29 +43,14 @@ function normalizeTransactions(payload) {
   return payload?.transactions || payload?.history || [];
 }
 
-function normalizePredictions(payload) {
-  return Array.isArray(payload) ? payload : Array.isArray(payload?.bets) ? payload.bets : [];
-}
-
-function getEntityName(value, fallback = "") {
-  if (!value || typeof value === "string") return fallback;
-  return value.name || value.full_name || fallback;
-}
-
-function formatPredictionStatus(value) {
-  const normalized = String(value || "pending").toLowerCase();
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
-function normalizeActivityTone(status, fallbackTone = "pending", transactionType = "") {
+function normalizeActivityTone(status, transactionType = "") {
   const normalized = String(status || "").toLowerCase();
   const type = String(transactionType || "").toLowerCase();
 
-  if (type.includes("redemption") || type.includes("redeem") || type.includes("reward")) return "lost";
-  if (["success", "completed", "complete", "published", "won", "settled"].includes(normalized)) return "success";
   if (["lost", "failed", "failure", "cancelled", "canceled", "rejected", "expired"].includes(normalized)) return "lost";
-  if (fallbackTone === "won") return "success";
-  if (fallbackTone === "lost") return "lost";
+  if (["pending", "processing"].includes(normalized)) return "pending";
+  if (type.includes("redeem") || type.includes("reward")) return "redeem";
+  if (["success", "completed", "complete", "published", "settled"].includes(normalized)) return "success";
   return "pending";
 }
 
@@ -81,38 +65,19 @@ function formatActivityStatus(value) {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
-function toPredictionHistoryRow(prediction) {
-  const status = String(prediction?.status || "pending").toLowerCase();
-  const raceName = getEntityName(prediction?.race_id, "Race");
-  const horseName =
-    prediction?.odds_snapshot?.horse_name ||
-    getEntityName(prediction?.predicted_horse_id, "Selected runner");
-  const currency =
-    prediction?.odds_snapshot?.currency ||
-    prediction?.race_id?.betting_market?.currency ||
-    "TOKEN";
-  const payoutAmount = Number(prediction?.payout_amount ?? 0);
-  const potentialPayout = Number(prediction?.potential_payout ?? 0);
-
-  return {
-    id: prediction?._id || prediction?.id,
-    kind: "prediction",
-    date: prediction?.settled_at || prediction?.submitted_at,
-    title: `${formatPredictionStatus(status)} prediction`,
-    detail: `${raceName} / ${horseName}`,
-    amount: status === "won" ? payoutAmount : Number(prediction?.stake_amount ?? 0),
-    amountLabel: status === "won" ? `+${formatTokenAmount(payoutAmount).replace(" TOKEN", ` ${currency}`)}` : formatTokenAmount(Number(prediction?.stake_amount ?? 0)).replace(" TOKEN", ` ${currency}`),
-    status,
-    tone: normalizeActivityTone(status, status === "won" ? "won" : status === "lost" ? "lost" : "pending"),
-    meta: status === "won" ? "Prediction payout" : potentialPayout ? `Potential ${formatTokenAmount(potentialPayout).replace(" TOKEN", ` ${currency}`)}` : "Prediction receipt",
-  };
+function formatPackageName(value) {
+  if (!value) return "Custom top-up";
+  return String(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function Deposit() {
   const [walletState, setWalletState] = useState({ balance: null, isLoading: true, error: "" });
   const [packagesState, setPackagesState] = useState({ packages: [], isLoading: true, error: "" });
   const [historyState, setHistoryState] = useState({ orders: [], isLoading: true, error: "" });
-  const [activityState, setActivityState] = useState({ transactions: [], predictions: [], isLoading: true, error: "" });
+  const [activityState, setActivityState] = useState({ transactions: [], isLoading: true, error: "" });
+  const [ledgerFilter, setLedgerFilter] = useState("all");
   const [depositState, setDepositState] = useState({
     mode: "package",
     packageId: "",
@@ -138,12 +103,11 @@ function Deposit() {
     setActivityState((current) => ({ ...current, isLoading: true, error: "" }));
 
     try {
-      const [walletPayload, packagesPayload, historyPayload, transactionsPayload, predictionsPayload] = await Promise.all([
+      const [walletPayload, packagesPayload, historyPayload, transactionsPayload] = await Promise.all([
         walletApi.getMyWallet(),
         depositApi.listPackages(),
-        depositApi.getHistory({ page: 1, limit: 8 }),
-        walletApi.getTransactions({ page: 1, limit: 12 }),
-        betApi.getMyBets({ page: 1, limit: 12 }),
+        depositApi.getHistory({ page: 1, limit: 20 }),
+        walletApi.getTransactions({ type: "redeem", page: 1, limit: 20 }),
       ]);
       const packages = normalizePackages(packagesPayload);
 
@@ -152,7 +116,6 @@ function Deposit() {
       setHistoryState({ orders: normalizeOrders(historyPayload), isLoading: false, error: "" });
       setActivityState({
         transactions: normalizeTransactions(transactionsPayload),
-        predictions: normalizePredictions(predictionsPayload).map(toPredictionHistoryRow),
         isLoading: false,
         error: "",
       });
@@ -175,12 +138,11 @@ function Deposit() {
 
     async function load() {
       try {
-        const [walletPayload, packagesPayload, historyPayload, transactionsPayload, predictionsPayload] = await Promise.all([
+        const [walletPayload, packagesPayload, historyPayload, transactionsPayload] = await Promise.all([
           walletApi.getMyWallet(),
           depositApi.listPackages(),
-          depositApi.getHistory({ page: 1, limit: 8 }),
-          walletApi.getTransactions({ page: 1, limit: 12 }),
-          betApi.getMyBets({ page: 1, limit: 12 }),
+          depositApi.getHistory({ page: 1, limit: 20 }),
+          walletApi.getTransactions({ type: "redeem", page: 1, limit: 20 }),
         ]);
         if (cancelled) return;
 
@@ -190,7 +152,6 @@ function Deposit() {
         setHistoryState({ orders: normalizeOrders(historyPayload), isLoading: false, error: "" });
         setActivityState({
           transactions: normalizeTransactions(transactionsPayload),
-          predictions: normalizePredictions(predictionsPayload).map(toPredictionHistoryRow),
           isLoading: false,
           error: "",
         });
@@ -302,59 +263,66 @@ function Deposit() {
       id: order._id || order.order_id,
       kind: "deposit",
       date: getOrderDate(order),
-      title: order.package_id || "Custom deposit",
-      detail: order.note || "Top-up order",
-      amountLabel: formatTokenAmount(order.total_token),
+      title: `${paymentMethodMeta[order.payment_method]?.label || order.payment_method || "Wallet"} top-up`,
+      detail: order.note || `${formatPackageName(order.package_id)} · ${formatVnd(order.total_vnd)}`,
+      amountLabel: String(order.status || "").toLowerCase() === "success"
+        ? `+${formatTokenAmount(order.total_token)}`
+        : formatTokenAmount(order.total_token),
       status: order.status || "pending",
-      tone: normalizeActivityTone(order.status),
-      meta: "Top-up order",
+      tone: normalizeActivityTone(order.status, "deposit"),
+      meta: "Deposit",
     }));
 
-    const transactionRows = activityState.transactions.map((transaction) => ({
-      id: transaction._id || transaction.reference_id || `${transaction.transaction_type}-${transaction.created_at}`,
-      kind: "wallet",
-      date: transaction.created_at,
-      title: transactionLabel(transaction.transaction_type),
-      detail: transaction.note || "Wallet movement",
-      amountLabel: formatTransactionAmount(transaction),
-      status: transaction.status || "completed",
-      tone: normalizeActivityTone(
-        transaction.status,
-        transaction.direction === "credit" ? "won" : transaction.direction === "debit" ? "lost" : "pending",
-        transaction.transaction_type
-      ),
-      meta: transaction.direction === "credit" ? "Credit" : "Debit",
-    }));
+    const redemptionRows = activityState.transactions
+      .filter((transaction) => transaction.transaction_type === "redeem")
+      .map((transaction) => ({
+        id: transaction._id || transaction.reference_id || `${transaction.transaction_type}-${transaction.created_at}`,
+        kind: "redemption",
+        date: transaction.created_at,
+        title: transactionLabel(transaction.transaction_type),
+        detail: transaction.note || "Prize exchange",
+        amountLabel: formatTransactionAmount(transaction),
+        status: transaction.status || "completed",
+        tone: normalizeActivityTone(transaction.status, transaction.transaction_type),
+        meta: transaction.direction === "credit" ? "Refund" : "Prize exchange",
+      }));
 
-    // A settled winning prediction is already represented by the wallet
-    // `bet_win` transaction above. Keep only non-winning prediction rows here
-    // so the same payout is not rendered twice in the activity feed.
-    const predictionRows = activityState.predictions.filter((prediction) => prediction.status !== "won");
-
-    return [...depositRows, ...transactionRows, ...predictionRows]
+    return [...depositRows, ...redemptionRows]
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-      .slice(0, 18);
-  }, [activityState.predictions, activityState.transactions, historyState.orders]);
+      .slice(0, 24);
+  }, [activityState.transactions, historyState.orders]);
+
+  const visibleActivityRows = useMemo(
+    () => ledgerFilter === "all" ? activityRows : activityRows.filter((row) => row.kind === ledgerFilter),
+    [activityRows, ledgerFilter]
+  );
+
+  const ledgerCounts = useMemo(() => ({
+    all: activityRows.length,
+    deposit: activityRows.filter((row) => row.kind === "deposit").length,
+    redemption: activityRows.filter((row) => row.kind === "redemption").length,
+  }), [activityRows]);
 
   return (
     <section className="spectator-page deposit-page">
       <Link className="tournament-detail-back" to="/spectator/profile"><ArrowLeft size={16} /> Back to profile</Link>
 
       <header className="deposit-hero">
-        <div>
-          <p className="spectator-eyebrow">Wallet command</p>
-          <h1 className="spectator-title">Deposit</h1>
-          <p className="spectator-copy">Top up TOKEN, review wallet movement, and track prediction receipts from one account ledger.</p>
+        <div className="deposit-hero__copy">
+          <p className="spectator-eyebrow">Fund your wallet</p>
+          <h1 className="spectator-title">Add TOKEN.<br />Stay race-ready.</h1>
+          <p className="spectator-copy">Choose a token package or enter a custom amount, then pay securely through your preferred gateway.</p>
           <div className="deposit-hero__signals" aria-label="Deposit support summary">
             <span><ShieldCheck size={15} aria-hidden="true" /> Secure gateway return</span>
-            <span><CreditCard size={15} aria-hidden="true" /> VNPAY and MoMo only</span>
-            <span><Target size={15} aria-hidden="true" /> Prediction history included</span>
+            <span><CreditCard size={15} aria-hidden="true" /> VNPAY or MoMo</span>
+            <span><Gift size={15} aria-hidden="true" /> Deposit and prize logs</span>
           </div>
         </div>
         <aside className="deposit-balance-card">
           <span><WalletCards size={16} /> Current balance</span>
           <strong>{walletState.isLoading ? "Loading..." : formatTokenAmount(walletState.balance)}</strong>
-          <small>{walletState.error || "Wallet updates after payment and prediction settlement."}</small>
+          <small>{walletState.error || "Updated after successful deposits and prize exchanges."}</small>
+          <Link to="/spectator/rewards">Browse prize rewards</Link>
         </aside>
       </header>
 
@@ -362,16 +330,16 @@ function Deposit() {
         <form className="deposit-form spectator-card" onSubmit={handleCreateIntent}>
           <div className="spectator-card__header">
             <div>
-              <p className="spectator-eyebrow">Top-up order</p>
-              <h2>Create top-up order</h2>
+              <p className="spectator-eyebrow">Top-up</p>
+              <h2>Choose how much to add</h2>
             </div>
-            <span className="spectator-badge">1 TOKEN = 1,000 VND</span>
+            <span className="spectator-badge">Live rate · 1:1,000</span>
           </div>
 
           {CUSTOM_DEPOSIT_ENABLED && (
             <div className="deposit-mode-toggle" role="group" aria-label="Deposit mode">
-              <button className={depositState.mode === "package" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "package", error: "", message: "" }))}>Packages</button>
-              <button className={depositState.mode === "custom" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "custom", error: "", message: "" }))}>Custom</button>
+              <button className={depositState.mode === "package" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "package", error: "", message: "" }))}>Token packages</button>
+              <button className={depositState.mode === "custom" ? "is-active" : ""} type="button" onClick={() => setDepositState((current) => ({ ...current, mode: "custom", error: "", message: "" }))}>Custom amount</button>
             </div>
           )}
 
@@ -439,9 +407,9 @@ function Deposit() {
           </div>
 
           <div className="deposit-preview">
-            <span>Order preview</span>
-            <strong>{activePreview ? `${formatTokenAmount(activePreview.total_token)} / ${formatVnd(activePreview.total_vnd)}` : "Select a package"}</strong>
-            {activePreview?.bonus_token > 0 && <small>Bonus +{activePreview.bonus_token} TOKEN</small>}
+            <div><span>You receive</span><strong>{activePreview ? formatTokenAmount(activePreview.total_token) : "-- TOKEN"}</strong></div>
+            <div><span>You pay</span><strong>{activePreview ? formatVnd(activePreview.total_vnd) : "-- VND"}</strong></div>
+            {activePreview?.bonus_token > 0 && <small>Includes +{activePreview.bonus_token} bonus TOKEN</small>}
           </div>
 
           {(depositState.message || depositState.error) && (
@@ -458,8 +426,8 @@ function Deposit() {
         <article className="spectator-card deposit-history-card">
           <div className="spectator-card__header">
             <div>
-              <p className="spectator-eyebrow">Account ledger</p>
-              <h2>Recent activity</h2>
+              <p className="spectator-eyebrow">Focused wallet ledger</p>
+              <h2>Deposits & prize exchanges</h2>
             </div>
             <button className="spectator-badge profile-refresh-button" disabled={historyState.isLoading || activityState.isLoading} type="button" onClick={loadDepositData}>
               <RefreshCw size={13} /> Refresh
@@ -467,24 +435,42 @@ function Deposit() {
           </div>
 
           <div className="deposit-activity-summary" aria-label="Deposit account summary">
-            <div><Package size={16} /><span>Top-ups</span><strong>{historyState.orders.length}</strong></div>
-            <div><History size={16} /><span>Ledger rows</span><strong>{activityState.transactions.length}</strong></div>
-            <div><Target size={16} /><span>Predictions</span><strong>{activityState.predictions.length}</strong></div>
-            <div><WalletCards size={16} /><span>Balance</span><strong>{walletState.isLoading ? "--" : formatTokenAmount(walletState.balance)}</strong></div>
+            <div><Package size={16} /><span>Deposit logs</span><strong>{ledgerCounts.deposit}</strong></div>
+            <div><Gift size={16} /><span>Prize exchanges</span><strong>{ledgerCounts.redemption}</strong></div>
+            <div><WalletCards size={16} /><span>Current balance</span><strong>{walletState.isLoading ? "--" : formatTokenAmount(walletState.balance)}</strong></div>
           </div>
 
-          <div className="profile-history deposit-history-list deposit-activity-list">
-            {(historyState.isLoading || activityState.isLoading) && <div className="deposit-history-row"><span>Loading</span><strong>Account activity</strong><small>Fetching wallet and prediction records</small><b>--</b></div>}
+          <div className="deposit-ledger-filters" role="tablist" aria-label="Filter wallet ledger">
+            {[
+              { id: "all", label: "All logs" },
+              { id: "deposit", label: "Deposits" },
+              { id: "redemption", label: "Prize exchanges" },
+            ].map((item) => (
+              <button
+                aria-selected={ledgerFilter === item.id}
+                className={ledgerFilter === item.id ? "is-active" : ""}
+                key={item.id}
+                role="tab"
+                type="button"
+                onClick={() => setLedgerFilter(item.id)}
+              >
+                {item.label} <b>{ledgerCounts[item.id]}</b>
+              </button>
+            ))}
+          </div>
+
+          <div className="deposit-history-list deposit-activity-list">
+            {(historyState.isLoading || activityState.isLoading) && <div className="deposit-history-row"><span>Loading</span><strong>Wallet ledger</strong><small>Fetching deposits and prize exchanges</small><b>--</b></div>}
             {!historyState.isLoading && (historyState.error || activityState.error) && <div className="deposit-history-row"><span>Error</span><strong>Some activity is unavailable</strong><small>{historyState.error || activityState.error}</small><b>--</b></div>}
-            {!historyState.isLoading && !activityState.isLoading && !historyState.error && !activityState.error && !activityRows.length && <div className="deposit-history-row"><span>Empty</span><strong>No account activity yet</strong><small>Top-ups, withdrawals, predictions, and payouts will appear here.</small><b>0 TOKEN</b></div>}
-            {!historyState.isLoading && !activityState.isLoading && activityRows.map((row) => (
+            {!historyState.isLoading && !activityState.isLoading && !historyState.error && !activityState.error && !visibleActivityRows.length && <div className="deposit-history-row"><span>Empty</span><strong>No matching wallet logs</strong><small>Successful top-ups and prize exchanges will appear here.</small><b>0 TOKEN</b></div>}
+            {!historyState.isLoading && !activityState.isLoading && visibleActivityRows.map((row) => (
               <div className={`deposit-history-row deposit-activity-row deposit-activity-row--${row.tone}`} key={`${row.kind}-${row.id}`}>
                 <span className="deposit-history-row__date">
                   <span>{formatTransactionDate(row.date)}</span>
                   <em className={`deposit-status-tag deposit-status-tag--${row.tone}`}>{formatActivityStatus(row.status)}</em>
                 </span>
                 <span className="deposit-history-row__main">
-                  <strong>{row.title} {row.tone === "success" && <CheckCircle2 size={14} aria-hidden="true" />}</strong>
+                  <strong>{row.kind === "deposit" ? <Landmark size={14} aria-hidden="true" /> : <Gift size={14} aria-hidden="true" />}{row.title} {row.tone === "success" && <CheckCircle2 size={14} aria-hidden="true" />}</strong>
                   <small>{row.detail}</small>
                 </span>
                 <b className={row.tone === "success" ? "profile-history__won deposit-history-row__amount" : "deposit-history-row__amount"}>{row.amountLabel}</b>

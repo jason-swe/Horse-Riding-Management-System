@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, ArrowRight, CalendarClock, CircleDollarSign, Flag, MapPin, RefreshCw, Timer, UsersRound, WalletCards } from "lucide-react";
+import { Activity, ArrowRight, CalendarClock, CircleDollarSign, Flag, History, MapPin, RefreshCw, Timer, UsersRound, WalletCards } from "lucide-react";
 import { walletApi } from "../../api/walletApi.js";
 import LoadingSkeleton from "../../components/LoadingSkeleton.jsx";
 import { BETTING_STATUS, RACE_STATUS, bettingStatusMeta, raceStatusMeta } from "./race/raceStatus.js";
@@ -120,7 +120,12 @@ export default function Predictions() {
     <section className="spectator-page race-market-board">
       <header className="race-market-board__header">
         <div><p className="spectator-eyebrow">Race markets</p><h1>Choose a race, not a tournament.</h1><p>Open markets come first. Upcoming races stay visible without implying that prediction is available.</p></div>
-        <aside className="race-market-board__wallet"><span><WalletCards size={15} /> Wallet balance</span><strong>{walletState.isLoading ? "Loading..." : formatWalletBalance(walletState.balance)}</strong><small>{walletState.error || "Live wallet balance"}</small></aside>
+        <aside className="race-market-board__wallet">
+          <Link className="race-market-board__history-link" to="/spectator/predictions/history"><History size={15} /> Bet history <ArrowRight size={14} /></Link>
+          <span><WalletCards size={15} /> Wallet balance</span>
+          <strong>{walletState.isLoading ? "Loading..." : formatWalletBalance(walletState.balance)}</strong>
+          <small>{walletState.error || "Live wallet balance"}</small>
+        </aside>
       </header>
 
       <div className="race-market-board__summary">

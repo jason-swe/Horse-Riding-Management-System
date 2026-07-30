@@ -87,6 +87,12 @@ function JockeyInvitations() {
   const acceptedCount = invitations.filter((invite) => ["accepted", "standby_confirmed"].includes(invite.rawStatus)).length;
   const reviewCount = invitations.filter((invite) => ["terms_pending_confirmation", "standby_terms_pending_confirmation", "contract_uploaded"].includes(invite.rawStatus)).length;
   const featuredInvite = invitations.find((invite) => invite.rawStatus === "meeting_invited") ?? invitations[0];
+  const filterCounts = useMemo(() => ["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].reduce((counts, item) => {
+    counts[item] = item === "All"
+      ? invitations.length
+      : invitations.filter((invite) => getStatusGroup(invite.rawStatus) === item).length;
+    return counts;
+  }, {}), [invitations]);
 
   const updateInvitation = async (id, action) => {
     setActionError("");
@@ -182,11 +188,17 @@ function JockeyInvitations() {
         <div className="jockey-invitations-hero__copy">
           <p className="jockey-kicker">Invitation room</p>
           <h1>Accept only the rides that fit race day.</h1>
-          <p>Review owner requests, horse context, venue, and race timing before locking your availability.</p>
+          <p>Review the horse, meeting details, and race timing before you commit your availability.</p>
+          <div className="jockey-invitations-hero__signals" aria-label="Invitation workflow">
+            <span><b>01</b> Review the brief</span>
+            <span><b>02</b> Meet the owner</span>
+            <span><b>03</b> Lock the ride</span>
+          </div>
         </div>
         <aside className="jockey-invitations-hero__panel">
           {featuredInvite ? (
             <>
+              <span className="jockey-invitations-hero__panel-label">Next decision</span>
               <span className={`jockey-badge ${statusClass(featuredInvite.status)}`}>{featuredInvite.status}</span>
               <strong>{featuredInvite.horse}</strong>
               <p>{featuredInvite.assignmentTypeLabel} / {featuredInvite.race} / {featuredInvite.date}</p>
@@ -222,14 +234,25 @@ function JockeyInvitations() {
 
       <section className="jockey-invitation-board">
         <div className="jockey-invitation-board__header">
-          <div>
-            <span className="jockey-kicker">Decision board</span>
-            <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
+          <div className="jockey-invitation-board__heading">
+            <div>
+              <span className="jockey-kicker">Decision board</span>
+              <h2>{filter === "All" ? "All invitations" : `${filter} invitations`}</h2>
+            </div>
+            <span className="jockey-invitation-board__result-count">
+              <i aria-hidden="true" /> {visibleInvitations.length} {visibleInvitations.length === 1 ? "invitation" : "invitations"} in view
+            </span>
           </div>
-          <div className="jockey-segmented">
-              {["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
-              <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
-                {item}
+          <div className="jockey-segmented" aria-label="Filter invitations by stage" role="group">
+            {["All", "Appointment", "Terms", "Contract", "Accepted", "Closed"].map((item) => (
+              <button
+                aria-pressed={filter === item}
+                className={filter === item ? "jockey-segmented__active" : ""}
+                key={item}
+                onClick={() => setFilter(item)}
+                type="button"
+              >
+                <span>{item}</span><small>{filterCounts[item]}</small>
               </button>
             ))}
           </div>
@@ -237,7 +260,7 @@ function JockeyInvitations() {
 
         <div className="jockey-invitation-list">
           {visibleInvitations.map((invite, index) => (
-            <article className="jockey-invitation-card" key={invite.id}>
+            <article className="jockey-invitation-card" data-state={getStatusGroup(invite.rawStatus).toLowerCase()} key={invite.id}>
               <div className="jockey-invitation-card__media">
                 <img src={horseJockeyImages[index % horseJockeyImages.length]} alt={`${invite.horse} invitation pairing`} />
                 <span className={`jockey-badge ${statusClass(invite.status)}`}>{invite.status}</span>
@@ -249,15 +272,21 @@ function JockeyInvitations() {
                     <span className="jockey-kicker">{invite.id}</span>
                     <h3>{invite.horse}</h3>
                   </div>
-                  <strong>{invite.owner}</strong>
+                  <div className="jockey-invitation-card__owner">
+                    <span>Owner</span>
+                    <strong>{invite.owner}</strong>
+                  </div>
                 </div>
 
                 <p>{invite.note}</p>
                 <span className="jockey-badge">{invite.assignmentTypeLabel}</span>
 
                 <div className="jockey-invitation-stage" role="status">
-                  <ShieldCheck size={17} />
-                  <span>{getStageCopy(invite.rawStatus, invite.isBackup)}</span>
+                  <span className="jockey-invitation-stage__icon"><ShieldCheck size={17} /></span>
+                  <div>
+                    <span className="jockey-invitation-stage__label">Next step</span>
+                    <p>{getStageCopy(invite.rawStatus, invite.isBackup)}</p>
+                  </div>
                 </div>
 
                 <div className="jockey-invitation-meta">
