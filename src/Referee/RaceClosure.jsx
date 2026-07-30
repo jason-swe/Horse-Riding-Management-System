@@ -127,7 +127,9 @@ function RaceClosure() {
       if (action === "finalize") await refereeApi.finalizeRaceResults(raceId);
       else await refereeApi.applyRaceResultPenalties(raceId);
       await Promise.all([reload(), loadWorkflow()]);
-      addMsg(action === "finalize" ? "Draft results generated." : "Confirmed penalties applied.");
+      addMsg(action === "finalize"
+        ? "Penalty-adjusted final summary sent to Admin."
+        : "Confirmed penalties applied. Review the adjusted rankings before sending them to Admin.");
     } catch (apiError) {
       addMsg(apiError.message || "Unable to update race results.");
     } finally {
@@ -221,7 +223,12 @@ function RaceClosure() {
   }
 
   const hasResults = race.result.length > 0;
-  const lockedResults = [RESULT_STATUSES.CONFIRMED, RESULT_STATUSES.PUBLISHED].includes(race.resultStatus);
+  const penaltiesApplied = readiness?.penalties_applied === true ||
+    (hasResults && race.result.every((result) => result.penaltyApplied));
+  const submittedToAdmin = readiness?.submitted_to_admin === true ||
+    (hasResults && race.result.every((result) => result.submittedToAdmin));
+  const lockedResults = submittedToAdmin ||
+    [RESULT_STATUSES.CONFIRMED, RESULT_STATUSES.PUBLISHED].includes(race.resultStatus);
   const correctionResult = race.result.find((result) => result.correctionRequested);
   const hasCorrectionRequest = Boolean(correctionResult);
   const isSubmitted = (race.report?.status || "draft") === "submitted";
@@ -234,6 +241,8 @@ function RaceClosure() {
     ["Post-race checks complete", readiness.missing_post_check_horse_ids?.length === 0],
     ["No horse under investigation", readiness.under_investigation_horse_ids?.length === 0],
     ["No unresolved violations", readiness.unresolved_violation_ids?.length === 0],
+    ["Confirmed penalties applied", readiness.penalties_applied],
+    ["Final summary sent to Admin", readiness.submitted_to_admin],
   ] : [];
   const sortedResults = [...race.result].sort((a, b) => (a.finalPosition ?? Number.MAX_SAFE_INTEGER) - (b.finalPosition ?? Number.MAX_SAFE_INTEGER));
   const sortedDraftResults = [...race.result].sort((a, b) => (a.rawPosition ?? a.position ?? Number.MAX_SAFE_INTEGER) - (b.rawPosition ?? b.position ?? Number.MAX_SAFE_INTEGER));
@@ -242,7 +251,7 @@ function RaceClosure() {
     <RefereeLayout
       title="Race Closure"
       eyebrow={`Official closure | ${race.name}`}
-      description="Finalize engine results, apply penalties, and submit the official referee report in one race-day workspace."
+      description="Apply confirmed penalties, review the adjusted rankings, then send the final summary to Admin."
       actions={<Link className="admin-header__button admin-header__button--ghost" to={`/referee/races/${raceId}`}>Race Detail</Link>}
     >
       {(error || workflowError) && <section className="admin-live-state admin-live-state--warning">{error || workflowError}</section>}
@@ -268,7 +277,7 @@ function RaceClosure() {
           {isWorkflowLoading && <LoadingSkeleton ariaLabel="Loading result readiness" rows={3} variant="cards" />}
           {!isWorkflowLoading && (
             <section className="admin-panel">
-              <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Finalization gate</p><h2>{readiness?.ready ? "Ready to finalize" : "Readiness requirements"}</h2></div><span className={`referee-status-badge referee-status-badge--${readiness?.ready ? "green" : "amber"}`}>{readiness?.ready ? "Ready" : "Blocked"}</span></div>
+              <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Finalization gate</p><h2>{submittedToAdmin ? "Sent to Admin" : penaltiesApplied ? "Review final summary" : readiness?.ready ? "Apply confirmed penalties" : "Readiness requirements"}</h2></div><span className={`referee-status-badge referee-status-badge--${submittedToAdmin ? "blue" : readiness?.ready ? "green" : "amber"}`}>{submittedToAdmin ? "Pending Admin" : readiness?.ready ? "Ready" : "Blocked"}</span></div>
               <div className="referee-checklist">{readinessChecks.map(([label, passed]) => <div className="referee-check-item" key={label}><span className={`referee-insp-badge referee-insp-badge--${passed ? "done" : "pending"}`}>{passed ? "Ready" : "Required"}</span><span>{label}</span></div>)}</div>
               {readiness?.missing_report && (
                 <section className="admin-live-state admin-live-state--warning">
@@ -277,8 +286,8 @@ function RaceClosure() {
                 </section>
               )}
               <div className="admin-tool-card__footer">
-                <button className="admin-header__button" type="button" disabled={!readiness?.ready || hasResults || Boolean(activeAction)} onClick={() => runAction("finalize")}>{activeAction === "finalize" ? "Finalizing..." : hasResults ? "Draft Already Generated" : "Finalize and Generate Draft"}</button>
-                <button className="admin-header__button admin-header__button--ghost" type="button" disabled={!hasResults || lockedResults || Boolean(activeAction)} onClick={() => runAction("penalties")}>{activeAction === "penalties" ? "Applying..." : "Apply Confirmed Penalties"}</button>
+                <button className={`admin-header__button${penaltiesApplied ? " admin-header__button--ghost" : ""}`} type="button" disabled={!readiness?.ready_to_apply_penalties || penaltiesApplied || lockedResults || Boolean(activeAction)} onClick={() => runAction("penalties")}>{activeAction === "penalties" ? "Applying..." : penaltiesApplied ? "Penalties Applied" : "Apply Confirmed Penalties"}</button>
+                <button className={`admin-header__button${penaltiesApplied && !submittedToAdmin ? "" : " admin-header__button--ghost"}`} type="button" disabled={!readiness?.ready_to_finalize || submittedToAdmin || lockedResults || Boolean(activeAction)} onClick={() => runAction("finalize")}>{activeAction === "finalize" ? "Sending..." : submittedToAdmin ? "Sent to Admin" : "Finalize and Send to Admin"}</button>
               </div>
             </section>
           )}
@@ -290,13 +299,13 @@ function RaceClosure() {
           )}
 
           <section className="admin-panel"><div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Engine result</p><h2>Raw and penalty-adjusted rankings</h2></div>{race.resultStatus && <span className={`referee-status-badge referee-status-badge--${race.resultStatus === RESULT_STATUSES.PUBLISHED ? "green" : race.resultStatus === RESULT_STATUSES.CONFIRMED ? "blue" : "gray"}`}>{formatStatus(race.resultStatus)}</span>}</div>
-            {!hasResults ? <p>No authoritative draft exists yet.</p> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Final</th><th>Horse / Jockey</th><th>Raw position</th><th>Raw time</th><th>Final time</th><th>Final score</th><th>Violations</th></tr></thead><tbody>{sortedResults.map((result) => <tr key={result.id}><td><span className="referee-position-badge">{result.finalPosition ? `#${result.finalPosition}` : "DQ"}</span></td><td><strong>{result.horseName}</strong><br />{result.jockeyName}</td><td>{formatNumber(result.rawPosition, result.finalPosition !== result.rawPosition ? ` -> ${result.finalPosition ?? "DQ"}` : "")}</td><td>{formatNumber(result.rawFinishTime, "s")}</td><td>{formatNumber(result.finalFinishTime, "s")}</td><td>{formatNumber(result.finalScore)}</td><td>{result.appliedViolationIds.length}</td></tr>)}</tbody></table></div>}
+            {!hasResults ? <p>Apply confirmed penalties to generate the raw draft and adjusted rankings.</p> : <div className="admin-data-table__wrap"><table className="admin-data-table"><thead><tr><th>Final</th><th>Horse / Jockey</th><th>Raw position</th><th>Raw time</th><th>Final time</th><th>Final score</th><th>Violations</th></tr></thead><tbody>{sortedResults.map((result) => <tr key={result.id}><td><span className="referee-position-badge">{result.finalPosition ? `#${result.finalPosition}` : "DQ"}</span></td><td><strong>{result.horseName}</strong><br />{result.jockeyName}</td><td>{formatNumber(result.rawPosition, result.finalPosition !== result.rawPosition ? ` -> ${result.finalPosition ?? "DQ"}` : "")}</td><td>{formatNumber(result.rawFinishTime, "s")}</td><td>{formatNumber(result.finalFinishTime, "s")}</td><td>{formatNumber(result.finalScore)}</td><td>{result.appliedViolationIds.length}</td></tr>)}</tbody></table></div>}
           </section>
 
           {hasResults && (
             <section className="admin-panel">
               <div className="admin-panel__header"><div><p className="admin-panel__eyebrow">Referee correction</p><h2>Draft result editor</h2></div><span className={`referee-status-badge referee-status-badge--${lockedResults ? "gray" : "amber"}`}>{lockedResults ? "Locked" : "Draft editable"}</span></div>
-              {lockedResults ? <p>These results are {formatStatus(race.resultStatus)}. Admin must request correction before Referee can update draft rows.</p> : (
+              {lockedResults ? <p>{submittedToAdmin ? "This final summary is pending Admin review." : `These results are ${formatStatus(race.resultStatus)}.`} Admin must request correction before Referee can update draft rows.</p> : (
                 <div className="admin-data-table__wrap">
                   <table className="admin-data-table referee-result-editor">
                     <thead><tr><th>Horse / Jockey</th><th>Position</th><th>Finish time</th><th>Score</th><th>Note</th><th>Action</th></tr></thead>
