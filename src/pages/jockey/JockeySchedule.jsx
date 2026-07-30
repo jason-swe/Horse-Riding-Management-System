@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import {
+  ArrowUpRight,
   BadgeCheck,
   CalendarDays,
   ClipboardCheck,
   Clock3,
+  ChevronRight,
   XCircle,
   MapPin,
   Trophy,
@@ -25,20 +27,33 @@ const statusClass = (status) => {
   return "jockey-badge--amber";
 };
 
+const preferredFilterOrder = ["Accepted", "Pending", "Review", "Complete", "Rejected", "Cancelled"];
+
 function JockeySchedule() {
   const [filter, setFilter] = useState("All");
   const { error, isLoading, schedule } = useJockeyApiData();
+
+  const filterOptions = useMemo(() => {
+    const discoveredStatuses = [...new Set(schedule.map((race) => race.status))];
+    return [
+      "All",
+      ...preferredFilterOrder.filter((status) => discoveredStatuses.includes(status)),
+      ...discoveredStatuses.filter((status) => !preferredFilterOrder.includes(status)),
+    ];
+  }, [schedule]);
 
   const visibleRaces = useMemo(
     () => schedule.filter((race) => filter === "All" || race.status === filter),
     [filter, schedule]
   );
 
-  const acceptedCount = schedule.filter((race) => race.status === "Accepted").length;
+  const acceptedCount = schedule.filter((race) => ["Accepted", "Confirmed"].includes(race.status)).length;
   const completeCount = schedule.filter((race) => race.status === "Complete").length;
   const pendingCount = schedule.filter((race) => race.status === "Pending").length;
-  const rejectedCount = schedule.filter((race) => race.status === "Rejected").length;
-  const nextRace = visibleRaces[0] ?? schedule[0];
+  const reviewCount = schedule.filter((race) => race.status === "Review").length;
+  const nextRace = schedule.find((race) => ["Accepted", "Pending", "Review", "Confirmed"].includes(race.status)) ?? schedule[0];
+  const nextRaceDate = nextRace?.time?.split(", ")[0] || "Race day";
+  const nextRaceTime = nextRace?.time?.split(", ")[1] || "Time TBA";
 
   if (isLoading) {
     return <div className="jockey-schedule-page"><LoadingSkeleton ariaLabel="Loading race schedule" rows={5} variant="list" /></div>;
@@ -51,19 +66,36 @@ function JockeySchedule() {
           {error}
         </div>
       )}
-      <section className="jockey-schedule-hero">
+      <section className="jockey-schedule-hero" aria-labelledby="jockey-schedule-title">
         <img src={jockeyTrackImages[3]} alt="Race track schedule view for jockey" />
         <div className="jockey-schedule-hero__copy">
-          <p className="jockey-kicker">Race schedule</p>
-          <h1>Know every start before the gate opens.</h1>
-          <p>Track accepted rides, pending slots, venue details, and horse pairings in a personal race-day calendar.</p>
+          <div className="jockey-schedule-hero__eyebrow">
+            <p className="jockey-kicker">Jockey workspace / schedule</p>
+            <span>{schedule.length} race slots · Season 2026</span>
+          </div>
+          <h1 id="jockey-schedule-title">Your week, at a glance.</h1>
+          <p>Every ride, venue, and check-in window in one focused race-day board.</p>
+          <a className="jockey-button jockey-button--primary jockey-schedule-hero__action" href="#schedule-board">
+            <CalendarDays size={17} />
+            Open race board
+            <ArrowUpRight size={16} />
+          </a>
         </div>
         <aside className="jockey-schedule-hero__panel">
           {nextRace ? (
             <>
-              <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>
-              <strong>{nextRace.race}</strong>
-              <p>{nextRace.time} / {nextRace.venue}</p>
+              <div className="jockey-schedule-hero__panel-head">
+                <span className="jockey-kicker">Next on deck</span>
+                <span className={`jockey-badge ${statusClass(nextRace.status)}`}>{nextRace.status}</span>
+              </div>
+              <div className="jockey-schedule-hero__panel-time">
+                <strong>{nextRaceDate}</strong>
+                <span>{nextRaceTime}</span>
+              </div>
+              <div className="jockey-schedule-hero__panel-copy">
+                <strong>{nextRace.race}</strong>
+                <p><MapPin size={14} /> {nextRace.venue}</p>
+              </div>
             </>
           ) : (
             <>
@@ -77,11 +109,11 @@ function JockeySchedule() {
 
       <section className="jockey-schedule-stats" aria-label="Schedule summary">
         {[
-          { label: "All slots", value: schedule.length, note: "Personal race windows", icon: CalendarDays },
+          { label: "All slots", value: schedule.length, note: "On your board", icon: CalendarDays },
           { label: "Accepted", value: acceptedCount, note: "Locked rides", icon: BadgeCheck },
-          { label: "Complete", value: completeCount, note: "Published results", icon: Trophy },
           { label: "Pending", value: pendingCount, note: "Awaiting decision", icon: ClipboardCheck },
-          { label: "Rejected", value: rejectedCount, note: "Declined slots", icon: XCircle },
+          { label: "Review", value: reviewCount, note: "Needs a closer look", icon: XCircle },
+          { label: "Complete", value: completeCount, note: "Results published", icon: Trophy },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -95,18 +127,28 @@ function JockeySchedule() {
         })}
       </section>
 
-      <section className="jockey-schedule-board">
+      <section className="jockey-schedule-board" id="schedule-board" aria-labelledby="jockey-schedule-board-title">
         <div className="jockey-schedule-board__header">
           <div>
             <span className="jockey-kicker">Race-day board</span>
-            <h2>{filter === "All" ? "All race slots" : `${filter} race slots`}</h2>
+            <h2 id="jockey-schedule-board-title">{filter === "All" ? "Your race calendar" : `${filter} race slots`}</h2>
+            <p>Stay ahead of the gate with the details that matter before every start.</p>
           </div>
-          <div className="jockey-segmented">
-            {["All", "Accepted", "Complete", "Pending", "Rejected", "Cancelled"].map((item) => (
-              <button className={filter === item ? "jockey-segmented__active" : ""} key={item} onClick={() => setFilter(item)} type="button">
-                {item}
-              </button>
-            ))}
+          <div className="jockey-schedule-board__toolbar">
+            <span className="jockey-schedule-board__count">Showing {visibleRaces.length} of {schedule.length} slots</span>
+            <div className="jockey-segmented" aria-label="Filter race slots">
+              {filterOptions.map((item) => (
+                <button
+                  aria-pressed={filter === item}
+                  className={filter === item ? "jockey-segmented__active" : ""}
+                  key={item}
+                  onClick={() => setFilter(item)}
+                  type="button"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -114,20 +156,24 @@ function JockeySchedule() {
           {visibleRaces.map((race, index) => {
             const [date, time] = race.time.split(", ");
             return (
-              <article className="jockey-schedule-slot" key={race.id}>
+              <article className={`jockey-schedule-slot ${nextRace?.id === race.id ? "jockey-schedule-slot--next" : ""}`} key={race.id}>
                 <div className="jockey-schedule-slot__media">
                   <img src={jockeyActionImages[index % jockeyActionImages.length]} alt={`${race.race} schedule`} />
                   <span className={`jockey-badge ${statusClass(race.status)}`}>{race.status}</span>
+                  {nextRace?.id === race.id && <span className="jockey-schedule-slot__next">Next ride</span>}
                 </div>
 
                 <div className="jockey-schedule-slot__body">
-                  <div className="jockey-schedule-slot__time">
-                    <span>{date}</span>
-                    <strong>{time}</strong>
+                  <div className="jockey-schedule-slot__topline">
+                    <div className="jockey-schedule-slot__time">
+                      <span>{date}</span>
+                      <strong>{time}</strong>
+                    </div>
+                    <span className="jockey-schedule-slot__round">{race.id} · {race.round}</span>
                   </div>
 
                   <div className="jockey-schedule-slot__race">
-                    <span className="jockey-kicker">{race.id} / {race.round}</span>
+                    <span className="jockey-kicker">Race assignment</span>
                     <h3>{race.race}</h3>
                     <small><MapPin size={13} /> {race.venue}</small>
                   </div>
@@ -138,8 +184,8 @@ function JockeySchedule() {
                   </div>
 
                   <div className="jockey-schedule-slot__footer">
-                    <small><Clock3 size={13} /> Rider check-in opens 45 minutes before start.</small>
-                    <Trophy size={18} />
+                    <small><Clock3 size={13} /> Check-in opens 45 minutes before start.</small>
+                    <span className="jockey-schedule-slot__footer-mark"><Trophy size={16} /> {nextRace?.id === race.id ? "Prepare for this ride" : "Race slot"}<ChevronRight size={15} /></span>
                   </div>
                 </div>
               </article>

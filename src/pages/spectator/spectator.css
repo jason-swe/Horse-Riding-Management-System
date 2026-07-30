@@ -6965,15 +6965,15 @@
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
   gap: clamp(18px, 3vw, 34px);
   align-items: stretch;
-  min-height: 320px;
+  min-height: 290px;
   padding: clamp(24px, 4vw, 46px);
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.26);
-  border-radius: 8px;
+  border-radius: 12px;
   background:
-    linear-gradient(125deg, rgba(var(--racing-contrast-rgb), 0.13), rgba(var(--racing-contrast-rgb), 0.045) 48%, rgba(var(--racing-accent-rgb), 0.11)),
+    linear-gradient(125deg, rgba(var(--racing-contrast-rgb), 0.14), rgba(var(--racing-contrast-rgb), 0.035) 52%, rgba(var(--racing-accent-rgb), 0.12)),
     rgba(29, 48, 36, 0.82);
   box-shadow: 0 24px 70px rgba(4, 16, 10, 0.18);
 }
@@ -6994,8 +6994,21 @@
 }
 
 .deposit-hero .spectator-title {
-  max-width: 740px;
+  max-width: 660px;
   margin-bottom: 12px;
+  font-size: clamp(2.7rem, 6vw, 5.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+}
+
+.deposit-hero__copy {
+  display: grid;
+  align-content: center;
+}
+
+.deposit-hero__copy .spectator-copy {
+  max-width: 58ch;
+  line-height: 1.62;
 }
 
 .deposit-hero__signals {
@@ -7020,16 +7033,28 @@
 }
 
 .deposit-balance-card {
+  position: relative;
+  overflow: hidden;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   gap: 10px;
+  min-width: 0;
   min-height: 180px;
   padding: 22px;
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.26);
-  border-radius: 8px;
+  border-radius: 10px;
   background:
     linear-gradient(135deg, rgba(var(--racing-accent-rgb), 0.12), rgba(var(--racing-contrast-rgb), 0.06)),
     rgba(16, 34, 24, 0.52);
+}
+
+.deposit-balance-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--racing-accent-soft), rgba(var(--racing-accent-rgb), 0.18));
 }
 
 .deposit-balance-card span {
@@ -7041,14 +7066,36 @@
 }
 
 .deposit-balance-card strong {
+  min-width: 0;
   color: var(--racing-accent-soft);
   font-family: "Sora", sans-serif;
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(1.45rem, 1.8vw, 1.65rem);
   line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .deposit-balance-card small {
   color: var(--spectator-text-soft);
+  line-height: 1.45;
+}
+
+.deposit-balance-card > a {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 5px;
+  border-bottom: 1px solid rgba(var(--racing-accent-rgb), 0.42);
+  color: var(--racing-accent-soft);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.deposit-balance-card > a:hover {
+  border-color: var(--spectator-text-strong);
+  color: var(--spectator-text-strong);
 }
 
 .deposit-layout {
@@ -7059,7 +7106,7 @@
 }
 
 .deposit-layout--wide {
-  grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
+  grid-template-columns: minmax(430px, 0.95fr) minmax(0, 1.2fr);
 }
 
 .deposit-form {
@@ -7160,16 +7207,17 @@
 
 .deposit-package-grid {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  max-height: 390px;
-  overflow: auto;
+  max-height: 420px;
+  overflow-y: auto;
   padding: 2px 3px 2px 0;
 }
 
 .deposit-package {
   display: grid;
   gap: 7px;
-  min-height: 98px;
+  min-height: 112px;
   padding: 14px 16px;
   border: 2px solid rgba(var(--racing-contrast-rgb), 0.2);
   border-radius: 8px;
@@ -7278,31 +7326,46 @@
 
 .deposit-preview {
   display: grid;
-  grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   gap: 12px;
-  min-height: 68px;
-  padding: 13px 16px;
+  min-height: 78px;
+  padding: 12px;
   margin-top: 2px;
   border: 1px solid rgba(var(--racing-accent-rgb), 0.24);
   border-radius: 8px;
   background: rgba(var(--racing-accent-rgb), 0.08);
 }
 
+.deposit-preview > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+  border-radius: 6px;
+  background: rgba(var(--racing-contrast-rgb), 0.055);
+}
+
 .deposit-preview span {
   color: var(--spectator-text-soft);
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .deposit-preview strong {
   color: var(--racing-accent-soft);
   font-family: "Sora", sans-serif;
-  text-align: right;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .deposit-preview small {
   grid-column: 1 / -1;
-  text-align: right;
+  padding-inline: 4px;
+  text-align: left;
   font-weight: 800;
 }
 
@@ -7331,6 +7394,7 @@
 }
 
 .deposit-history-card {
+  min-width: 0;
   padding: clamp(18px, 2vw, 24px);
 }
 
@@ -7353,7 +7417,7 @@
 
 .deposit-activity-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
   margin-bottom: 12px;
 }
@@ -7389,6 +7453,60 @@
   white-space: nowrap;
 }
 
+.deposit-ledger-filters {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  margin-bottom: 13px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+}
+
+.deposit-ledger-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 6px;
+  color: var(--spectator-text-soft);
+  background: rgba(var(--racing-contrast-rgb), 0.045);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 120ms ease;
+}
+
+.deposit-ledger-filters button:hover {
+  border-color: rgba(var(--racing-accent-rgb), 0.5);
+  color: var(--spectator-text-strong);
+}
+
+.deposit-ledger-filters button:active {
+  transform: translateY(1px);
+}
+
+.deposit-ledger-filters button.is-active {
+  border-color: var(--racing-accent-soft);
+  color: var(--racing-green);
+  background: var(--racing-accent-soft);
+}
+
+.deposit-ledger-filters b {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 4px;
+  background: rgba(29, 48, 36, 0.12);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .deposit-history-row {
   position: relative;
   overflow: hidden;
@@ -7398,7 +7516,7 @@
   align-items: center;
   min-height: 76px;
   padding: 14px 16px 14px 18px;
-  border: 3px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(var(--racing-contrast-rgb), 0.075), rgba(var(--racing-contrast-rgb), 0.045)),
@@ -7467,6 +7585,12 @@
   color: var(--racing-accent-soft);
 }
 
+.deposit-status-tag--redeem {
+  border-color: rgba(var(--racing-accent-rgb), 0.34);
+  background: rgba(var(--racing-accent-rgb), 0.09);
+  color: var(--racing-accent-soft);
+}
+
 .deposit-history-row__main {
   display: grid;
   gap: 5px;
@@ -7486,6 +7610,18 @@
   overflow: hidden;
   color: var(--spectator-text-soft);
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deposit-history-row > strong {
+  color: var(--spectator-text-strong);
+}
+
+.deposit-history-row > small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--spectator-text-soft);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -7515,27 +7651,34 @@
 
 .deposit-activity-row--success,
 .deposit-activity-row--won {
-  border-color: rgb(var(--racing-success-rgb));
+  border-color: rgba(var(--racing-success-rgb), 0.36);
   background:
-    linear-gradient(135deg, rgba(var(--racing-success-rgb), 0.18), rgba(var(--racing-contrast-rgb), 0.05)),
+    linear-gradient(135deg, rgba(var(--racing-success-rgb), 0.1), rgba(var(--racing-contrast-rgb), 0.035)),
     rgba(var(--racing-contrast-rgb), 0.035);
-  box-shadow: inset 0 0 0 1px rgba(var(--racing-success-rgb), 0.24);
+  box-shadow: none;
 }
 
 .deposit-activity-row--lost {
-  border-color: #ff8f8f;
+  border-color: rgba(255, 143, 143, 0.38);
   background:
-    linear-gradient(135deg, rgba(255, 143, 143, 0.19), rgba(var(--racing-contrast-rgb), 0.045)),
+    linear-gradient(135deg, rgba(255, 143, 143, 0.1), rgba(var(--racing-contrast-rgb), 0.035)),
     rgba(var(--racing-contrast-rgb), 0.035);
-  box-shadow: inset 0 0 0 1px rgba(255, 143, 143, 0.24);
+  box-shadow: none;
 }
 
 .deposit-activity-row--pending {
-  border-color: rgb(var(--racing-accent-rgb));
+  border-color: rgba(var(--racing-accent-rgb), 0.42);
   background:
-    linear-gradient(135deg, rgba(var(--racing-accent-rgb), 0.2), rgba(var(--racing-contrast-rgb), 0.05)),
+    linear-gradient(135deg, rgba(var(--racing-accent-rgb), 0.11), rgba(var(--racing-contrast-rgb), 0.035)),
     rgba(var(--racing-contrast-rgb), 0.035);
-  box-shadow: inset 0 0 0 1px rgba(var(--racing-accent-rgb), 0.24);
+  box-shadow: none;
+}
+
+.deposit-activity-row--redeem {
+  border-color: rgba(var(--racing-accent-rgb), 0.34);
+  background:
+    linear-gradient(135deg, rgba(var(--racing-accent-rgb), 0.09), rgba(var(--racing-contrast-rgb), 0.035)),
+    rgba(var(--racing-contrast-rgb), 0.035);
 }
 
 .deposit-activity-row--success::before,
@@ -7549,6 +7692,14 @@
 
 .deposit-activity-row--pending::before {
   background: rgb(var(--racing-accent-rgb));
+}
+
+.deposit-activity-row--redeem::before {
+  background: var(--racing-accent-soft);
+}
+
+.deposit-activity-row--redeem .deposit-history-row__amount {
+  color: var(--racing-accent-soft);
 }
 
 .deposit-activity-row--lost .deposit-history-row__amount {
@@ -8004,7 +8155,7 @@
   }
 
   .deposit-activity-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .deposit-activity-row .deposit-history-row__meta {
@@ -8042,7 +8193,9 @@
   }
 
   .deposit-custom-row,
-  .deposit-payment-method-grid {
+  .deposit-payment-method-grid,
+  .deposit-package-grid,
+  .deposit-activity-summary {
     grid-template-columns: 1fr;
   }
 
@@ -10160,36 +10313,6 @@
   overflow-wrap: anywhere;
 }
 
-.race-detail-data-note,
-.race-detail-boundary-note {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 208, 138, 0.28);
-  border-radius: 8px;
-  color: var(--spectator-text-muted);
-  background: rgba(255, 208, 138, 0.07);
-  font-size: 0.76rem;
-  line-height: 1.5;
-}
-
-.race-detail-data-note {
-  justify-content: flex-start;
-}
-
-.race-detail-data-note > svg,
-.race-detail-boundary-note svg {
-  flex: 0 0 auto;
-  color: var(--racing-accent-soft);
-}
-
-.race-detail-data-note strong,
-.race-detail-boundary-note strong {
-  color: var(--spectator-text-soft);
-}
-
 .race-detail-viewer-shell {
   display: grid;
   gap: 20px;
@@ -10435,8 +10558,7 @@
   }
 
   .race-overview-header,
-  .race-overview-track footer,
-  .race-detail-boundary-note {
+  .race-overview-track footer {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -10447,10 +10569,6 @@
 
   .race-detail-field__form {
     display: none;
-  }
-
-  .race-detail-data-note {
-    align-items: flex-start;
   }
 
   .race-overview-track footer strong {
@@ -11247,7 +11365,7 @@
 
 .race-market-board__header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 250px);
   align-items: end;
   gap: 30px;
   padding-bottom: 20px;
@@ -11278,6 +11396,40 @@
   border-left: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
 }
 
+.race-market-board__history-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--racing-accent-rgb), 0.38);
+  border-radius: 7px;
+  color: var(--racing-green);
+  background: var(--racing-accent-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.race-market-board__history-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--racing-accent-soft);
+  background: var(--racing-contrast);
+}
+
+.race-market-board__history-link:active {
+  transform: translateY(1px);
+}
+
+.race-market-board__history-link:focus-visible {
+  outline: 2px solid var(--racing-accent-soft);
+  outline-offset: 3px;
+}
+
 .race-market-board__wallet span {
   display: inline-flex;
   align-items: center;
@@ -11292,6 +11444,7 @@
   font-family: "Sora", sans-serif;
   font-size: 1.8rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .race-market-board__wallet small {
@@ -11699,6 +11852,516 @@
 
   .race-market-row__actions > :only-child {
     grid-column: 1 / -1;
+  }
+}
+
+/* Personal bet history */
+.bet-history-page {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.bet-history-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 270px);
+  align-items: end;
+  gap: 30px;
+  padding: 26px 28px 28px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(var(--racing-contrast-rgb), 0.11), transparent 58%),
+    rgba(var(--racing-contrast-rgb), 0.045);
+}
+
+.bet-history-hero__copy {
+  min-width: 0;
+}
+
+.bet-history-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 28px;
+  color: var(--spectator-text-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.bet-history-back:hover {
+  color: var(--racing-accent-soft);
+  transform: translateX(-2px);
+}
+
+.bet-history-hero h1 {
+  max-width: 680px;
+  margin: 8px 0 12px;
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.bet-history-hero__copy > p:last-child {
+  max-width: 650px;
+  margin: 0;
+  color: var(--spectator-text-muted);
+  line-height: 1.6;
+}
+
+.bet-history-performance {
+  display: grid;
+  gap: 8px;
+  padding-left: 24px;
+  border-left: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+}
+
+.bet-history-performance > span,
+.bet-history-performance small {
+  color: var(--spectator-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.bet-history-performance > strong {
+  color: var(--racing-accent-soft);
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-history-performance div {
+  display: flex;
+  gap: 8px;
+}
+
+.bet-history-performance div span {
+  padding: 4px 7px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 5px;
+  color: var(--spectator-text-soft);
+  background: rgba(var(--racing-contrast-rgb), 0.07);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.bet-history-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 9px;
+  background: rgba(var(--racing-contrast-rgb), 0.05);
+}
+
+.bet-history-summary article {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 4px 8px;
+  min-width: 0;
+  padding: 15px 17px;
+  border-right: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+}
+
+.bet-history-summary article:last-child {
+  border-right: 0;
+}
+
+.bet-history-summary svg {
+  grid-row: 1 / 3;
+  color: var(--racing-accent-soft);
+}
+
+.bet-history-summary article.is-won svg {
+  color: var(--racing-success-soft);
+}
+
+.bet-history-summary article.is-lost svg {
+  color: var(--racing-danger);
+}
+
+.bet-history-summary span,
+.bet-history-summary small {
+  color: var(--spectator-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.bet-history-summary strong {
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-history-summary small {
+  grid-column: 2;
+  font-size: 0.64rem;
+}
+
+.bet-history-board {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 10px;
+  background: rgba(var(--racing-contrast-rgb), 0.065);
+}
+
+.bet-history-board__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 14px;
+}
+
+.bet-history-board__header h2 {
+  margin: 5px 0 0;
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 1.45rem;
+}
+
+.bet-history-refresh,
+.bet-history-state button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.22);
+  border-radius: 6px;
+  color: var(--spectator-text-soft);
+  background: rgba(var(--racing-contrast-rgb), 0.06);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.bet-history-refresh:hover,
+.bet-history-state button:hover {
+  border-color: var(--racing-accent-soft);
+  color: var(--racing-accent-soft);
+}
+
+.bet-history-refresh:active,
+.bet-history-state button:active {
+  transform: translateY(1px);
+}
+
+.bet-history-refresh:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.bet-history-refresh .is-spinning {
+  animation: bet-history-spin 800ms linear infinite;
+}
+
+@keyframes bet-history-spin {
+  to { transform: rotate(360deg); }
+}
+
+.bet-history-filters {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0 0 14px;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+}
+
+.bet-history-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 6px;
+  color: var(--spectator-text-soft);
+  background: rgba(255, 255, 255, 0.025);
+  font: inherit;
+  font-size: 0.69rem;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bet-history-filters button:hover {
+  border-color: rgba(var(--racing-accent-rgb), 0.5);
+}
+
+.bet-history-filters button.is-active {
+  border-color: var(--racing-accent-soft);
+  color: var(--racing-green);
+  background: var(--racing-accent-soft);
+}
+
+.bet-history-filters b {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 4px;
+  color: inherit;
+  background: rgba(29, 48, 36, 0.12);
+  font-size: 0.61rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-history-list {
+  display: grid;
+}
+
+.bet-history-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 1.15fr) minmax(135px, 0.9fr) minmax(195px, 1fr) minmax(175px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  padding: 17px 5px 17px 14px;
+  border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+}
+
+.bet-history-row::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  bottom: 17px;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--racing-accent-soft);
+}
+
+.bet-history-row--won::before {
+  background: var(--racing-success);
+}
+
+.bet-history-row--lost::before {
+  background: var(--racing-danger);
+}
+
+.bet-history-row--cancelled::before {
+  background: var(--spectator-text-muted);
+}
+
+.bet-history-row:last-child {
+  border-bottom: 0;
+}
+
+.bet-history-row__race,
+.bet-history-row__selection,
+.bet-history-row__outcome {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bet-history-row__race > span,
+.bet-history-row__selection > span,
+.bet-history-row__money span {
+  overflow: hidden;
+  color: var(--spectator-text-muted);
+  font-size: 0.63rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bet-history-row__race h3,
+.bet-history-row__selection strong,
+.bet-history-row__money strong,
+.bet-history-row__outcome > strong {
+  overflow: hidden;
+  margin: 0;
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+  font-size: 0.83rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bet-history-row__race small,
+.bet-history-row__selection small,
+.bet-history-row__outcome small {
+  overflow: hidden;
+  color: var(--spectator-text-muted);
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bet-history-row__money {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bet-history-row__money div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bet-history-row__outcome {
+  justify-items: start;
+}
+
+.bet-history-row__outcome > strong.is-positive {
+  color: var(--racing-success-soft);
+}
+
+.bet-history-row__outcome > strong.is-negative {
+  color: var(--racing-danger);
+}
+
+.bet-history-row__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.22);
+  border-radius: 6px;
+  color: var(--spectator-text-soft);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bet-history-row__link:hover {
+  border-color: var(--racing-accent-soft);
+  color: var(--racing-accent-soft);
+}
+
+.bet-history-row__link.is-disabled {
+  opacity: 0.5;
+}
+
+.bet-history-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 230px;
+  align-content: center;
+  padding: 30px;
+  color: var(--spectator-text-muted);
+  text-align: center;
+}
+
+.bet-history-state svg {
+  color: var(--racing-accent-soft);
+}
+
+.bet-history-state strong {
+  color: var(--spectator-text-strong);
+  font-family: "Sora", sans-serif;
+}
+
+.bet-history-state > span {
+  max-width: 480px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.bet-history-state > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--racing-accent-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.bet-history-state.is-error svg {
+  color: var(--racing-danger);
+}
+
+@media (max-width: 1000px) {
+  .bet-history-row {
+    grid-template-columns: minmax(160px, 1.1fr) minmax(150px, 1fr) minmax(190px, 1fr) auto;
+  }
+
+  .bet-history-row__outcome {
+    grid-column: 2 / 4;
+  }
+
+  .bet-history-row__link {
+    grid-column: 4;
+  }
+}
+
+@media (max-width: 760px) {
+  .bet-history-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .bet-history-performance {
+    padding: 18px 0 0;
+    border-top: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
+    border-left: 0;
+  }
+
+  .bet-history-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bet-history-summary article:nth-child(2) {
+    border-right: 0;
+  }
+
+  .bet-history-summary article:nth-child(-n + 2) {
+    border-bottom: 1px solid rgba(var(--racing-contrast-rgb), 0.14);
+  }
+
+  .bet-history-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bet-history-row__outcome,
+  .bet-history-row__link {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 500px) {
+  .bet-history-hero {
+    padding: 22px 20px 24px;
+  }
+
+  .bet-history-board {
+    padding: 14px;
+  }
+
+  .bet-history-board__header {
+    align-items: flex-start;
+  }
+
+  .bet-history-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding-block: 18px;
+  }
+
+  .bet-history-row__link {
+    width: 100%;
   }
 }
 
@@ -13963,9 +14626,7 @@
 .rd-facts-panel,
 .rd-market-panel,
 .rd-meta-card,
-.race-detail-field,
-.race-detail-data-note,
-.race-detail-boundary-note {
+.race-detail-field {
   border-radius: 8px;
 }
 
@@ -14134,12 +14795,6 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.race-detail-data-note,
-.race-detail-boundary-note {
-  align-items: flex-start;
-  color: var(--spectator-text-soft);
-}
-
 .race-detail-field__row {
   grid-template-columns: 28px 42px minmax(0, 1fr) minmax(76px, auto) auto;
   gap: 12px;
@@ -14261,9 +14916,6 @@
     text-align: left;
   }
 
-  .race-detail-boundary-note {
-    flex-direction: column;
-  }
 }
 
 /* Tournament board final pass: three-card rows and stronger banner */

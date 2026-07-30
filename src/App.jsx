@@ -12,6 +12,7 @@ import TournamentDetail from "./pages/spectator/TournamentDetail";
 import RaceDetail from "./pages/spectator/RaceDetail";
 import Predictions from "./pages/spectator/Predictions";
 import PredictionDetail from "./pages/spectator/PredictionDetail";
+import BetHistory from "./pages/spectator/BetHistory";
 import Profile from "./pages/spectator/Profile";
 import Deposit from "./pages/spectator/Deposit";
 import PaymentReturn from "./pages/spectator/PaymentReturn";
@@ -105,6 +106,7 @@ function App() {
         <Route path="/spectator/tournaments/:tournamentId" element={<TournamentDetail />} />
         <Route path="/spectator/tournaments/:tournamentId/races/:raceId" element={<RaceDetail />} />
         <Route path="/spectator/predictions" element={<Predictions />} />
+        <Route path="/spectator/predictions/history" element={<BetHistory />} />
         <Route path="/spectator/predictions/races/:raceId" element={<PredictionDetail />} />
         <Route path="/spectator/predictions/:tournamentId" element={<Navigate to="/spectator/predictions" replace />} />
         <Route path="/spectator/profile" element={<Profile />} />

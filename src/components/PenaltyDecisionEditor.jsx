@@ -336,7 +336,7 @@ export default function PenaltyDecisionEditor({
 
       {differs && (
         <label className="penalty-editor__reason">
-          Reason for policy deviation <span aria-hidden="true">*</span>
+          <span className="penalty-editor__reason-label">Reason for policy deviation <b aria-hidden="true">*</b></span>
           <textarea
             rows="3"
             value={deviationReason || ""}

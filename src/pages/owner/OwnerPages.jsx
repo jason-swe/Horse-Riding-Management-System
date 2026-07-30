@@ -63,6 +63,14 @@ const formatMoney = (value, currency = "VND") => {
   }
 };
 
+const getTodayInputValue = () => {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${today.getFullYear()}-${month}-${day}`;
+};
+
 const FactPills = ({ facts, emptyText = "No optional profile data recorded yet." }) => {
   if (!facts?.length) {
     return <div className="owner-fact-empty">{emptyText}</div>;
@@ -415,6 +423,7 @@ function OwnerHorseForm({ mode = "new" }) {
   const { horse: existingHorse, isLoading, error: loadError } = useOwnerHorse(isEdit ? horseId : null);
   const horseIndex = imageIndexForId(existingHorse?.id || horseId, horseRosterImages.length);
   const horseImage = horseRosterImages[Math.max(horseIndex, 0) % horseRosterImages.length];
+  const todayInputValue = getTodayInputValue();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -474,6 +483,11 @@ function OwnerHorseForm({ mode = "new" }) {
 
     if (!form.registrationNumber.trim()) {
       setError("Registration number is required.");
+      return;
+    }
+
+    if (form.dateOfBirth && form.dateOfBirth > todayInputValue) {
+      setError("Date of birth cannot be in the future.");
       return;
     }
 
@@ -543,7 +557,7 @@ function OwnerHorseForm({ mode = "new" }) {
               <label>Name<input value={form.name} onChange={(event) => updateField("name", event.target.value)} required /></label>
               <label>Registration number<input value={form.registrationNumber} onChange={(event) => updateField("registrationNumber", event.target.value)} required /></label>
               <FormSelect label="Breed" value={form.breed} options={["Thoroughbred", "Warmblood", "Arabian", "Quarter Horse", "Standardbred", "Other"]} onChange={(value) => updateField("breed", value)} />
-              <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
+              <label>Date of birth<input type="date" max={todayInputValue} value={form.dateOfBirth} onChange={(event) => updateField("dateOfBirth", event.target.value)} /></label>
               <label>Weight<input value={form.weight} onChange={(event) => updateField("weight", event.target.value)} /></label>
               <label className="owner-form-span owner-profile-image-field">
                 <span className="owner-profile-image-field__title">Profile image</span>
@@ -825,7 +839,9 @@ function OwnerRegistrations() {
   const [cancellationSubmitting, setCancellationSubmitting] = useState(false);
   const [confirmingRefundId, setConfirmingRefundId] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [horseQuery, setHorseQuery] = useState("");
   const [tournamentQuery, setTournamentQuery] = useState("");
+  const [entriesQuery, setEntriesQuery] = useState("");
   const [detailsRace, setDetailsRace] = useState(null);
   const [entry, setEntry] = useState({
     horseId: "",
@@ -836,10 +852,20 @@ function OwnerRegistrations() {
   const selectedHorse = horses.find((horse) => horse.id === entry.horseId) ?? null;
   const selectedTournament = tournaments.find((tournament) => tournament.id === entry.tournamentId) ?? null;
   const selectedRace = races.find((race) => race.id === entry.raceId) ?? null;
+  const filteredHorses = horses.filter((horse) => (
+    `${horse.name} ${horse.registrationNumber} ${horse.breed} ${horse.gender} ${horse.color} ${horse.status}`
+      .toLowerCase()
+      .includes(horseQuery.trim().toLowerCase())
+  ));
   const filteredTournaments = tournaments.filter((tournament) => (
     `${tournament.name} ${tournament.location} ${tournament.date} ${tournament.status}`
       .toLowerCase()
       .includes(tournamentQuery.trim().toLowerCase())
+  ));
+  const filteredRegistrations = registrations.filter((registration) => (
+    `${registration.id} ${registration.horse} ${registration.tournament} ${registration.race} ${registration.status} ${registration.submitted} ${registration.note}`
+      .toLowerCase()
+      .includes(entriesQuery.trim().toLowerCase())
   ));
   const tournamentPrizePool = selectedTournament?.prizePool || races.reduce((total, race) => total + Number(race.prizePool || 0), 0);
   const tournamentPrizeCurrency = selectedTournament?.prizeCurrency || selectedRace?.prizeCurrency || "VND";
@@ -1125,10 +1151,29 @@ function OwnerRegistrations() {
               <div>
                 <span className="owner-kicker">Choose horse</span>
                 <h2 id="choose-horse-heading">Select the horse you want to enter</h2>
+                <p className="owner-entry-section__description">Choose one active horse from your stable. The selected profile will be paired with the race below.</p>
               </div>
             </div>
+            <div className="owner-entry-horse-toolbar">
+              <label className="owner-entry-search">
+                <Search size={17} aria-hidden="true" />
+                <input
+                  aria-label="Search horses by name"
+                  onChange={(event) => setHorseQuery(event.target.value)}
+                  placeholder="Search by horse name or registration number"
+                  type="search"
+                  value={horseQuery}
+                />
+                {horseQuery && (
+                  <button aria-label="Clear horse search" onClick={() => setHorseQuery("")} type="button">
+                    <X size={15} />
+                  </button>
+                )}
+              </label>
+              <span className="owner-entry-results"><strong>{filteredHorses.length}</strong> of {horses.length} horses</span>
+            </div>
             <div className="owner-entry-horse-list" role="listbox" aria-label="Eligible horses">
-              {horses.map((horse) => {
+              {filteredHorses.map((horse) => {
                 const eligible = isHorseEligible(horse);
                 const selected = selectedHorse?.id === horse.id;
                 return (
@@ -1156,6 +1201,7 @@ function OwnerRegistrations() {
                 );
               })}
               {!horses.length && <div className="owner-empty owner-empty--compact">No horse profiles are available.</div>}
+              {!!horses.length && !filteredHorses.length && <div className="owner-entry-empty-search"><Search size={18} /><strong>No horses found</strong><span>Try a different name or registration number.</span></div>}
             </div>
           </section>
 
@@ -1167,16 +1213,27 @@ function OwnerRegistrations() {
                 <h3 id="choose-race-heading">Choose a tournament, then compare its races</h3>
                 <p>Review the race conditions, available places, entry fee and prize before selecting.</p>
               </div>
-              <label className="owner-tournament-search">
-                <Search size={16} aria-hidden="true" />
-                <span className="sr-only">Search tournaments</span>
-                <input
-                  onChange={(event) => setTournamentQuery(event.target.value)}
-                  placeholder="Search tournament or venue"
-                  type="search"
-                  value={tournamentQuery}
-                />
-              </label>
+              <div className="owner-tournament-browser__tools">
+                <div className="owner-tournament-search__label">
+                  <span>Find a tournament</span>
+                  <strong>{filteredTournaments.length} available</strong>
+                </div>
+                <label className="owner-tournament-search">
+                  <Search size={17} aria-hidden="true" />
+                  <input
+                    aria-label="Search tournaments"
+                    onChange={(event) => setTournamentQuery(event.target.value)}
+                    placeholder="Search by name or venue"
+                    type="search"
+                    value={tournamentQuery}
+                  />
+                  {tournamentQuery && (
+                    <button aria-label="Clear tournament search" onClick={() => setTournamentQuery("")} type="button">
+                      <X size={15} />
+                    </button>
+                  )}
+                </label>
+              </div>
             </div>
             <div className="owner-tournament-list">
               {filteredTournaments.map((tournament) => (
@@ -1348,8 +1405,26 @@ function OwnerRegistrations() {
           </div>
           <ClipboardCheck size={20} />
         </div>
+        <div className="owner-entry-horse-toolbar owner-registration-search-toolbar">
+          <label className="owner-entry-search">
+            <Search size={17} aria-hidden="true" />
+            <input
+              aria-label="Search registration entries"
+              onChange={(event) => setEntriesQuery(event.target.value)}
+              placeholder="Search horse, tournament, race or status"
+              type="search"
+              value={entriesQuery}
+            />
+            {entriesQuery && (
+              <button aria-label="Clear entries search" onClick={() => setEntriesQuery("")} type="button">
+                <X size={15} />
+              </button>
+            )}
+          </label>
+          <span className="owner-entry-results"><strong>{filteredRegistrations.length}</strong> of {registrations.length} entries</span>
+        </div>
         <div className="owner-registration-list owner-registration-list--board">
-          {registrations.map((item) => (
+          {filteredRegistrations.map((item) => (
             <div className="owner-registration owner-registration--rich" key={item.id}>
               <time className="owner-registration__date">{item.submitted}</time>
               <div className="owner-registration__content">
@@ -1399,6 +1474,13 @@ function OwnerRegistrations() {
           {registrations.length === 0 && (
             <div className="owner-empty owner-empty--compact" role="status">
               No race registrations have been submitted yet.
+            </div>
+          )}
+          {!!registrations.length && !filteredRegistrations.length && (
+            <div className="owner-entry-empty-search" role="status">
+              <Search size={18} />
+              <strong>No entries found</strong>
+              <span>Try a horse, tournament, race or status.</span>
             </div>
           )}
         </div>
@@ -2252,7 +2334,10 @@ function OwnerJockeys() {
     }
   };
 
-  if (isLoading || horsesLoading || registrationsLoading || assignmentsLoading) {
+  // Selecting a race entry refreshes jockey availability for that race. Keep the
+  // workspace mounted while that refresh is in flight so the form does not jump
+  // back to its loading state (and lose the user's scroll position).
+  if ((isLoading && !liveJockeys.length) || horsesLoading || registrationsLoading || assignmentsLoading) {
     return <div className="owner-jockey-page"><LoadingSkeleton ariaLabel="Loading jockey assignment workspace" rows={6} variant="cards" /></div>;
   }
 
@@ -3112,15 +3197,24 @@ function OwnerSchedule() {
   const [filter, setFilter] = useState("All");
   const { registrations, isLoading, error } = useOwnerRegistrations();
   const { assignments, isLoading: assignmentsLoading, error: assignmentsError } = useOwnerJockeyAssignments();
-  const ownerSchedule = registrations.map((registration) => toOwnerScheduleEntry(
-    registration,
-    findAcceptedPrimaryAssignment(assignments, registration)
-  ));
+  const ownerSchedule = registrations
+    .map((registration) => toOwnerScheduleEntry(
+      registration,
+      findAcceptedPrimaryAssignment(assignments, registration)
+    ))
+    .sort((first, second) => {
+      const firstDate = first.date && first.date !== "Date unavailable" ? new Date(first.date).getTime() : Number.POSITIVE_INFINITY;
+      const secondDate = second.date && second.date !== "Date unavailable" ? new Date(second.date).getTime() : Number.POSITIVE_INFINITY;
+      return firstDate - secondDate;
+    });
   const visibleRaces = ownerSchedule.filter((race) => filter === "All" || race.status === filter);
   const confirmedCount = ownerSchedule.filter((race) => race.status === "Confirmed").length;
   const pendingCount = ownerSchedule.filter((race) => race.status === "Pending").length;
   const closedCount = ownerSchedule.filter((race) => race.status === "Closed").length;
-  const featuredRace = visibleRaces[0] ?? ownerSchedule[0];
+  const featuredRace = visibleRaces.find((race) => {
+    const timestamp = new Date(`${race.date} ${race.clock}`).getTime();
+    return Number.isFinite(timestamp) && timestamp >= Date.now();
+  }) ?? visibleRaces[0] ?? ownerSchedule[0];
 
   if (isLoading || assignmentsLoading) {
     return <div className="owner-schedule-page"><LoadingSkeleton ariaLabel="Loading owner schedule" rows={5} variant="cards" /></div>;
@@ -3132,18 +3226,20 @@ function OwnerSchedule() {
         <img src={scheduleHeroImage} alt="Race track at night for owner schedule planning" />
         <div className="owner-schedule-hero__copy">
           <p className="owner-eyebrow">Race calendar</p>
-          <h1>Track every owner race slot.</h1>
-          <p>Review date, venue, round, horse, jockey, and confirmation status in one race-day board.</p>
+          <h1>Your race calendar, without the clutter.</h1>
+          <p>See what runs next, who is riding, and which entries still need attention.</p>
         </div>
         <aside className="owner-schedule-hero__panel">
           {featuredRace ? (
             <>
+              <span className="owner-schedule-hero__panel-label"><CalendarDays size={15} /> Next on your calendar</span>
               <span className={`owner-badge ${statusClass(featuredRace.status)}`}>{featuredRace.status}</span>
               <strong>{featuredRace.race}</strong>
               <p>{featuredRace.time} / {featuredRace.venue}</p>
             </>
           ) : (
             <>
+              <span className="owner-schedule-hero__panel-label"><CalendarDays size={15} /> Next on your calendar</span>
               <span className="owner-badge">No entries</span>
               <strong>Schedule unavailable</strong>
               <p>Submit a race registration to create an owner schedule entry.</p>
@@ -3193,7 +3289,7 @@ function OwnerSchedule() {
                   <strong>{race.clock}</strong>
                 </div>
                 <div className="owner-schedule-slot__race">
-                  <span className="owner-kicker">{race.id} / {race.round}</span>
+                  <span className="owner-kicker">{race.round && race.round !== "Round unavailable" && !isMongoObjectId(race.round) ? race.round : "Race day"}</span>
                   <h3>{race.race}</h3>
                   <small><MapPin size={13} /> {race.venue}</small>
                 </div>

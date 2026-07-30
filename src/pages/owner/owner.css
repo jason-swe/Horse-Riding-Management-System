@@ -2250,6 +2250,14 @@
   line-height: 1.2;
 }
 
+.owner-entry-section__description {
+  max-width: 58ch;
+  margin: 8px 0 0;
+  color: var(--owner-text-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 .owner-entry-step {
   width: 32px;
   height: 32px;
@@ -2274,16 +2282,103 @@
   gap: 8px;
 }
 
+.owner-entry-horse-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.15);
+  border-radius: 12px;
+  background: rgba(var(--racing-contrast-rgb), 0.045);
+}
+
+.owner-entry-search {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex !important;
+  align-items: center;
+  gap: 10px !important;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(var(--racing-contrast-rgb), 0.2);
+  border-radius: 9px;
+  background: rgba(7, 22, 14, 0.44);
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.owner-entry-search:focus-within {
+  border-color: rgba(var(--racing-accent-rgb), 0.72);
+  background: rgba(7, 22, 14, 0.68);
+  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.11);
+}
+
+.owner-entry-search > svg {
+  flex: 0 0 auto;
+  color: var(--racing-accent-soft);
+}
+
+.owner-entry-search input,
+.owner-tournament-search input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  color: var(--owner-text-strong);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.owner-entry-search input::placeholder,
+.owner-tournament-search input::placeholder {
+  color: rgba(212, 208, 192, 0.62);
+}
+
+.owner-entry-search button,
+.owner-tournament-search button {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 7px;
+  color: var(--owner-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.owner-entry-search button:hover,
+.owner-tournament-search button:hover {
+  color: var(--owner-text-strong);
+  background: rgba(var(--racing-contrast-rgb), 0.12);
+}
+
+.owner-entry-results {
+  flex: 0 0 auto;
+  color: var(--owner-text-muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.owner-entry-results strong {
+  color: var(--racing-accent-soft);
+  font-size: 0.9rem;
+}
+
 .owner-entry-horse {
   width: 100%;
-  min-height: 68px;
+  min-height: 82px;
   display: grid;
-  grid-template-columns: 28px minmax(150px, 0.8fr) minmax(220px, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: 28px minmax(150px, 0.95fr) minmax(280px, 1.55fr) auto;
+  gap: 16px;
   align-items: center;
-  padding: 11px 14px;
+  padding: 14px 16px;
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.18);
-  border-radius: 8px;
+  border-radius: 11px;
   color: inherit;
   background: rgba(255, 255, 255, 0.05);
   text-align: left;
@@ -2331,12 +2426,14 @@
 .owner-entry-horse__facts {
   min-width: 0;
   display: grid;
-  gap: 5px;
+  gap: 6px;
 }
 
 .owner-entry-horse__identity strong {
   color: var(--owner-text-strong);
   font-family: "Sora", sans-serif;
+  font-size: 0.96rem;
+  line-height: 1.2;
 }
 
 .owner-entry-horse__identity small,
@@ -2347,22 +2444,54 @@
 }
 
 .owner-entry-horse__facts {
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-  gap: 8px 12px;
+  grid-template-columns: repeat(5, minmax(64px, 1fr));
+  gap: 8px;
 }
 
 .owner-entry-horse__facts > span {
   min-width: 0;
   display: grid;
-  gap: 2px;
+  gap: 3px;
+  align-content: center;
+  min-height: 38px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(var(--racing-contrast-rgb), 0.13);
   color: var(--owner-text-soft);
   overflow-wrap: anywhere;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .owner-entry-horse__facts small {
   color: var(--owner-text-muted);
   font-size: 0.66rem;
   font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.owner-entry-empty-search {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 30px 20px;
+  border: 1px dashed rgba(var(--racing-contrast-rgb), 0.24);
+  border-radius: 11px;
+  color: var(--owner-text-muted);
+  text-align: center;
+}
+
+.owner-entry-empty-search svg {
+  color: var(--racing-accent-soft);
+}
+
+.owner-entry-empty-search strong {
+  color: var(--owner-text-strong);
+}
+
+.owner-entry-empty-search span {
+  font-size: 0.78rem;
 }
 
 .owner-entry-section.owner-tournament-browser {
@@ -3813,6 +3942,32 @@
   gap: 20px;
 }
 
+.owner-tournament-browser__tools {
+  flex: 0 1 320px;
+  display: grid;
+  gap: 7px;
+}
+
+.owner-tournament-search__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: 2px;
+  color: var(--owner-text-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.owner-tournament-search__label strong {
+  color: var(--racing-accent-soft);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .owner-tournament-browser__header h3 {
   margin: 3px 0 0;
   color: var(--owner-text-strong);
@@ -3830,26 +3985,29 @@
 }
 
 .owner-tournament-search {
-  flex: 0 1 290px;
+  width: 100%;
   display: flex !important;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 9px !important;
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 12px 0 14px;
   border: 1px solid rgba(var(--racing-contrast-rgb), 0.24);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(7, 22, 14, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 24px rgba(0, 0, 0, 0.1);
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .owner-tournament-search:focus-within {
   border-color: rgba(var(--racing-accent-rgb), 0.68);
-  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.1);
+  background: rgba(7, 22, 14, 0.72);
+  box-shadow: 0 0 0 3px rgba(var(--racing-accent-rgb), 0.1), 0 12px 26px rgba(0, 0, 0, 0.16);
 }
 
 .owner-tournament-search svg {
   flex: 0 0 auto;
-  color: var(--owner-text-muted);
+  color: var(--racing-accent-soft);
 }
 
 .owner-tournament-list {
@@ -5318,6 +5476,14 @@
 
 .owner-registration-board .owner-card__header {
   margin-bottom: 12px;
+}
+
+.owner-registration-search-toolbar {
+  margin-bottom: 12px;
+}
+
+.owner-registration-search-toolbar .owner-entry-search {
+  max-width: 680px;
 }
 
 .owner-registration-list--board {
@@ -7683,6 +7849,15 @@
     padding: 14px;
   }
 
+  .owner-entry-horse-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owner-entry-results {
+    padding-inline: 2px;
+  }
+
   .owner-entry-horse {
     grid-template-columns: 28px minmax(0, 1fr) auto;
   }
@@ -8386,5 +8561,255 @@
     left: 50% !important;
     transform: translate(-50%, -50%);
     animation: none;
+  }
+}
+
+/* Schedule refresh: make the next race and the useful details easier to scan. */
+.owner-schedule-page {
+  gap: 24px;
+  max-width: 1240px;
+}
+
+.owner-schedule-hero {
+  min-height: 360px;
+  padding: clamp(28px, 5vw, 54px);
+  border-color: rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 24px;
+  background: var(--racing-surface);
+  box-shadow: 0 24px 70px rgba(4, 15, 9, 0.22);
+}
+
+.owner-schedule-hero::after {
+  background:
+    linear-gradient(90deg, rgba(11, 27, 19, 0.97) 0%, rgba(11, 27, 19, 0.78) 46%, rgba(11, 27, 19, 0.28) 100%),
+    linear-gradient(180deg, rgba(11, 27, 19, 0.08), rgba(11, 27, 19, 0.62));
+}
+
+.owner-schedule-hero__copy h1 {
+  max-width: 11ch;
+  font-size: clamp(2.65rem, 6vw, 5.4rem);
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+}
+
+.owner-schedule-hero__copy p:not(.owner-eyebrow) {
+  max-width: 42ch;
+  margin-top: 22px;
+  font-size: 1rem;
+}
+
+.owner-schedule-hero__panel {
+  gap: 14px;
+  padding: 22px;
+  border-color: rgba(var(--racing-contrast-rgb), 0.22);
+  border-radius: 18px;
+  background: rgba(16, 39, 28, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 40px rgba(4, 15, 9, 0.18);
+}
+
+.owner-schedule-hero__panel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--racing-accent-soft);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.owner-schedule-hero__panel strong {
+  font-size: clamp(1.5rem, 2.8vw, 2.35rem);
+  letter-spacing: -0.05em;
+}
+
+.owner-schedule-stats {
+  gap: 14px;
+}
+
+.owner-schedule-stat {
+  position: relative;
+  min-height: 132px;
+  padding: 18px 18px 16px;
+  border-color: rgba(var(--racing-contrast-rgb), 0.16);
+  border-radius: 16px;
+  background: rgb(28 54 40 / 0.56);
+}
+
+.owner-schedule-stat::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 28px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--racing-accent);
+  opacity: 0.55;
+}
+
+.owner-schedule-stat strong {
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  letter-spacing: -0.06em;
+}
+
+.owner-schedule-board {
+  gap: 20px;
+  padding: clamp(20px, 3vw, 30px);
+  border-color: rgba(var(--racing-contrast-rgb), 0.18);
+  border-radius: 24px;
+  background: rgb(18 41 30 / 0.76);
+  box-shadow: 0 22px 60px rgba(4, 15, 9, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.owner-schedule-board__header {
+  align-items: center;
+}
+
+.owner-schedule-board__header h2 {
+  font-size: clamp(1.7rem, 3vw, 2.55rem);
+  letter-spacing: -0.06em;
+}
+
+.owner-schedule-list {
+  gap: 12px;
+}
+
+.owner-schedule-slot {
+  grid-template-columns: 124px minmax(200px, 0.9fr) minmax(260px, 1fr) minmax(150px, auto);
+  gap: 18px;
+  padding: 16px;
+  border-color: rgba(var(--racing-contrast-rgb), 0.12);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
+}
+
+.owner-schedule-slot__time {
+  gap: 8px;
+  min-height: 76px;
+  align-content: center;
+  padding: 13px 14px;
+  border: 0;
+  border-left: 3px solid var(--racing-accent);
+  border-radius: 10px;
+  background: rgba(var(--racing-accent-rgb), 0.11);
+}
+
+.owner-schedule-slot__time span {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.owner-schedule-slot__time strong {
+  font-size: 1.38rem;
+  letter-spacing: -0.04em;
+}
+
+.owner-schedule-slot__race {
+  gap: 8px;
+}
+
+.owner-schedule-slot__race h3 {
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  letter-spacing: -0.04em;
+}
+
+.owner-schedule-slot__pairing {
+  gap: 8px;
+}
+
+.owner-schedule-slot__pairing div {
+  gap: 5px;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(var(--racing-contrast-rgb), 0.055);
+}
+
+.owner-schedule-slot__pairing strong {
+  font-size: 0.9rem;
+}
+
+.owner-schedule-slot__status {
+  gap: 10px;
+}
+
+.owner-schedule-slot__status small {
+  font-size: 0.74rem;
+}
+
+@media (max-width: 1080px) {
+  .owner-schedule-hero {
+    min-height: 420px;
+  }
+
+  .owner-schedule-slot {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .owner-schedule-page {
+    gap: 16px;
+  }
+
+  .owner-schedule-hero {
+    min-height: 520px;
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .owner-schedule-hero__copy h1 {
+    max-width: 10ch;
+    font-size: clamp(2.55rem, 13vw, 4rem);
+  }
+
+  .owner-schedule-hero__panel {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .owner-schedule-stats {
+    gap: 10px;
+  }
+
+  .owner-schedule-stat {
+    min-height: 112px;
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .owner-schedule-board {
+    padding: 18px 14px;
+    border-radius: 20px;
+  }
+
+  .owner-schedule-slot {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  .owner-schedule-slot__time {
+    min-height: 0;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .owner-schedule-slot__time strong {
+    justify-self: end;
+  }
+
+  .owner-schedule-slot__pairing {
+    gap: 8px;
+  }
+
+  .owner-schedule-slot__status {
+    justify-items: start;
+  }
+
+  .owner-schedule-slot__status small {
+    max-width: none;
+    text-align: left;
   }
 }

@@ -3,22 +3,22 @@ import AdminCommandModule from "./AdminCommandModule";
 import AdminCompetitionModule from "./AdminCompetitionModule";
 import AdminCancellationModule from "./AdminCancellationModule";
 import AdminDepositModule from "./AdminDepositModule";
-import AdminIncidentModule from "./AdminIncidentModule";
 import AdminLayout from "./AdminLayout";
+import AdminRoleApplicationsModule from "./AdminRoleApplicationsModule";
 import AdminRegistryModule from "./AdminRegistryModule";
 import AdminRewardsModule from "./AdminRewardsModule";
 
-const commandModules = new Set(["users", "registrations", "results"]);
+const commandModules = new Set(["users", "results"]);
 const competitionModules = new Set(["tournament", "schedule"]);
 const registryModules = new Set(["jockeys", "referees"]);
 
 function AdminModulePage() {
   const { module: moduleName } = useParams();
 
-  if (moduleName === "incidents") return <AdminIncidentModule />;
   if (moduleName === "cancellations") return <AdminCancellationModule />;
   if (moduleName === "deposits") return <AdminDepositModule />;
   if (moduleName === "rewards") return <AdminRewardsModule />;
+  if (moduleName === "role-applications") return <AdminRoleApplicationsModule />;
   if (commandModules.has(moduleName)) return <AdminCommandModule moduleName={moduleName} />;
   if (competitionModules.has(moduleName)) return <AdminCompetitionModule moduleName={moduleName} />;
   if (registryModules.has(moduleName)) return <AdminRegistryModule moduleName={moduleName} />;
